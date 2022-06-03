@@ -8,6 +8,7 @@ from scripts.utils.json_functions import *
 from scripts.utils.plot_functions import *
 
 from scripts.audio_functions.audio_manipulation import *
+from scripts.audio_functions.signal_generation import *
 from scripts.audio_functions.reverb_features import *
 from scripts.audio_functions.DSPfunc import *
 
@@ -51,7 +52,7 @@ rirs = os.listdir(rir_path)
 for idx, rir_file in enumerate(rirs):
     convolution.append(pedalboard.Convolution(rir_path + rir_file, mix))
     reference_audio.append(convolution[idx](test_sound, sr))
-    reference_norm.append(reference_audio[idx] / np.max(abs(reference_audio[idx])))
+    reference_norm.append(normalize_audio(reference_audio[idx]))
 
 for ref_idx, ref in enumerate(reference_norm):
 
@@ -82,12 +83,13 @@ for ref_idx, ref in enumerate(reference_norm):
                 external_vst3_set_params(params, rev_external)
 
                 reverb_audio_external = plugin_process(rev_external, test_eq, sr)
+                reverb_audio_external = pd_highpass_filter(reverb_audio_external, 3, sr)
 
                 rev_ms = ms_matrix(reverb_audio_external)
                 rev_ms[1] = filters([1], rir_eq[1], rev_ms[1])
                 reverb_audio_external = ms_matrix(rev_ms)
 
-                reverb_norm_external = reverb_audio_external / np.max(abs(reverb_audio_external))
+                reverb_norm_external = normalize_audio(reverb_audio_external)
 
                 sf.write('audio/revparams_rirs/' + rir_folder[ref_idx] + '/' + effect_params + '.wav',
                          reverb_norm_external.T, sr)
@@ -100,13 +102,13 @@ for ref_idx, ref in enumerate(reference_norm):
                 opt_rev_native = native_reverb_set_params(params)
 
                 reverb_audio_native = plugin_process(opt_rev_native, test_eq, sr)
-                reverb_audio_native = filter_order(reverb_audio_native, 3, sr)
+                reverb_audio_native = pd_highpass_filter(reverb_audio_native, 3, sr)
 
                 rev_ms = ms_matrix(reverb_audio_native)
                 rev_ms[1] = filters([1], rir_eq[1], rev_ms[1])
                 reverb_audio_native = ms_matrix(rev_ms)
 
-                reverb_norm_native = reverb_audio_native / np.max(abs(reverb_audio_native))
+                reverb_norm_native = normalize_audio(reverb_audio_native)
 
                 sf.write('audio/revparams_rirs/' + rir_folder[ref_idx] + '/' + effect_params + '.wav',
                          reverb_norm_native.T, sr)
