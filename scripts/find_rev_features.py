@@ -12,9 +12,9 @@ from scripts.audio_functions.signal_generation import *
 from scripts.audio_functions.reverb_features import *
 from scripts.audio_functions.DSPfunc import *
 
-rir_path = 'audio/input/chosen_rirs/'
+rir_path = '../audio/input/chosen_rirs/'
 rir_file = os.listdir(rir_path)
-rir_folder = os.listdir('audio/results')
+rir_folder = os.listdir('../audio/results')
 
 rir, sr = sf.read(rir_path + rir_file[0])
 rir = rir.T
@@ -23,7 +23,7 @@ test_sound = create_impulse(sr * 6)
 test_sound = np.stack([test_sound, test_sound])
 
 #rir_eq_coeffs = np.load('audio/armodels/rir_eq_coeffs_ms.npy', allow_pickle=True)[()]
-rir_eq_coeffs = np.load('audio/armodels/rir_eq_coeffs_kl_s.npy', allow_pickle=True)[()]
+rir_eq_coeffs = np.load('../audio/armodels/rir_eq_coeffs_kl_s.npy', allow_pickle=True)[()]
 
 rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
 rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
@@ -65,7 +65,7 @@ for ref_idx, ref in enumerate(reference_norm):
     test_mid = filters([1], rir_eq[0], test_sound[0])
     test_eq = np.stack([test_mid, test_mid])
 
-    params_path = 'audio/params/'
+    params_path = '../audio/params/'
     params_folder = os.listdir(params_path)
 
     current_param_path = params_path + params_folder[ref_idx] + '/'
@@ -135,7 +135,7 @@ df = df.rename(index={'Auditorium - Atherton Hall (M)': 'Auditorium Hall',
                  'Simulation_A1_01_XY': 'Living Room',
                  'REVelation': 'Plate Reverb'})
 
-text_file = open("images/rev_feats_klm.txt", "w")
+text_file = open("../images/rev_feats_klm.txt", "w")
 
 fv_mape = np.zeros(num_features)
 fdn_mape = np.zeros(num_features)
