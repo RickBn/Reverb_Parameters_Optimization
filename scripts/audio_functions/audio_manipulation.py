@@ -80,6 +80,15 @@ def batch_convolve(input_files, convolution_array, rir_folder, sr, scale_factor=
     return convolved
 
 
+def pad_windowed_signal(input_signal: np.array, window_size: int):
+
+    if len(input_signal % window_size) != 0:
+        xpad = np.append(input_signal, np.zeros(window_size))
+    else:
+        xpad = input_signal
+
+    return xpad
+
 def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
     t = np.linspace(0, np.pi, fade_length)
     no_fade = np.ones(signal_length - fade_length)
