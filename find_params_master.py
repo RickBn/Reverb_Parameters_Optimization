@@ -52,13 +52,15 @@ def find_params():
         reference_audio[idx] = pd_highpass_filter(reference_audio[idx], 3, sr)
         reference_norm.append(normalize_audio(reference_audio[idx]))
 
-    audio_file = []
-    for idx, wav in enumerate(input_audio_file):
-        audio_file.append(sf.read(input_audio_path + input_audio_file[idx])[0])
+    # audio_file = []
+    # for idx, wav in enumerate(input_audio_file):
+    #     audio_file.append(sf.read(input_audio_path + input_audio_file[idx])[0])
+    #
+    #     if audio_file[idx].ndim is 1:
+    #         audio_file[idx] = np.stack([audio_file[idx], audio_file[idx]])
 
-        if audio_file[idx].ndim is 1:
-            audio_file[idx] = np.stack([audio_file[idx], audio_file[idx]])
-
+    convolution = prepare_batch_convolve(rir_path, mix=1.0)
+    audio_file = prepare_batch_input_stereo(input_audio_path)
     convolved = batch_convolve(audio_file, convolution, rir_folder, sr, 0.70)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,9 +1,12 @@
+from typing import Tuple, Any
+
 import numpy as np
 import os
 
 import soundfile as sf
 import librosa
 import librosa.display
+from numpy import ndarray
 from scipy.signal import chirp
 
 from scripts.audio_functions.pedalboard_functions import *
@@ -48,12 +51,36 @@ def ms_matrix(stereo_audio: np.ndarray) -> np.ndarray:
     return np.array([mid, side])
 
 
-def b_format_to_stereo(filename: str) -> np.ndarray:
+def b_format_to_stereo(filename: str) -> Tuple[ndarray, Any]:
     wxyz, sr = sf.read(filename)
     ms = np.array([wxyz[:, 0], wxyz[:, 2]])
     lr = ms_matrix(ms)
 
     return lr, sr
+
+
+def prepare_batch_convolve(rir_path, mix=1.0):
+
+    convolution_array = []
+
+    for idx, rir_file in enumerate(os.listdir(rir_path)):
+        convolution_array.append(pedalboard.Convolution(rir_path + rir_file, mix))
+
+    return convolution_array
+
+
+def prepare_batch_input_stereo(input_audio_path):
+
+    audio_file = []
+    input_audio_file = os.listdir(input_audio_path)
+
+    for idx, wav in enumerate(input_audio_file):
+        audio_file.append(sf.read(input_audio_path + input_audio_file[idx])[0])
+
+        if audio_file[idx].ndim is 1:
+            audio_file[idx] = np.stack([audio_file[idx], audio_file[idx]])
+
+    return audio_file
 
 
 def batch_convolve(input_files, convolution_array, rir_folder, sr, scale_factor=1.0, save_file=False):
@@ -88,6 +115,7 @@ def pad_windowed_signal(input_signal: np.array, window_size: int):
         xpad = input_signal
 
     return xpad
+
 
 def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
     t = np.linspace(0, np.pi, fade_length)
