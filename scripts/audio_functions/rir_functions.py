@@ -1,4 +1,6 @@
 import os
+from typing import Dict, Optional, Any
+
 from kneed import KneeLocator
 
 from scripts.utils.json_functions import *
@@ -58,7 +60,7 @@ def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500,
 		psd_dict[rir_file] = p_a
 		lsd_dict[rir_file] = l_a
 
-		if save_path != None:
+		if save_path is not None:
 			print('Hi')
 			#'audio/armodels/arm_dict_ms.npy'
 			np.save(save_path + '/arm_dict_ms.npy', arm_dict)
@@ -102,15 +104,51 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, img_path=None, cut_dict
 		ax.plot(x, y / np.max(y), 'o-', color='darkorange')
 		plt.axvline(kn, linestyle='--', color='red')
 
-		if img_path != None:
+		if img_path is not None:
 			# 'images/lsd/'
 			fig.savefig(img_path + rir_file.replace('.wav', '.pdf'))
 
-		if cut_dict_path != None:
+		if cut_dict_path is not None:
 			# 'audio/armodels/
 			model_store(cut_dict_path + 'cut_idx_kl.json', cut_dict)
 
 	return cut_dict
+
+
+def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
+
+	trimmed_rir_dict = {}
+
+	rir_files = os.listdir(rir_path)
+
+	for rir_file in rir_files:
+
+		rir, sr = sf.read(rir_path + rir_file)
+		rir = rir.T
+
+		cut_idx = int(cut_dict[rir_file])
+
+		if rir.ndim > 1:
+			trimmed_rir = rir[:, :cut_idx]
+
+		else:
+			trimmed_rir = rir[:cut_idx]
+
+		print(len(trimmed_rir.T))
+
+		trimmed_rir_faded = trimmed_rir * cosine_fade(len(trimmed_rir.T), fade_length)
+
+		trimmed_rir_dict[rir_file] = trimmed_rir_faded
+
+		# fig = plt.figure()
+		# ax = fig.add_subplot(1, 1, 1)
+		#
+		# ax.plot(trimmed_rir[0])
+
+		if save_path is not None:
+			sf.write(save_path + 'trimmed_' + rir_file, trimmed_rir_faded.T, sr)
+
+	return trimmed_rir_dict
 
 
 if __name__ == "__main__":
@@ -129,3 +167,6 @@ if __name__ == "__main__":
 	lsd_dict = np.load('audio/armodels/lsd_dict_ms.npy', allow_pickle=True)[()]
 
 	cut_dict = rir_er_detection(rir_path, lsd_dict)
+
+	trim_rir_save_path = 'audio/trimmed_rirs/'
+	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
