@@ -146,7 +146,7 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 		# ax.plot(trimmed_rir[0])
 
 		if save_path is not None:
-			sf.write(save_path + 'trimmed_' + rir_file, trimmed_rir_faded.T, sr)
+			sf.write(save_path + rir_file, trimmed_rir_faded.T, sr)
 
 	return trimmed_rir_dict
 

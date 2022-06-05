@@ -107,6 +107,14 @@ def batch_convolve(input_files, convolution_array, rir_folder, sr, scale_factor=
     return convolved
 
 
+def pad_signal(input_signal: np.ndarray, n_dim: int, pad_length: int):
+
+    padded_signal = np.concatenate([input_signal, np.zeros((n_dim, pad_length))], axis=1)
+
+    return padded_signal
+
+
+
 def pad_windowed_signal(input_signal: np.array, window_size: int):
 
     if len(input_signal) % window_size != 0:
