@@ -151,6 +151,22 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 	return trimmed_rir_dict
 
 
+def rir_maximum(rir_path):
+
+	rir_files = os.listdir(rir_path)
+
+	rir_max_dict = {}
+
+	for rir_file in rir_files:
+
+		rir, sr = sf.read(rir_path + rir_file)
+		rir = rir.T
+
+		rir_max_dict[rir_file] = np.max(rir)
+
+	return rir_max_dict
+
+
 if __name__ == "__main__":
 	frame_size = 512
 	sr = 44100
@@ -170,3 +186,5 @@ if __name__ == "__main__":
 
 	trim_rir_save_path = 'audio/trimmed_rirs/'
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
+
+	rir_max = rir_maximum(rir_path)
