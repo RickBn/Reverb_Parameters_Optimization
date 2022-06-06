@@ -26,6 +26,7 @@ def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_
 		model_path = current_param_path + effect_params + '/'
 
 		dp_scale_factor = max_dict[rir + '.wav']
+
 		#scaled_input = input_audio * dp_scale_factor
 
 		for model in os.listdir(model_path):
@@ -40,15 +41,13 @@ def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_
 
 			reverb_norm *= dp_scale_factor
 
+			# fig = plt.figure()
+			# ax = fig.add_subplot(1, 1, 1)
+			#
+			# ax.plot(reverb_norm[0])
+
 			if save_path is not None:
 				sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
-
-	# elif effect_params == 'fv':
-	#
-	# 	reverb_norm_native = process_native_reverb(params, sr, input_audio, hp_cutoff=20)
-	#
-	# 	if save_path is not None:
-	# 		sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm_native.T, sr)
 
 
 def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=None):
@@ -94,8 +93,6 @@ def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=
 
 			if save_path is not None:
 				sf.write(save_path + effect_rir, padded_er_rir.T, er_sr)
-
-	# print(padded_er_rir.shape)
 
 
 if __name__ == "__main__":

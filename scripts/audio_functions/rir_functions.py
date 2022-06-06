@@ -140,10 +140,10 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 
 		trimmed_rir_dict[rir_file] = trimmed_rir_faded
 
-		# fig = plt.figure()
-		# ax = fig.add_subplot(1, 1, 1)
-		#
-		# ax.plot(trimmed_rir[0])
+		fig = plt.figure()
+		ax = fig.add_subplot(1, 1, 1)
+
+		ax.plot(trimmed_rir[0])
 
 		if save_path is not None:
 			sf.write(save_path + rir_file, trimmed_rir_faded.T, sr)
