@@ -83,26 +83,27 @@ def prepare_batch_input_stereo(input_audio_path):
     return audio_file
 
 
-def batch_convolve(input_files, convolution_array, rir_folder, sr, scale_factor=1.0, save_file=False):
+def batch_convolve(input_files, convolution_array, input_files_path, rir_path, sr, scale_factor=1.0, save_path=None):
 
     convolved = []
 
-    for idx, wav in enumerate(input_files):
+    input_files_names = os.listdir(input_files_path)
+    rir_files_names = os.listdir(rir_path)
+
+    for idx, input_sound in enumerate(input_files):
         for dir, conv in enumerate(convolution_array):
-            convoluted_ref = conv(wav, sr)
 
-            convoluted_ref = pd_highpass_filter(convoluted_ref, 3, sr)
+            convolved_input = conv(input_sound, sr)
 
-            convoluted_ref = convoluted_ref / np.max(abs(convoluted_ref))
-            convoluted_ref = convoluted_ref * scale_factor
+            convolved_input = pd_highpass_filter(convolved_input, 3, sr)
 
-            convolved.append(convoluted_ref)
+            convolved_input = normalize_audio(convolved_input) * scale_factor
 
-            if save_file:
-                input_sounds = os.listdir('audio/results/' + rir_folder[dir])[:-1]
+            convolved.append(convolved_input)
 
-                sf.write('audio/results/' + rir_folder[dir] + '/' + input_sounds[idx] + '/' + input_sounds[
-                    idx] + '_ref.wav', convoluted_ref.T, sr)
+            if save_path is not None:
+                sf.write(save_path + input_files_names[idx].strip('.wav') + '_' + rir_files_names[dir],
+                         convolved_input.T, sr)
 
     return convolved
 

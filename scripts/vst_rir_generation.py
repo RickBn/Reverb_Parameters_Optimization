@@ -15,7 +15,6 @@ from scripts.audio_functions.rir_functions import *
 
 
 def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_external=None, save_path=None):
-
 	if rev_external is not None and rev_name == 'fv':
 		raise Exception("Attention! Reverb name is the default native reverb one but you loaded an external reverb!")
 
@@ -40,18 +39,17 @@ def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_
 				reverb_norm = process_native_reverb(params, sr, scaled_input, hp_cutoff=20, norm=False)
 
 			if save_path is not None:
-					sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
+				sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
 
-			# elif effect_params == 'fv':
-			#
-			# 	reverb_norm_native = process_native_reverb(params, sr, input_audio, hp_cutoff=20)
-			#
-			# 	if save_path is not None:
-			# 		sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm_native.T, sr)
+	# elif effect_params == 'fv':
+	#
+	# 	reverb_norm_native = process_native_reverb(params, sr, input_audio, hp_cutoff=20)
+	#
+	# 	if save_path is not None:
+	# 		sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm_native.T, sr)
 
 
 def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=None):
-
 	er_files = os.listdir(er_path)
 	tail_files = os.listdir(tail_path)
 
@@ -87,7 +85,6 @@ def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=
 				padded_er_rir = padded_er_rir[:, :(trim * er_sr)]
 				padded_er_rir *= cosine_fade(len(padded_er_rir.T), fade_length)
 
-
 			fig = plt.figure()
 			ax = fig.add_subplot(1, 1, 1)
 
@@ -96,7 +93,7 @@ def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=
 			if save_path is not None:
 				sf.write(save_path + effect_rir, padded_er_rir.T, er_sr)
 
-			#print(padded_er_rir.shape)
+	# print(padded_er_rir.shape)
 
 
 if __name__ == "__main__":
@@ -134,10 +131,10 @@ if __name__ == "__main__":
 
 	merge_er_tail_rir(er_path, tail_path, fade_length=fade_in, trim=3, save_path=merged_rirs_path)
 
-	convolution = prepare_batch_convolve(merged_rirs_path)
-
 	input_sound_path = 'audio/input/sounds/'
+	batch_input_sound = prepare_batch_input_stereo(input_sound_path)
+	batch_convolution = prepare_batch_convolve(merged_rirs_path)
 
-	input_sound = prepare_batch_input_stereo(input_sound_path)
-
-
+	merged_final_path = 'audio/merged_final/'
+	batch_convolve(batch_input_sound, batch_convolution, input_sound_path, merged_rirs_path, 44100, scale_factor=0.70,
+	               save_path=merged_final_path)
