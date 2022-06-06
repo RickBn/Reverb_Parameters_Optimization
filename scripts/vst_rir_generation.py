@@ -26,17 +26,19 @@ def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_
 		model_path = current_param_path + effect_params + '/'
 
 		dp_scale_factor = max_dict[rir + '.wav']
-		scaled_input = input_audio * dp_scale_factor
+		#scaled_input = input_audio * dp_scale_factor
 
 		for model in os.listdir(model_path):
 
 			params = model_load(model_path + model)
 
 			if rev_external is not None:
-				reverb_norm = process_external_reverb(params, rev_external, sr, scaled_input, hp_cutoff=20, norm=False)
+				reverb_norm = process_external_reverb(params, rev_external, sr, input_audio, hp_cutoff=20, norm=True)
 
 			else:
-				reverb_norm = process_native_reverb(params, sr, scaled_input, hp_cutoff=20, norm=False)
+				reverb_norm = process_native_reverb(params, sr, input_audio, hp_cutoff=20, norm=True)
+
+			reverb_norm *= dp_scale_factor
 
 			if save_path is not None:
 				sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
@@ -127,7 +129,7 @@ if __name__ == "__main__":
 	tail_path = 'audio/vst_rirs/'
 	merged_rirs_path = 'audio/merged_rirs/'
 
-	fade_in = int(5 * 44100 * 0.001)
+	fade_in = int(5 * sr * 0.001)
 
 	merge_er_tail_rir(er_path, tail_path, fade_length=fade_in, trim=3, save_path=merged_rirs_path)
 
