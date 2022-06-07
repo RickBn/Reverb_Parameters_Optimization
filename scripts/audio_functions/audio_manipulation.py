@@ -25,9 +25,12 @@ def pd_highpass_filter(audio: np.ndarray, order: int, sr: int, cutoff=20.0):
     return audio
 
 
-def normalize_audio(audio: np.ndarray, scale_factor=1.0) -> np.ndarray:
+def normalize_audio(audio: np.ndarray, scale_factor=1.0, nan_check=False) -> np.ndarray:
 
     norm_audio = np.divide(audio, np.max(abs(audio))) * scale_factor
+
+    if nan_check:
+        norm_audio[np.isnan(norm_audio)] = 0
 
     return norm_audio
 

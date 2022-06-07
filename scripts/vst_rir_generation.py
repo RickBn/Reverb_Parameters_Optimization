@@ -14,126 +14,146 @@ from scripts.audio_functions.pedalboard_process import *
 from scripts.audio_functions.rir_functions import *
 
 
-def generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv', rev_external=None, save_path=None):
-	if rev_external is not None and rev_name == 'fv':
-		raise Exception("Attention! Reverb name is the default native reverb one but you loaded an external reverb!")
+def generate_vst_rir(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
+        if rev_external is not None:
+            reverb_norm = process_external_reverb(params, rev_external, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
-	effect_params = rev_name
+        else:
+            reverb_norm = process_native_reverb(params, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
-	for rir_idx, rir in enumerate(os.listdir(params_path)):
+        reverb_norm *= scale_factor
 
-		current_param_path = params_path + rir + '/'
-		model_path = current_param_path + effect_params + '/'
-
-		dp_scale_factor = max_dict[rir + '.wav']
-
-		#scaled_input = input_audio * dp_scale_factor
-
-		for model in os.listdir(model_path):
-
-			params = model_load(model_path + model)
-
-			if rev_external is not None:
-				reverb_norm = process_external_reverb(params, rev_external, sr, input_audio, hp_cutoff=20, norm=True)
-
-			else:
-				reverb_norm = process_native_reverb(params, sr, input_audio, hp_cutoff=20, norm=True)
-
-			reverb_norm *= dp_scale_factor
-
-			# fig = plt.figure()
-			# ax = fig.add_subplot(1, 1, 1)
-			#
-			# ax.plot(reverb_norm[0])
-
-			if save_path is not None:
-				sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
+        return reverb_norm
 
 
-def merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=None):
-	er_files = os.listdir(er_path)
-	tail_files = os.listdir(tail_path)
+def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None):
+    padded_er_rir = pad_signal(er, len(er), len(tail.T) - 128)
 
-	for rir in tail_files:
+    fade_in_tail = tail * cosine_fade(len(tail.T), fade_length, False)
 
-		effect_path = tail_path + rir + '/'
+    start_point = len(er.T) - 128
+    padded_er_rir[:, start_point:] += fade_in_tail
 
-		for effect_rir in os.listdir(effect_path):
+    if trim is not None:
+        padded_er_rir = padded_er_rir[:, :(trim * sr)]
+        padded_er_rir *= cosine_fade(len(padded_er_rir.T), fade_length)
 
-			er_rir, er_sr = sf.read(er_path + rir + '.wav')
-			er_rir = er_rir.T
+    return padded_er_rir
 
-			tail_rir, tail_sr = sf.read(effect_path + effect_rir)
-			tail_rir = tail_rir.T
 
-			if er_sr != tail_sr:
-				raise Exception("Warning! ER and tail sampling rate doesn't match!")
+def batch_generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv',
+                           hp_cutoff=None, rev_external=None, save_path=None):
 
-			padded_er_rir = pad_signal(er_rir, len(er_rir), len(tail_rir.T) - 128)
+    if rev_external is not None and rev_name == 'fv':
+        raise Exception("Attention! Reverb name is the default native reverb one but you loaded an external reverb!")
 
-			fade_in_tail = tail_rir * cosine_fade(len(tail_rir.T), fade_length, False)
+    effect_params = rev_name
 
-			start_point = len(er_rir.T) - 128
+    for rir_idx, rir in enumerate(os.listdir(params_path)):
 
-			# print(start_point)
-			#
-			# print(len(padded_er_rir[:, start_point:].T))
-			# print(len(fade_in_tail.T))
+        current_param_path = params_path + rir + '/'
+        model_path = current_param_path + effect_params + '/'
 
-			padded_er_rir[:, start_point:] += fade_in_tail
+        dp_scale_factor = max_dict[rir + '.wav']
 
-			if trim is not None:
-				padded_er_rir = padded_er_rir[:, :(trim * er_sr)]
-				padded_er_rir *= cosine_fade(len(padded_er_rir.T), fade_length)
+        # scaled_input = input_audio * dp_scale_factor
 
-			fig = plt.figure()
-			ax = fig.add_subplot(1, 1, 1)
+        for model in os.listdir(model_path):
 
-			ax.plot(padded_er_rir[0])
+            params = model_load(model_path + model)
 
-			if save_path is not None:
-				sf.write(save_path + effect_rir, padded_er_rir.T, er_sr)
+            reverb_norm = generate_vst_rir(params, input_audio, sr, scale_factor=dp_scale_factor,
+                                          hp_cutoff=hp_cutoff, rev_external=rev_external)
+
+            # if rev_external is not None:
+            #     reverb_norm = process_external_reverb(params, rev_external, sr, input_audio, hp_cutoff=20, norm=True)
+            #
+            # else:
+            #     reverb_norm = process_native_reverb(params, sr, input_audio, hp_cutoff=20, norm=True)
+            #
+            # reverb_norm *= dp_scale_factor
+
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1)
+
+            ax.plot(reverb_norm[0])
+
+            if save_path is not None:
+                sf.write(save_path + rir + '/' + rir + '_' + effect_params + '.wav', reverb_norm.T, sr)
+
+
+def batch_merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save_path=None):
+    er_files = os.listdir(er_path)
+    tail_files = os.listdir(tail_path)
+
+    for rir in tail_files:
+
+        effect_path = tail_path + rir + '/'
+
+        for effect_rir in os.listdir(effect_path):
+
+            er_rir, er_sr = sf.read(er_path + rir + '.wav')
+            er_rir = er_rir.T
+
+            tail_rir, tail_sr = sf.read(effect_path + effect_rir)
+            tail_rir = tail_rir.T
+
+            if er_sr != tail_sr:
+                raise Exception("Warning! ER and tail sampling rate doesn't match!")
+
+            merged_rir = merge_er_tail_rir(er_rir, tail_rir, er_sr, fade_length, trim)
+
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1)
+
+            ax.plot(merged_rir[0])
+
+            if save_path is not None:
+                sf.write(save_path + effect_rir, merged_rir.T, er_sr)
 
 
 if __name__ == "__main__":
-	rir_path = 'audio/trimmed_rirs/'
-	rir_files = os.listdir(rir_path)
+    rir_path = 'audio/trimmed_rirs/'
+    rir_files = os.listdir(rir_path)
 
-	sr = 44100
+    sr = 44100
 
-	impulse = create_impulse(sr * 6)
-	impulse = np.stack([impulse, impulse])
+    impulse = create_impulse(sr * 6)
+    impulse = np.stack([impulse, impulse])
 
-	rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
-	rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
+    rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
+    rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
 
-	rev_external = pedalboard.load_plugin("vst3/FdnReverb.vst3")
-	rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
-	rev_param_names_ex.pop('fdn_size_internal')
-	rev_param_ranges = rev_param_ranges_ex[:-1]
+    rev_external = pedalboard.load_plugin("vst3/FdnReverb.vst3")
+    rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
+    rev_param_names_ex.pop('fdn_size_internal')
+    rev_param_ranges = rev_param_ranges_ex[:-1]
 
-	params_path = 'audio/params/'
-	params_folder = os.listdir(params_path)
+    params_path = 'audio/params/'
+    params_folder = os.listdir(params_path)
 
-	vst_rir_save_path = 'audio/vst_rirs/'
+    vst_rir_save_path = 'audio/vst_rirs/'
 
-	rir_max = rir_maximum(rir_path)
+    rir_max = rir_maximum(rir_path)
 
-	generate_vst_rir(params_path, impulse, sr, rir_max, 'fv', None, save_path=vst_rir_save_path)
-	generate_vst_rir(params_path, impulse, sr, rir_max, 'fdn', rev_external, save_path=vst_rir_save_path)
+    batch_generate_vst_rir(params_path, impulse, sr, rir_max, 'fv',
+                           hp_cutoff=20, rev_external=None, save_path=vst_rir_save_path)
 
-	er_path = 'audio/trimmed_rirs/'
-	tail_path = 'audio/vst_rirs/'
-	merged_rirs_path = 'audio/merged_rirs/'
+    batch_generate_vst_rir(params_path, impulse, sr, rir_max, 'fdn',
+                           hp_cutoff=20, rev_external=rev_external, save_path=vst_rir_save_path)
 
-	fade_in = int(5 * sr * 0.001)
+    er_path = 'audio/trimmed_rirs/'
+    tail_path = 'audio/vst_rirs/'
+    merged_rirs_path = 'audio/merged_rirs/'
 
-	merge_er_tail_rir(er_path, tail_path, fade_length=fade_in, trim=3, save_path=merged_rirs_path)
+    fade_in = int(5 * sr * 0.001)
 
-	input_sound_path = 'audio/input/sounds/'
-	batch_input_sound = prepare_batch_input_stereo(input_sound_path)
-	batch_convolution = prepare_batch_convolve(merged_rirs_path)
+    batch_merge_er_tail_rir(er_path, tail_path, fade_length=fade_in, trim=3, save_path=merged_rirs_path)
 
-	merged_final_path = 'audio/merged_final/'
-	batch_convolve(batch_input_sound, batch_convolution, input_sound_path, merged_rirs_path, 44100, scale_factor=0.70,
-	               save_path=merged_final_path)
+    input_sound_path = 'audio/input/sounds/'
+    batch_input_sound = prepare_batch_input_stereo(input_sound_path)
+    batch_convolution = prepare_batch_convolve(merged_rirs_path)
+
+    merged_final_path = 'audio/merged_final/'
+    batch_convolve(batch_input_sound, batch_convolution, input_sound_path, merged_rirs_path, 44100, scale_factor=0.70,
+                   save_path=merged_final_path)
