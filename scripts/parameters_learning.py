@@ -59,8 +59,7 @@ def merged_rir_distance_native(params, params_dict, input_audio, ref_audio, er_p
     for idx, par in enumerate(params_dict):
         params_dict[par] = params[idx]
 
-    impulse = create_impulse(sample_rate * 6)
-    impulse = np.stack([impulse, impulse])
+    impulse = create_impulse(sample_rate * 6, stereo=True)
 
     rir_tail = generate_vst_rir(params_dict, impulse, sr, scale_factor=1.0, hp_cutoff=20, rev_external=None)
 
@@ -92,8 +91,7 @@ def merged_rir_distance_external(params, vst3, params_dict, input_audio, ref_aud
     for idx, par in enumerate(params_dict):
         params_dict[par] = params[idx]
 
-    impulse = create_impulse(sample_rate * 6)
-    impulse = np.stack([impulse, impulse])
+    impulse = create_impulse(sample_rate * 6, stereo=True)
 
     rir_tail = generate_vst_rir(params_dict, impulse, sr, scale_factor=1.0, hp_cutoff=20, rev_external=vst3)
 

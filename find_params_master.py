@@ -23,8 +23,7 @@ def find_params():
     rir, sr = sf.read(rir_path + rir_file[0])
     rir = rir.T
 
-    impulse = create_log_sweep(3, 20, 20000, sr, 3)
-    impulse = np.stack([impulse, impulse])
+    impulse = create_log_sweep(3, 20, 20000, sr, 3, stereo=True)
 
     test_sound = impulse
     rir_eq_coeffs = np.load('audio/armodels/rir_eq_coeffs_ms.npy', allow_pickle=True)[()]

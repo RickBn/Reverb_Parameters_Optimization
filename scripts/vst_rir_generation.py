@@ -118,8 +118,7 @@ if __name__ == "__main__":
 
     sr = 44100
 
-    impulse = create_impulse(sr * 6)
-    impulse = np.stack([impulse, impulse])
+    impulse = create_impulse(sr * 6, stereo=True)
 
     rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
     rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
