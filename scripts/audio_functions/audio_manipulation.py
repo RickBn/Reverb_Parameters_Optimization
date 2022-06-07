@@ -8,6 +8,7 @@ import librosa
 import librosa.display
 from numpy import ndarray
 from scipy.signal import chirp
+import matplotlib.pyplot as plt
 
 from scripts.audio_functions.pedalboard_functions import *
 
@@ -105,8 +106,12 @@ def batch_convolve(input_files, convolution_array, input_files_path, rir_path, s
             convolved.append(convolved_input)
 
             if save_path is not None:
-                sf.write(save_path + input_files_names[idx].strip('.wav') + '_' + rir_files_names[dir],
-                         convolved_input.T, sr)
+                sp = save_path + '/' + rir_files_names[dir].replace('.wav', "") + '/'
+
+                if not os.path.exists(sp):
+                    os.makedirs(sp)
+
+                sf.write(sp + input_files_names[idx], convolved_input.T, sr)
 
     return convolved
 
