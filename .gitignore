@@ -1,4 +1,4 @@
 .idea
-scripts/__pycache__
+__pycache__
 scripts/old
 venv
