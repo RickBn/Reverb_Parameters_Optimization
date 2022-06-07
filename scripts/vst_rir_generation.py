@@ -14,7 +14,7 @@ from scripts.audio_functions.pedalboard_process import *
 from scripts.audio_functions.rir_functions import *
 
 
-def generate_vst_rir(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
+def vst_reverb_process(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
         if rev_external is not None:
             reverb_norm = process_external_reverb(params, rev_external, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
@@ -62,8 +62,8 @@ def batch_generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv'
 
             params = model_load(model_path + model)
 
-            reverb_norm = generate_vst_rir(params, input_audio, sr, scale_factor=dp_scale_factor,
-                                          hp_cutoff=hp_cutoff, rev_external=rev_external)
+            reverb_norm = vst_reverb_process(params, input_audio, sr, scale_factor=dp_scale_factor,
+                                             hp_cutoff=hp_cutoff, rev_external=rev_external)
 
             # if rev_external is not None:
             #     reverb_norm = process_external_reverb(params, rev_external, sr, input_audio, hp_cutoff=20, norm=True)
