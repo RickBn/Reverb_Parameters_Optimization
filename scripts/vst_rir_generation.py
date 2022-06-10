@@ -15,23 +15,28 @@ from scripts.audio_functions.rir_functions import *
 
 
 def vst_reverb_process(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
-        if rev_external is not None:
-            reverb_norm = process_external_reverb(params, rev_external, sr, input, hp_cutoff=hp_cutoff, norm=True)
+    if rev_external is not None:
+        rev_ex = external_vst3_set_params(params, rev_external)
+        reverb_norm = process_external_reverb(rev_ex, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
-        else:
-            reverb_norm = process_native_reverb(params, sr, input, hp_cutoff=hp_cutoff, norm=True)
+    else:
+        rev_native = native_reverb_set_params(params)
+        reverb_norm = process_native_reverb(rev_native, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
-        reverb_norm *= scale_factor
+    reverb_norm *= scale_factor
 
-        return reverb_norm
+    return reverb_norm
 
 
 def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None):
-    padded_er_rir = pad_signal(er, len(er), len(tail.T) - 128)
+
+    fade_length = len(er.T)
+
+    padded_er_rir = pad_signal(er, len(er), len(tail.T) - fade_length)
 
     fade_in_tail = tail * cosine_fade(len(tail.T), fade_length, False)
 
-    start_point = len(er.T) - 128
+    start_point = len(er.T) - fade_length
     padded_er_rir[:, start_point:] += fade_in_tail
 
     if trim is not None:
@@ -43,7 +48,6 @@ def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None):
 
 def batch_generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv',
                            hp_cutoff=None, rev_external=None, save_path=None):
-
     if rev_external is not None and rev_name == 'fv':
         raise Exception("Attention! Reverb name is the default native reverb one but you loaded an external reverb!")
 
@@ -54,7 +58,7 @@ def batch_generate_vst_rir(params_path, input_audio, sr, max_dict, rev_name='fv'
         current_param_path = params_path + rir + '/'
         model_path = current_param_path + effect_params + '/'
 
-        dp_scale_factor = max_dict[rir + '.wav']
+        dp_scale_factor = 1.0 #max_dict[rir + '.wav']
 
         # scaled_input = input_audio * dp_scale_factor
 
@@ -86,7 +90,7 @@ def batch_merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save
     er_files = os.listdir(er_path)
     tail_files = os.listdir(tail_path)
 
-    for rir in tail_files:
+    for idx, rir in enumerate(tail_files):
 
         effect_path = tail_path + rir + '/'
 
@@ -109,6 +113,7 @@ def batch_merge_er_tail_rir(er_path, tail_path, fade_length=128, trim=None, save
             ax.plot(merged_rir[0])
 
             if save_path is not None:
+                #+ er_files[idx].replace(".wav", "/")
                 sf.write(save_path + effect_rir, merged_rir.T, er_sr)
 
 
@@ -154,5 +159,16 @@ if __name__ == "__main__":
     batch_convolution = prepare_batch_convolve(merged_rirs_path)
 
     merged_final_path = 'audio/merged_final/'
-    batch_convolve(batch_input_sound, batch_convolution, input_sound_path, merged_rirs_path, 44100, scale_factor=0.70,
+    input_file_names = os.listdir(input_sound_path)
+
+    batch_convolve(batch_input_sound, batch_convolution, input_file_names, merged_rirs_path, 44100, scale_factor=0.70,
                    save_path=merged_final_path)
+
+    path1 = 'audio/input/chosen_rirs/'
+    path2 = 'audio/merged_rirs/'
+
+    for rir in os.listdir(path1):
+        merged_path = path2 + rir.replace('.wav', "") + '/'
+        for merged in os.listdir(merged_path):
+            plot_rir_pair(path1 + rir, merged_path + merged, 'images/rirs/generated/' + merged.replace('.wav', '.pdf'))
+

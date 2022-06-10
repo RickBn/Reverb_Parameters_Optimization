@@ -1,3 +1,5 @@
+import os
+import soundfile as sf
 import numpy as np
 import librosa
 import librosa.display
@@ -5,7 +7,28 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-def plot_melspec_pair(audio1, audio2, n_fft, hop_length, sample_rate: 44100, save_path: None):
+def plot_rir_pair(path1, path2, save_path=None, ch=0):
+
+    r1, sr = sf.read(path1)
+    r1 = r1.T
+
+    r2, sr = sf.read(path2)
+    r2 = r2.T
+
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(1, 2, 1)
+
+    plt.plot(r1[0])
+
+    ax2 = fig.add_subplot(1, 2, 2)
+
+    plt.plot(r2[0])
+
+    if save_path is not None:
+        plt.savefig(save_path, format='pdf')
+
+def plot_melspec_pair(audio1, audio2, n_fft, hop_length, sample_rate=44100, save_path=None):
     fig = plt.figure()
 
     ax = fig.add_subplot(1, 2, 1)

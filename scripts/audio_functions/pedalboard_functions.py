@@ -31,7 +31,7 @@ def external_vst3_set_params(params: dict, vst3: pedalboard.pedalboard.VST3Plugi
 
 	print(params)
 
-	return
+	return vst3
 
 
 def external_vst3_fix_param_ranges(params: dict, vst3: pedalboard.pedalboard.VST3Plugin):

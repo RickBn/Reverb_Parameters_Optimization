@@ -61,7 +61,7 @@ def merged_rir_distance_native(params, params_dict, input_audio, ref_audio, er_p
 
     impulse = create_impulse(sample_rate * 6, stereo=True)
 
-    rir_tail = vst_reverb_process(params_dict, impulse, sr, scale_factor=1.0, hp_cutoff=20, rev_external=None)
+    rir_tail = vst_reverb_process(params_dict, impulse, sample_rate, scale_factor=1.0, hp_cutoff=20, rev_external=None)
 
     rir_er, sr_er = sf.read(er_path)
     rir_er = rir_er.T
@@ -93,7 +93,7 @@ def merged_rir_distance_external(params, vst3, params_dict, input_audio, ref_aud
 
     impulse = create_impulse(sample_rate * 6, stereo=True)
 
-    rir_tail = vst_reverb_process(params_dict, impulse, sr, scale_factor=1.0, hp_cutoff=20, rev_external=vst3)
+    rir_tail = vst_reverb_process(params_dict, impulse, sample_rate, scale_factor=1.0, hp_cutoff=20, rev_external=vst3)
 
     rir_er, sr_er = sf.read(er_path)
     rir_er = rir_er.T

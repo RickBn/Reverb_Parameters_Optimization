@@ -87,11 +87,11 @@ def prepare_batch_input_stereo(input_audio_path):
     return audio_file
 
 
-def batch_convolve(input_files, convolution_array, input_files_path, rir_path, sr, scale_factor=1.0, save_path=None):
+def batch_convolve(input_files, convolution_array, input_files_names, rir_path, sr, scale_factor=1.0,
+                   norm=True, save_path=None):
 
     convolved = []
 
-    input_files_names = os.listdir(input_files_path)
     rir_files_names = os.listdir(rir_path)
 
     for idx, input_sound in enumerate(input_files):
@@ -101,7 +101,8 @@ def batch_convolve(input_files, convolution_array, input_files_path, rir_path, s
 
             convolved_input = pd_highpass_filter(convolved_input, 3, sr)
 
-            convolved_input = normalize_audio(convolved_input) * scale_factor
+            if norm:
+                convolved_input = normalize_audio(convolved_input) * scale_factor
 
             convolved.append(convolved_input)
 
