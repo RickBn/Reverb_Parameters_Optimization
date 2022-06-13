@@ -16,9 +16,10 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
     rir, sr = sf.read(rir_path + rir_file[0])
     rir = rir.T
 
-    impulse = create_log_sweep(3, 20, 20000, sr, 3, stereo=True)
+    impulse = create_impulse(sr * 6, stereo=True)
+    sweep = create_log_sweep(3, 20, 20000, sr, 3, stereo=True)
 
-    test_sound = impulse
+    test_sound = sweep
 
     input_audio_file = os.listdir(input_path)
 
@@ -37,7 +38,7 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
     if generate_references:
-        reference_norm = batch_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.7,
+        reference_norm = batch_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.70,
                                     norm=True, save_path=result_path)
 
     reference_audio = batch_convolve([test_sound], convolution, result_file_names, rir_path, sr, 1.0, norm=False)
@@ -47,6 +48,9 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
     for ref_idx, ref in enumerate(reference_audio):
 
         rir_er_path = er_path + os.listdir(er_path)[ref_idx]
+
+        rir_er, sr_er = sf.read(rir_er_path)
+        rir_er = rir_er.T
 
         distance_func_native = functools.partial(merged_rir_distance_native, params_dict=rev_param_names_nat,
                                                  input_audio=test_sound, ref_audio=ref, er_path=rir_er_path,
@@ -58,6 +62,7 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
                                                    sample_rate=sr, pre_norm=pre_norm)
 
         current_rir_path = result_path + rir_folder[ref_idx] + '/'
+        fade_in = int(5 * sr * 0.001)
 
         # Freeverb
 
@@ -72,28 +77,37 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
         for i, p in enumerate(optimal_params_nat):
             optimal_params_nat[p] = res_rev_native.x[i]
 
+        # Save params
         current_params_path = 'audio/params/' + rir_folder[ref_idx] + '/' + effect_folder + '/'
         model_store(current_params_path + current_effect + '.json', optimal_params_nat)
 
-        opt_rev_native = native_reverb_set_params(optimal_params_nat)
+        #opt_rev_native = native_reverb_set_params(optimal_params_nat)
 
-        # print(res_rev_native.x)
-        # func_val = [round(v) for v in sorted(res_rev_native.func_vals, reverse=True)]
-        # min_f = round(res_rev_native.fun)
-        # np.savetxt('images/convergence/' + rir_folder[ref_idx] + '_fv.txt',
-        #            [func_val.index(min_f), res_rev_native.fun, min_f], fmt='%1.2f')
+        # Process tail with optimized params
+        rir_tail = vst_reverb_process(optimal_params_nat, impulse, sr, scale_factor=1.0, hp_cutoff=20)
+
+        # Merge tail with ER
+        merged_rir = merge_er_tail_rir(rir_er, rir_tail, sr, fade_length=fade_in, trim=3)
+
+        current_merged_rir = 'audio/merged_rirs/' + rir_folder[ref_idx] + '_fv.wav'
+        sf.write(current_merged_rir, merged_rir.T, sr)
+
+        # Prepare convolution and generate/save reverberated sweep
+        conv = pedalboard.Convolution(current_merged_rir, mix=1.0)
+        reverberated_sweep = conv(test_sound, sr)
 
         fig = plt.figure()
         plot_convergence(res_rev_native)
         plt.savefig('images/convergence/' + rir_folder[ref_idx] + '_fv.pdf')
 
-        plot_melspec_pair(ref[0], plugin_process(opt_rev_native, test_sound, sr)[0], 2048, 0.25, 44100,
+        plot_melspec_pair(ref[0], reverberated_sweep[0], 2048, 0.25, 44100,
                           'images/melspec/' + rir_folder[ref_idx] + '_fv.pdf')
 
+        # Convolve with all input files
         for audio_idx, input_audio in enumerate(audio_file):
 
-            reverb_norm_native = process_native_reverb(opt_rev_native, sr, input_audio,
-                                                       scale_factor=0.70, hp_cutoff=20, norm=True)
+            reverb_native = conv(input_audio, sr)
+            reverb_norm_native = normalize_audio(reverb_native, 0.70)
 
             current_sound = os.listdir('audio/input/sounds/')[audio_idx]
 
@@ -113,28 +127,37 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
         for i, p in enumerate(optimal_params_ex):
             optimal_params_ex[p] = res_rev_external.x[i]
 
+        # Save params
         current_params_path = 'audio/params/' + rir_folder[ref_idx] + '/' + effect_folder + '/'
         model_store(current_params_path + current_effect + '.json', optimal_params_ex)
 
-        external_vst3_set_params(optimal_params_ex, rev_external)
+        #external_vst3_set_params(optimal_params_ex, rev_external)
 
-        # print(res_rev_external.x)
-        # func_val = [round(v) for v in sorted(res_rev_external.func_vals, reverse=True)]
-        # min_f = round(res_rev_external.fun)
-        # np.savetxt('images/convergence/' + rir_folder[ref_idx] + '_fdn.txt',
-        #            [func_val.index(min_f), res_rev_external.fun, min_f], fmt='%1.2f')
+        # Process tail with optimized params
+        rir_tail = vst_reverb_process(optimal_params_ex, impulse, sr, scale_factor=1.0, hp_cutoff=20,
+                                      rev_external=rev_external)
+
+        # Merge tail with ER
+        merged_rir = merge_er_tail_rir(rir_er, rir_tail, sr, fade_length=fade_in, trim=3)
+
+        current_merged_rir = 'audio/merged_rirs/' + rir_folder[ref_idx] + '_fdn.wav'
+        sf.write(current_merged_rir, merged_rir.T, sr)
+
+        # Prepare convolution and generate/save reverberated sweep
+        conv = pedalboard.Convolution(current_merged_rir, mix=1.0)
+        reverberated_sweep = conv(test_sound, sr)
 
         fig = plt.figure()
-        plot_convergence(res_rev_external)
+        plot_convergence(res_rev_native)
         plt.savefig('images/convergence/' + rir_folder[ref_idx] + '_fdn.pdf')
 
-        plot_melspec_pair(ref[0], plugin_process(rev_external, test_sound, sr)[0], 2048, 0.25, 44100,
+        plot_melspec_pair(ref[0], reverberated_sweep[0], 2048, 0.25, 44100,
                           'images/melspec/' + rir_folder[ref_idx] + '_fdn.pdf')
 
+        # Convolve with all input files
         for audio_idx, input_audio in enumerate(audio_file):
-
-            reverb_norm_external = process_external_reverb(rev_external, sr, input_audio,
-                                    scale_factor=0.70, hp_cutoff=20, norm=True)
+            reverb_external = conv(input_audio, sr)
+            reverb_norm_external = normalize_audio(reverb_external, 0.70)
 
             current_sound = os.listdir('audio/input/sounds/')[audio_idx]
 
