@@ -13,19 +13,6 @@ import matplotlib.pyplot as plt
 from scripts.audio_functions.pedalboard_functions import *
 
 
-def pd_highpass_filter(audio: np.ndarray, order: int, sr: int, cutoff=20.0):
-
-    filter = np.array([pedalboard.HighpassFilter(cutoff_frequency_hz=cutoff),
-                       pedalboard.HighpassFilter(cutoff_frequency_hz=cutoff)])
-
-    if audio.ndim == len(filter):
-        for ch, fil in enumerate(filter):
-            for i in range(0, order):
-                audio[ch] = fil(audio[ch], sr)
-
-    return audio
-
-
 def normalize_audio(audio: np.ndarray, scale_factor=1.0, nan_check=False) -> np.ndarray:
 
     norm_audio = np.divide(audio, np.max(abs(audio))) * scale_factor
