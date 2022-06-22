@@ -2,18 +2,30 @@ from scripts.parameters_learning import *
 from scripts.utils.plot_functions import *
 
 from scripts.audio_functions.signal_generation import *
-from scripts.audio_functions.pedalboard_process import *
+from scripts.audio_functions.pedalboard_functions import *
 from scripts.audio_functions.rir_functions import *
 
+
+def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,
+                   hp_cutoff: float = None, norm: bool = True):
+    reverb = plugin_process(rev, input_audio, sr)
+
+    if hp_cutoff is not None:
+        reverb = pd_highpass_filter(reverb, 3, sr, hp_cutoff)
+
+    if norm:
+        reverb = normalize_audio(reverb)
+
+    return reverb * scale_factor
 
 def vst_reverb_process(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
     if rev_external is not None:
         rev_ex = external_vst3_set_params(params, rev_external)
-        reverb_norm = process_external_reverb(rev_ex, sr, input, hp_cutoff=hp_cutoff, norm=True)
+        reverb_norm = process_reverb(rev_ex, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
     else:
         rev_native = native_reverb_set_params(params)
-        reverb_norm = process_native_reverb(rev_native, sr, input, hp_cutoff=hp_cutoff, norm=True)
+        reverb_norm = process_reverb(rev_native, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
     reverb_norm *= scale_factor
 
@@ -160,7 +172,7 @@ if __name__ == "__main__":
     path2 = 'audio/merged_rirs/'
 
     for rir in os.listdir(path1):
-        merged_path = path2 + rir.replace('.wav', "") + '/'
-        for merged in os.listdir(merged_path):
-            plot_rir_pair(path1 + rir, merged_path + merged, 'images/rirs/generated/' + merged.replace('.wav', '.pdf'))
+        matching_merged = [s for s in os.listdir(path2) if rir.replace('.wav', "") in s]
+        for merged in matching_merged:
+            plot_rir_pair(path1 + rir, path2 + merged, 'images/rirs/generated/' + merged.replace('.wav', '.pdf'))
 

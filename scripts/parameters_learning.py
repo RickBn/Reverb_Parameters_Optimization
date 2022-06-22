@@ -115,3 +115,4 @@ def merged_rir_distance_external(params, vst3, params_dict, input_audio, ref_aud
                     mel_spectrogram_l1_distance(ref_audio[1], audio_to_match[1], sample_rate)])
 
     return loss
+
