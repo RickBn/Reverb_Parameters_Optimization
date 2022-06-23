@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
-# Implement the default Matplotlib key bindings.
+
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
@@ -14,7 +14,7 @@ import soundfile as sf
 from typing import List
 
 root = tk.Tk()
-root.wm_title("Embedding in Tk")
+root.wm_title("Reverb Parameters Optimizer")
 
 class TkPyplot(tk.Tk):
 
@@ -22,19 +22,19 @@ class TkPyplot(tk.Tk):
         #super().__init__()
         self.fig = Figure(figsize=(fig_w, fig_h), dpi=fig_dpi)
 
-        self.ax1 = self.fig.add_subplot(1, 2, 1)
-        self.line1, = self.ax1.plot(np.arange(0, 44100, 1), np.arange(0, 44100, 1))#t, 2 * np.sin(2 * np.pi * t))
-        self.ax1.set_xlabel("time [s]")
-        self.ax1.set_ylabel("f(t)")
-        #self.ax1.set_ylim(-1, 1)
-        self.ax1.autoscale()
+        self.ax = self.fig.subplots(1, 2, sharex='all', sharey='all')
 
-        self.ax2 = self.fig.add_subplot(1, 2, 2)
-        self.line2, = self.ax2.plot(np.arange(0, 44100, 1), np.arange(0, 44100, 1))
-        self.ax2.set_xlabel("time [s]")
-        self.ax2.set_ylabel("f(t)")
-        #self.ax2.set_ylim(-1, 1)
-        self.ax2.autoscale()
+        #self.ax[0] = self.fig.add_subplot(1, 2, 1)
+        self.line1, = self.ax[0].plot(0)
+        self.ax[0].set_xlabel("t")
+        self.ax[0].set_ylabel("A")
+        self.ax[0].autoscale()
+
+        #self.ax[1] = self.fig.add_subplot(1, 2, 2)
+        self.line2, = self.ax[1].plot(0)
+        self.ax[1].set_xlabel("t")
+        self.ax[1].set_ylabel("A")
+        self.ax[1].autoscale()
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)  # A tk.DrawingArea.
         self.canvas.draw()
@@ -48,24 +48,42 @@ class TkPyplot(tk.Tk):
         self.line1.set_data(x, audio)
         self.line2.set_data(x, audio)
 
-        self.ax1.relim()
-        self.ax1.autoscale_view()
+        self.ax[0].relim()
+        self.ax[0].autoscale_view()
 
-        self.ax2.relim()
-        self.ax2.autoscale_view()
+        self.ax[1].relim()
+        self.ax[1].autoscale_view()
 
         self.canvas.draw()
 
 
-def open_file(initdir: str, filetype: List[tuple], tk_plot: TkPyplot):
-    file = filedialog.askopenfilenames(initialdir=initdir, filetypes=filetype)
+def load_audio_files(initdir: str, filetype: List[tuple], tk_plot: TkPyplot):
+    audio_files = []
 
-    rir, sr = sf.read(file[0])
-    rir = rir.T
+    file_paths = filedialog.askopenfilenames(initialdir=initdir, filetypes=filetype)
 
-    tkplot.update_plot(rir[0])
+    for fp in file_paths:
+        af = sf.read(fp)[0].T
+        audio_files.append(af)
 
-    return rir
+    # Plotting the first audio file of the list
+    tk_plot.update_plot(audio_files[0][0])
+
+    return audio_files
+
+
+def show_next_audio_plot(audio_files: List[np.ndarray], tk_plot: TkPyplot, index: tk.IntVar):
+
+    i = (index.get() + 1) % len(audio_files)
+    tk_plot.update_plot(audio_files[i][0])
+
+    counter.set(i)
+
+
+
+def on_closing():
+    messagebox.askokcancel("Quit", "Do you want to quit?")
+    root.destroy()
 
 
 tkplot = TkPyplot(root)
@@ -77,28 +95,31 @@ canvas.mpl_connect(
     "key_press_event", lambda event: print(f"you pressed {event.key}"))
 canvas.mpl_connect("key_press_event", key_press_handler)
 
-button_quit = tk.Button(master=root, text="Quit", command=root.quit)
-
 rir_list = []
 plugin_list = []
 
 assign_rirs = lambda x=root: [rir_list.append(f) for f in
-                              open_file('audio/input/chosen_rirs/', [('Wav Files', '.wav')], tkplot)]
+                              load_audio_files('audio/input/chosen_rirs/', [('Wav Files', '.wav')], tkplot)]
 
 
-tk.Button(root, text="RIRs", command=assign_rirs).pack(side=tk.BOTTOM)
+tk.Button(root, text="Load reference RIRs", command=assign_rirs).pack(side=tk.BOTTOM)
+
+
+counter = tk.IntVar()
+
+next_audio_plot = lambda x= root: [show_next_audio_plot(rir_list, tkplot, counter)]
+tk.Button(root, text="Show next plot", command=next_audio_plot).pack(side=tk.BOTTOM)
 
 
 
-#tkplot.update_plot(rir_list[0][0])
+button_quit = tk.Button(master=root, text="Quit", command=on_closing)
+
+
 
 # slider_update = tk.Scale(root, from_=1, to=5, orient=tk.HORIZONTAL,
 #                               command=update_frequency, label="Frequency [Hz]")
 
-# Packing order is important. Widgets are processed sequentially and if there
-# is no space left, because the window is too small, they are not displayed.
-# The canvas is rather flexible in its size, so we pack it last which makes
-# sure the UI controls are displayed as long as possible.
+
 button_quit.pack(side=tk.BOTTOM)
 #slider_update.pack(side=tk.BOTTOM)
 toolbar.pack(side=tk.TOP, fill=tk.X)
