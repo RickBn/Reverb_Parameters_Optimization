@@ -1,58 +1,53 @@
-import numpy as np
-
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from scripts.gui.plots import TkPyplot
+from tkinter import filedialog, messagebox, ttk
+from scripts.gui.plot_handler import TkPyplot
 from scripts.gui.audio_handler import TkAudioHandler
-
 from functools import partial
 
-from matplotlib.backend_bases import key_press_handler
+class TkGuiHandler:
 
-import soundfile as sf
+    def __init__(self,
+                 root,
+                 title: str = "Reverb Parameters Optimizer",
+                 sw_ratio: float = 0.75,
+                 sh_ratio: float = 0.75):
 
-from typing import List
+        #super().__init__()
 
-root = tk.Tk()
-root.wm_title("Reverb Parameters Optimizer")
+        root.wm_title(title)
+
+        screen_width = int(root.winfo_screenwidth() * sw_ratio)
+        screen_height = int(root.winfo_screenheight() * sh_ratio)
+        root.geometry(f'{screen_width}x{screen_height}')
+
+        self.tabControl = ttk.Notebook(root)
+
+        tab1 = tk.Frame(self.tabControl)
+        tab2 = tk.Frame(self.tabControl)
+
+        self.tabControl.add(tab1, text="Load Audio")
+        self.tabControl.add(tab2, text="Parameters Optimizer")
+        self.tabControl.pack(expand=1, fill="both")
+
+        quit_button = tk.Button(tab1, text="Quit", command=partial(self.on_closing, root))
+        quit_button.pack(side=tk.BOTTOM)
+
+        init_rir_path = 'audio/input/chosen_rirs/'
+
+        tk_plot = TkPyplot(tab1)
+        canvas = tk_plot.canvas
+        toolbar = tk_plot.toolbar
+
+        audio_handler = TkAudioHandler(tab1, init_rir_path, tk_plot)
+
+        toolbar.pack(side=tk.TOP, fill=tk.X)
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+    def on_closing(self, root):
+        messagebox.askokcancel("Quit", "Do you want to quit?")
+        root.destroy()
 
 
-def on_closing():
-    messagebox.askokcancel("Quit", "Do you want to quit?")
-    root.destroy()
-
-
-tk_plot = TkPyplot(root)
-canvas = tk_plot.canvas
-toolbar = tk_plot.toolbar
-
-audio_handler = TkAudioHandler()
-
-canvas.mpl_connect(
-    "key_press_event", lambda event: print(f"you pressed {event.key}"))
-canvas.mpl_connect("key_press_event", key_press_handler)
-
-plugin_list = []
-
-init_rir_path = 'audio/input/chosen_rirs/'
-
-load_rir_files = partial(audio_handler.load_audio_files,
-                           initdir=init_rir_path,
-                           filetype=[('Wav Files', '.wav')],
-                           tk_plot=tk_plot)
-
-next_audio_plot = partial(audio_handler.show_next_audio_plot, tk_plot=tk_plot)
-
-tk.Button(root, text="Quit", command=on_closing).pack(side=tk.BOTTOM)
-tk.Button(root, text="Show next plot", command=next_audio_plot).pack(side=tk.BOTTOM)
-tk.Button(root, text="Load reference RIRs", command=load_rir_files).pack(side=tk.BOTTOM)
-
-toolbar.pack(side=tk.TOP, fill=tk.X)
-canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-tk.mainloop()
-
-rir_files = audio_handler.get_audio_files()
-
-print(rir_files)
-print(plugin_list)
+tk_main = tk.Tk()
+TkGuiHandler(tk_main)
+tk_main.mainloop()
