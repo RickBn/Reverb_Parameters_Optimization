@@ -26,16 +26,16 @@ class TkGuiHandler:
         root.geometry(f'{screen_width}x{screen_height}')
 
         self.tabControl = ttk.Notebook(root, width=screen_width, height=screen_height)
-        self.tabControl.grid(sticky="nsew")
 
         self.tab = list()
         for i, tab_name in enumerate(tab_labels):
             self.tab.append(tk.Frame(self.tabControl))
             self.tabControl.add(self.tab[i], text=tab_name)
-            self.tab[i].grid(row=0, column=0, sticky="nsew")
 
-            quit_btn = tk.Button(self.tab[i], text="Quit", command=partial(self.on_closing, root))
-            quit_btn.grid(row=0, column=1, sticky="ne")
+        self.tabControl.grid(sticky="nsew")
+
+        quit_btn = tk.Button(self.tabControl, text="Quit", command=partial(self.on_closing, root))
+        quit_btn.grid(row=0, column=1, sticky="ne")
 
         TkGuiPlotComparison(self.tab[1], screen_width, screen_height)
 
