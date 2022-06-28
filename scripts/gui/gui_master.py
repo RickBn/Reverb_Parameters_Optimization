@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+from typing import Iterable, Tuple
+
 from scripts.gui.plot_handler import TkPyplot
 from scripts.gui.audio_handler import TkAudioHandler
+from scripts.gui.gui_plot_comparison import TkGuiPlotComparison
 from scripts.gui.gui_utils import *
 from functools import partial
 from matplotlib import figure
@@ -11,7 +14,8 @@ class TkGuiHandler:
 
     def __init__(self,
                  root,
-                 title: str = "Reverb Parameters Optimizer",
+                 title: str,
+                 tab_labels: Iterable[str],
                  sw_ratio: float = 0.85,
                  sh_ratio: float = 0.85):
 
@@ -22,46 +26,24 @@ class TkGuiHandler:
         root.geometry(f'{screen_width}x{screen_height}')
 
         self.tabControl = ttk.Notebook(root, width=screen_width, height=screen_height)
-
-        tab1 = tk.Frame(self.tabControl)
-
-        tab2 = tk.Frame(self.tabControl)
-
-        self.tabControl.add(tab1, text="Parameters Optimizer")
-        self.tabControl.add(tab2, text="Plots")
         self.tabControl.grid(sticky="nsew")
-        tab2.grid(row=0, column=0, sticky="nsew")
 
-        quit_button = tk.Button(tab1, text="Quit", command=partial(self.on_closing, root))
-        quit_button.grid(row=0, column=1, sticky="ne") #.pack(side=tk.BOTTOM)
+        self.tab = list()
+        for i, tab_name in enumerate(tab_labels):
+            self.tab.append(tk.Frame(self.tabControl))
+            self.tabControl.add(self.tab[i], text=tab_name)
+            self.tab[i].grid(row=0, column=0, sticky="nsew")
 
-        init_rir_path = 'audio/input/chosen_rirs/'
+            quit_btn = tk.Button(self.tab[i], text="Quit", command=partial(self.on_closing, root))
+            quit_btn.grid(row=0, column=1, sticky="ne")
 
-        tk_plot1 = TkPyplot(tab2,
-                            fig_w=int(screen_width*0.5),
-                            fig_h=int(screen_height*0.75))
-
-        canvas1 = tk_plot1.canvas
-        toolbar1 = tk_plot1.toolbar
-
-        tk_plot2 = TkPyplot(tab2,
-                            fig_w=int(screen_width*0.5),
-                            fig_h=int(screen_height*0.75)) #, shared_ax=tk_plot1.get_ax())
-
-        canvas2 = tk_plot2.canvas
-        toolbar2 = tk_plot2.toolbar
-
-        TkAudioHandler(tab2, init_rir_path, tk_plot1, 0)
-        TkAudioHandler(tab2, init_rir_path, tk_plot2, 1)
-
-        toolbar1.grid(row=0, column=0, sticky='nsew')
-        toolbar2.grid(row=0, column=1, sticky='nsew')
-        canvas1.get_tk_widget().grid(row=1, column=0, sticky="nsew")
-        canvas2.get_tk_widget().grid(row=1, column=1, sticky="nsew")
+        TkGuiPlotComparison(self.tab[1], screen_width, screen_height)
 
         configure_grid_all(root)
         configure_grid_all(self.tabControl)
-        configure_grid_all(tab2)
+
+        for t in self.tab:
+            configure_grid_all(t)
 
         self.window_raise(root)
 
@@ -78,6 +60,10 @@ class TkGuiHandler:
 
 if __name__ == "__main__":
     tk_main = tk.Tk()
-    TkGuiHandler(tk_main)
+
+    window_title = "Reverb Parameters Optimizer"
+    default_tabs = ("Parameters Optimizer", "Plots comparison")
+    TkGuiHandler(root=tk_main, title=window_title, tab_labels=default_tabs)
+
     tk_main.mainloop()
 

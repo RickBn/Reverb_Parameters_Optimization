@@ -17,7 +17,7 @@ class TkAudioHandler(tk.Frame):
         self.audio_files = dict()
 
         load_rir_files = partial(self.load_audio_files,
-                                 initdir=default_audio_path,
+                                 init_dir=default_audio_path,
                                  filetype=[('Wav Files', '.wav')],
                                  tk_plot=tk_plot)
 
