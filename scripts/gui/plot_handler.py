@@ -8,7 +8,7 @@ import numpy as np
 class TkPyplot(tk.Frame):
 
     def __init__(self, master, fig_w: int = 100, fig_h: int = 100, fig_dpi: int = 72, shared_ax=None):
-        super().__init__(master)
+        super().__init__()
 
         self.fig = figure.Figure(figsize=(fig_w/fig_dpi, fig_h/fig_dpi), dpi=fig_dpi)
 

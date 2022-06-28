@@ -10,7 +10,7 @@ from typing import List
 class TkAudioHandler(tk.Frame):
 
     def __init__(self, master, default_audio_path: str, tk_plot: TkPyplot, col: int):
-        super().__init__(master)
+        super().__init__()
 
         self.index = tk.IntVar()
         self.channel = tk.IntVar()
@@ -28,11 +28,9 @@ class TkAudioHandler(tk.Frame):
         self.next_plot_button = tk.Button(master, text="Show next plot", command=next_audio_plot, state="disabled")
         self.load_audio_button = tk.Button(master, text="Load reference RIRs", command=load_rir_files)
 
-        self.load_audio_button.grid(row=2, column=col)
-        self.next_plot_button.grid(row=3, column=col)
-        self.switch_channel_button.grid(row=4, column=col)
-
-
+        self.load_audio_button.grid(row=2, column=col, sticky="n")
+        self.next_plot_button.grid(row=3, column=col, sticky="n")
+        self.switch_channel_button.grid(row=4, column=col, sticky="n")
 
     def get_audio_files(self):
         return self.audio_files
@@ -47,12 +45,11 @@ class TkAudioHandler(tk.Frame):
                                 get_dict_idx_key(self.audio_files, idx),
                                 ch)
 
-
-    def load_audio_files(self, initdir: str, filetype: List[tuple], tk_plot: TkPyplot):
+    def load_audio_files(self, init_dir: str, filetype: List[tuple], tk_plot: TkPyplot):
 
         self.audio_files = dict()
 
-        file_paths = filedialog.askopenfilenames(initialdir=initdir, filetypes=filetype)
+        file_paths = filedialog.askopenfilenames(initialdir=init_dir, filetypes=filetype)
 
         if not file_paths:
             return
@@ -61,16 +58,14 @@ class TkAudioHandler(tk.Frame):
             af = sf.read(fp)[0].T
             self.audio_files[fp.split('/')[-1]] = af
 
-        # Plotting the first audio file of the list
-        tk_plot.update_plot(get_dict_idx_value(self.audio_files, 0)[0],
-                            get_dict_idx_key(self.audio_files, 0),
-                            self.channel.get())
-
         if self.next_plot_button["state"] == "disabled":
             self.next_plot_button.config(state="normal")
             self.switch_channel_button.config(state="normal")
 
-        return self.audio_files
+        # Plotting the first audio file of the list
+        tk_plot.update_plot(get_dict_idx_value(self.audio_files, 0)[0],
+                            get_dict_idx_key(self.audio_files, 0),
+                            self.channel.get())
 
     def show_next_audio_plot(self, tk_plot: TkPyplot):
 
@@ -78,10 +73,12 @@ class TkAudioHandler(tk.Frame):
             return
 
         i = (self.index.get() + 1) % len(self.audio_files)
+        self.index.set(i)
+
         ch = self.channel.get()
 
         audio = get_dict_idx_value(self.audio_files, i)[ch]
         title = get_dict_idx_key(self.audio_files, i)
         tk_plot.update_plot(audio, title, ch)
 
-        self.index.set(i)
+
