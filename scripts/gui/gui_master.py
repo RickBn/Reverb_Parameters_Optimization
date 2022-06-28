@@ -3,21 +3,17 @@ from tkinter import filedialog, messagebox, ttk
 from scripts.gui.plot_handler import TkPyplot
 from scripts.gui.audio_handler import TkAudioHandler
 from functools import partial
+from matplotlib import figure
 
 class TkGuiHandler:
 
     def __init__(self,
                  root,
                  title: str = "Reverb Parameters Optimizer",
-                 sw_ratio: float = 0.75,
-                 sh_ratio: float = 0.75):
-
-        #super().__init__()
+                 sw_ratio: float = 0.85,
+                 sh_ratio: float = 0.85):
 
         root.wm_title(title)
-
-        root.rowconfigure(tuple(range(4)), weight=1)
-        root.columnconfigure(tuple(range(4)), weight=1)
 
         screen_width = int(root.winfo_screenwidth() * sw_ratio)
         screen_height = int(root.winfo_screenheight() * sh_ratio)
@@ -38,21 +34,28 @@ class TkGuiHandler:
 
         init_rir_path = 'audio/input/chosen_rirs/'
 
-        tk_plot1 = TkPyplot(tab1, 7, 6)
+        tk_plot1 = TkPyplot(tab1,
+                            fig_w=int(screen_width*0.5),
+                            fig_h=int(screen_height*0.75))
+
         canvas1 = tk_plot1.canvas
         toolbar1 = tk_plot1.toolbar
 
-        tk_plot2 = TkPyplot(tab1, 7, 6)
+        tk_plot2 = TkPyplot(tab1,
+                            fig_w=int(screen_width*0.5),
+                            fig_h=int(screen_height*0.75),
+                            shared_ax=tk_plot1.get_ax())
+
         canvas2 = tk_plot2.canvas
         toolbar2 = tk_plot2.toolbar
 
         audio_handler = TkAudioHandler(tab1, init_rir_path, tk_plot1, 0)
         audio_handler2 = TkAudioHandler(tab1, init_rir_path, tk_plot2, 1)
 
-        toolbar1.grid(row=0, column=0, sticky='nw')#.pack(side=tk.TOP, fill=tk.X)
+        toolbar1.grid(row=0, column=0, sticky='nw')
         toolbar2.grid(row=0, column=1, sticky='nw')
-        canvas1.get_tk_widget().grid(row=1, column=0, sticky="n")#.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        canvas2.get_tk_widget().grid(row=1, column=1, sticky="n")  # .pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        canvas1.get_tk_widget().grid(row=1, column=0, sticky="w")
+        canvas2.get_tk_widget().grid(row=1, column=1, sticky="e")
 
     def on_closing(self, root):
         messagebox.askokcancel("Quit", "Do you want to quit?")

@@ -14,7 +14,7 @@ class TkAudioHandler(tk.Frame):
 
         self.index = tk.IntVar()
         self.channel = tk.IntVar()
-        self.audio_files = dict() #list()
+        self.audio_files = dict()
 
         load_rir_files = partial(self.load_audio_files,
                                  initdir=default_audio_path,
@@ -44,7 +44,8 @@ class TkAudioHandler(tk.Frame):
             idx = self.index.get()
             ch = self.channel.get()
             tk_plot.update_plot(get_dict_idx_value(self.audio_files, idx)[ch],
-                                get_dict_idx_key(self.audio_files, idx))
+                                get_dict_idx_key(self.audio_files, idx),
+                                ch)
 
 
     def load_audio_files(self, initdir: str, filetype: List[tuple], tk_plot: TkPyplot):
@@ -61,9 +62,9 @@ class TkAudioHandler(tk.Frame):
             self.audio_files[fp.split('/')[-1]] = af
 
         # Plotting the first audio file of the list
-        #tk_plot.update_plot(self.audio_files[0][0])
         tk_plot.update_plot(get_dict_idx_value(self.audio_files, 0)[0],
-                            get_dict_idx_key(self.audio_files, 0))
+                            get_dict_idx_key(self.audio_files, 0),
+                            self.channel.get())
 
         if self.next_plot_button["state"] == "disabled":
             self.next_plot_button.config(state="normal")
@@ -77,9 +78,10 @@ class TkAudioHandler(tk.Frame):
             return
 
         i = (self.index.get() + 1) % len(self.audio_files)
+        ch = self.channel.get()
 
-        audio = get_dict_idx_value(self.audio_files, i)[self.channel.get()]
+        audio = get_dict_idx_value(self.audio_files, i)[ch]
         title = get_dict_idx_key(self.audio_files, i)
-        tk_plot.update_plot(audio, title)
+        tk_plot.update_plot(audio, title, ch)
 
         self.index.set(i)
