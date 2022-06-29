@@ -1,13 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-from typing import Iterable, Tuple
-
-from scripts.gui.plot_handler import TkPyplot
-from scripts.gui.audio_handler import TkAudioHandler
+from typing import Iterable
+from scripts.gui.gui_param_optimizer import TkGuiParamOptimizer
 from scripts.gui.gui_plot_comparison import TkGuiPlotComparison
 from scripts.gui.gui_utils import *
 from functools import partial
-from matplotlib import figure
 
 
 class TkGuiHandler:
@@ -37,6 +34,12 @@ class TkGuiHandler:
         quit_btn = tk.Button(self.tabControl, text="Quit", command=partial(self.on_closing, root))
         quit_btn.grid(row=0, column=1, sticky="ne")
 
+        rir_path = 'audio/input/chosen_rirs/'
+        er_path = 'audio/trimmed_rirs/'
+        result_path = 'audio/results/'
+        input_path = 'audio/input/sounds/'
+
+        TkGuiParamOptimizer(self.tab[0], rir_path, er_path, result_path, input_path)
         TkGuiPlotComparison(self.tab[1], screen_width, screen_height)
 
         configure_grid_all(root)

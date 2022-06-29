@@ -18,7 +18,7 @@ class TkGuiPlotComparison(tk.Frame):
             self.canvas.append(self.tk_plot[i].canvas)
             self.toolbar.append(self.tk_plot[i].toolbar)
 
-            TkAudioHandler(master, init_rir_path, self.tk_plot[i], i)
+            TkAudioHandler(master, default_audio_path=init_rir_path, row=2, col=i, sticky="n", tk_plot=self.tk_plot[i])
 
             self.toolbar[i].grid(row=0, column=i, sticky='nsew')
             self.canvas[i].get_tk_widget().grid(row=1, column=i, sticky="nsew")

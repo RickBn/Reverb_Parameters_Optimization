@@ -9,7 +9,14 @@ from typing import List
 
 class TkAudioHandler(tk.Frame):
 
-    def __init__(self, master, default_audio_path: str, tk_plot: TkPyplot, col: int):
+    def __init__(self,
+                 master,
+                 default_audio_path: str,
+                 row: int = 0,
+                 col: int = 0,
+                 sticky: str = "nsew",
+                 tk_plot: TkPyplot = None):
+
         super().__init__()
 
         self.index = tk.IntVar()
@@ -21,16 +28,17 @@ class TkAudioHandler(tk.Frame):
                                  filetype=[('Wav Files', '.wav')],
                                  tk_plot=tk_plot)
 
-        next_audio_plot = partial(self.show_next_audio_plot, tk_plot=tk_plot)
-        switch_channel = partial(self.switch_channel, tk_plot=tk_plot)
-
-        self.switch_channel_button = tk.Button(master, text="Switch channel", command=switch_channel, state="disabled")
-        self.next_plot_button = tk.Button(master, text="Show next plot", command=next_audio_plot, state="disabled")
         self.load_audio_button = tk.Button(master, text="Load reference RIRs", command=load_rir_files)
+        self.load_audio_button.grid(row=row, column=col, sticky=sticky)
 
-        self.load_audio_button.grid(row=2, column=col, sticky="n")
-        self.next_plot_button.grid(row=3, column=col, sticky="n")
-        self.switch_channel_button.grid(row=4, column=col, sticky="n")
+        if tk_plot is not None:
+            next_audio_plot = partial(self.show_next_audio_plot, tk_plot=tk_plot)
+            switch_channel = partial(self.switch_channel, tk_plot=tk_plot)
+
+            self.switch_channel_button = tk.Button(master, text="Switch channel", command=switch_channel, state="disabled")
+            self.next_plot_button = tk.Button(master, text="Show next plot", command=next_audio_plot, state="disabled")
+            self.next_plot_button.grid(row=row+1, column=col, sticky=sticky)
+            self.switch_channel_button.grid(row=row+2, column=col, sticky=sticky)
 
     def get_audio_files(self):
         return self.audio_files
@@ -58,14 +66,15 @@ class TkAudioHandler(tk.Frame):
             af = sf.read(fp)[0].T
             self.audio_files[fp.split('/')[-1]] = af
 
-        if self.next_plot_button["state"] == "disabled":
-            self.next_plot_button.config(state="normal")
-            self.switch_channel_button.config(state="normal")
+        if tk_plot is not None:
+            if self.next_plot_button["state"] == "disabled":
+                self.next_plot_button.config(state="normal")
+                self.switch_channel_button.config(state="normal")
 
-        # Plotting the first audio file of the list
-        tk_plot.update_plot(get_dict_idx_value(self.audio_files, 0)[0],
-                            get_dict_idx_key(self.audio_files, 0),
-                            self.channel.get())
+            # Plotting the first audio file of the list
+            tk_plot.update_plot(get_dict_idx_value(self.audio_files, 0)[0],
+                                get_dict_idx_key(self.audio_files, 0),
+                                self.channel.get())
 
     def show_next_audio_plot(self, tk_plot: TkPyplot):
 
@@ -77,8 +86,9 @@ class TkAudioHandler(tk.Frame):
 
         ch = self.channel.get()
 
-        audio = get_dict_idx_value(self.audio_files, i)[ch]
-        title = get_dict_idx_key(self.audio_files, i)
-        tk_plot.update_plot(audio, title, ch)
+        if tk_plot is not None:
+            audio = get_dict_idx_value(self.audio_files, i)[ch]
+            title = get_dict_idx_key(self.audio_files, i)
+            tk_plot.update_plot(audio, title, ch)
 
 
