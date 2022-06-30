@@ -4,9 +4,11 @@ from skopt.plots import plot_convergence
 
 from scripts.parameters_learning import *
 from scripts.audio_functions.signal_generation import *
+from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.direct_sound_eq import *
 
 #plt.switch_backend('agg')
+
 
 def find_params_merged(rir_path, er_path, result_path, input_path, generate_references=True, pre_norm=True):
 
@@ -52,14 +54,23 @@ def find_params_merged(rir_path, er_path, result_path, input_path, generate_refe
         rir_er, sr_er = sf.read(rir_er_path)
         rir_er = rir_er.T
 
-        distance_func_native = functools.partial(merged_rir_distance_native, params_dict=rev_param_names_nat,
-                                                 input_audio=test_sound, ref_audio=ref, er_path=rir_er_path,
-                                                 sample_rate=sr, pre_norm=pre_norm)
+        distance_func_native = functools.partial(merged_rir_distance,
+                                                 params_dict=rev_param_names_nat,
+                                                 input_audio=test_sound,
+                                                 ref_audio=ref,
+                                                 er_path=rir_er_path,
+                                                 sample_rate=sr,
+                                                 vst3=None,
+                                                 pre_norm=pre_norm)
 
-        distance_func_external = functools.partial(merged_rir_distance_external, vst3=rev_external,
-                                                   params_dict=rev_param_names_ex, input_audio=test_sound,
-                                                   ref_audio=ref, er_path=rir_er_path,
-                                                   sample_rate=sr, pre_norm=pre_norm)
+        distance_func_external = functools.partial(merged_rir_distance,
+                                                   params_dict=rev_param_names_ex,
+                                                   input_audio=test_sound,
+                                                   ref_audio=ref,
+                                                   er_path=rir_er_path,
+                                                   sample_rate=sr,
+                                                   vst3=rev_external,
+                                                   pre_norm=pre_norm)
 
         current_rir_path = result_path + rir_folder[ref_idx] + '/'
         fade_in = int(5 * sr * 0.001)
