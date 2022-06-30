@@ -1,4 +1,3 @@
-import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from typing import Iterable
 from scripts.gui.gui_param_optimizer import TkGuiParamOptimizer
@@ -50,13 +49,13 @@ class TkGuiHandler:
 
         self.window_raise(root)
 
-    def window_raise(self, root):
+    def window_raise(self, root: tk.Tk):
         root.lift()
         root.attributes("-topmost", True)
         root.focus_force()
         root.attributes("-topmost", False)
 
-    def on_closing(self, root):
+    def on_closing(self, root: tk.Tk):
         messagebox.askokcancel("Quit", "Do you want to quit?")
         root.destroy()
 
