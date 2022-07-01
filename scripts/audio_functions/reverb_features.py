@@ -1,9 +1,5 @@
-import librosa
 import librosa.display
-import numpy as np
-from scipy.signal import chirp
-import soundfile as sf
-# import matplotlib.pyplot as plt
+from scripts.audio_functions.signal_generation import create_impulse
 from scripts.audio_functions.audio_manipulation import *
 from scripts.audio_functions.pedalboard_functions import *
 
@@ -61,6 +57,7 @@ def rev_lf(ir, sr, lf_time=80):
 
 	return lf
 
+
 def rev_ts(ir, sr):
 
 	t = np.arange(0, len(ir.T)) / sr
@@ -72,6 +69,7 @@ def rev_ts(ir, sr):
 	ts = t[round(ts)] * 1000
 
 	return ts
+
 
 def rev_sc(ir, sr):
 
@@ -97,6 +95,7 @@ def get_rev_features(ir, sr):
 	edt = edt * 1000
 
 	return [tr, edt, g, c, lf, ts, sc]
+
 
 if __name__ == "__main__":
 	sr = 44100
