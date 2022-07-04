@@ -34,7 +34,7 @@ def vst_reverb_process(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_
 
 def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None):
 
-    #fade_length = len(er.T)
+    fade_length = len(er.T)
 
     padded_er_rir = pad_signal(er, len(er), len(tail.T) - fade_length)
 
