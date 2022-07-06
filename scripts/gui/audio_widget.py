@@ -49,12 +49,23 @@ class TkPyplot(TkAudioWidget):
         if shared_ax is not None:
             self.ax.get_shared_y_axes().join(self.ax, shared_ax)
 
-        next_audio_plot = partial(self.show_next_audio_plot)
+        next_audio_plot = partial(self.switch_plot, asc=True)
+        prev_audio_plot = partial(self.switch_plot, asc=False)
         switch_channel = partial(self.switch_channel)
 
         self.switch_channel_button = tk.Button(master, text="Switch channel", command=switch_channel, state="disabled")
-        self.next_plot_button = tk.Button(master, text="Show next plot", command=next_audio_plot, state="disabled")
-        self.next_plot_button.grid(row=row, column=col, sticky=sticky)
+
+        self.switch_plot_frame = tk.Frame(master)
+        self.switch_plot_frame.grid(row=row, column=col, sticky=sticky)
+
+        self.prev_plot_button = tk.Button(self.switch_plot_frame, text="Previous plot", command=prev_audio_plot,
+                                          state="disabled", width=10)
+        self.prev_plot_button.pack(side="left")
+
+        self.next_plot_button = tk.Button(self.switch_plot_frame, text="Next plot", command=next_audio_plot,
+                                          state="disabled", width=10)
+        self.next_plot_button.pack(side="left")
+
         self.switch_channel_button.grid(row=row + 1, column=col, sticky=sticky)
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
@@ -87,12 +98,12 @@ class TkPyplot(TkAudioWidget):
                          get_dict_idx_key(self.audio_buffer, idx),
                          ch)
 
-    def show_next_audio_plot(self):
+    def switch_plot(self, asc=True):
 
         if not self.audio_buffer:
             return
 
-        i = (self.index.get() + 1) % len(self.audio_buffer)
+        i = (self.index.get() + (1 if asc else -1)) % len(self.audio_buffer)
         self.index.set(i)
 
         ch = self.channel.get()
@@ -111,4 +122,5 @@ class TkPyplot(TkAudioWidget):
 
             if self.next_plot_button["state"] == "disabled":
                 self.next_plot_button.config(state="normal")
+                self.prev_plot_button.config(state="normal")
                 self.switch_channel_button.config(state="normal")
