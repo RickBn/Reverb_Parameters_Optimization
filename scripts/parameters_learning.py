@@ -5,6 +5,7 @@ from scripts.audio_functions.pedalboard_functions import *
 from scripts.audio_functions.audio_metrics import *
 from scripts.audio_functions.signal_generation import create_impulse
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
+from scripts.utils.dict_functions import exclude_keys
 
 
 def reverb_distance_native(params, params_dict, input_audio, ref_audio, sample_rate, pre_norm=False):
@@ -57,12 +58,19 @@ def reverb_distance_external(params, vst3, params_dict, input_audio, ref_audio, 
 
 def merged_rir_distance(params, params_dict, input_audio, ref_audio, er_path, sample_rate, vst3=None, pre_norm=False):
 
+    print(params_dict)
+
     for idx, par in enumerate(params_dict):
         params_dict[par] = params[idx]
 
     impulse = create_impulse(sample_rate * 6, stereo=True)
 
-    rir_tail = vst_reverb_process(params_dict, impulse, sample_rate, scale_factor=1.0, hp_cutoff=20, rev_external=vst3)
+    print(params_dict)
+
+    scale = params_dict['scale']
+    params = exclude_keys(params_dict, 'scale')
+
+    rir_tail = vst_reverb_process(params, impulse, sample_rate, scale_factor=scale, hp_cutoff=20, rev_external=vst3)
 
     rir_er, sr_er = sf.read(er_path)
     rir_er = rir_er.T

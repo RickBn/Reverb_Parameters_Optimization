@@ -72,8 +72,14 @@ def external_vst3_fix_param_ranges(params: dict, vst3: pedalboard.pedalboard.VST
     return
 
 
-def native_reverb_set_params(params: dict) -> pedalboard_native.Reverb:
-    r = Reverb(freeze_mode=0)
+def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard_native.Reverb:
+    #r = Reverb(freeze_mode=0)
+
+    if full_wet:
+        r = Reverb(freeze_mode=0, dry_level=0.0, wet_level=1.0)
+
+    else:
+        r = Reverb(freeze_mode=0)
 
     for p in params:
         r.__setattr__(p, params[p])

@@ -18,12 +18,15 @@ def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,
 
     return reverb * scale_factor
 
-def vst_reverb_process(params, input, sr, scale_factor=1.0, hp_cutoff=None, rev_external=None):
+
+def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=None, rev_external=None):
     if rev_external is not None:
         rev = external_vst3_set_params(params, rev_external)
+        print(rev.parameters)
 
     else:
         rev = native_reverb_set_params(params)
+        print(rev)
 
     reverb_norm = process_reverb(rev, sr, input, hp_cutoff=hp_cutoff, norm=True)
 
