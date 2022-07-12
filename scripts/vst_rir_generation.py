@@ -14,7 +14,7 @@ def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,
         reverb = pd_highpass_filter(reverb, 3, sr, hp_cutoff)
 
     if norm:
-        reverb = normalize_audio(reverb)
+        reverb = normalize_audio(reverb, nan_check=True)
 
     return reverb * scale_factor
 

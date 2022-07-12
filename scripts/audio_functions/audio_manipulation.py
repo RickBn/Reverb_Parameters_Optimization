@@ -111,7 +111,6 @@ def pad_signal(input_signal: np.ndarray, n_dim: int, pad_length: int):
     return padded_signal
 
 
-
 def pad_windowed_signal(input_signal: np.array, window_size: int):
 
     if len(input_signal) % window_size != 0:

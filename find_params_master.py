@@ -24,7 +24,7 @@ if __name__ == "__main__":
     result_path = 'audio/results/'
     input_path = 'audio/input/sounds/'
 
-    find_params_merged(rir_path, er_path, result_path, input_path, generate_references=False, pre_norm=True)
+    find_params_merged(rir_path, er_path, result_path, input_path, generate_references=True, pre_norm=False)
 
 
 

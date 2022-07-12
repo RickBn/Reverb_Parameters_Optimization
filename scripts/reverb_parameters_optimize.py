@@ -163,7 +163,7 @@ def find_params_merged(rir_path: str,
 
                 current_sound = os.listdir('audio/input/sounds/')[audio_idx]
 
-                sf.write(current_rir_path + current_sound + '_' + current_effect + '.wav',
+                sf.write(current_rir_path + current_sound.replace('.wav', '') + '_' + current_effect + '.wav',
                          reverb_norm.T, sr)
 
             with open('audio/' + current_effect + '_times.txt', 'w') as f:

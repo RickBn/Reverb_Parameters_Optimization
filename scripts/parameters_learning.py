@@ -58,19 +58,15 @@ def reverb_distance_external(params, vst3, params_dict, input_audio, ref_audio, 
 
 def merged_rir_distance(params, params_dict, input_audio, ref_audio, er_path, sample_rate, vst3=None, pre_norm=False):
 
-    print(params_dict)
-
     for idx, par in enumerate(params_dict):
         params_dict[par] = params[idx]
 
     impulse = create_impulse(sample_rate * 6, stereo=True)
 
-    print(params_dict)
-
     scale = params_dict['scale']
-    params = exclude_keys(params_dict, 'scale')
+    par = exclude_keys(params_dict, 'scale')
 
-    rir_tail = vst_reverb_process(params, impulse, sample_rate, scale_factor=scale, hp_cutoff=20, rev_external=vst3)
+    rir_tail = vst_reverb_process(par, impulse, sample_rate, scale_factor=scale, hp_cutoff=20, rev_external=vst3)
 
     rir_er, sr_er = sf.read(er_path)
     rir_er = rir_er.T
