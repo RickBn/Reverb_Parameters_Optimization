@@ -18,6 +18,8 @@ from scripts.reverb_parameters_optimize import *
 plt.switch_backend('agg')
 
 if __name__ == "__main__":
+    # rir_path = 'audio/_SIM/'
+    # er_path = 'audio/_SIM_TRIMMED/'
 
     rir_path = 'audio/input/chosen_rirs/'
     er_path = 'audio/trimmed_rirs/'

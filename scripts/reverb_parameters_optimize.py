@@ -20,7 +20,7 @@ def find_params_merged(rir_path: str,
                        pre_norm: bool = True):
 
     rir_file = os.listdir(rir_path)
-    rir_folder = os.listdir(result_path)
+    rir_folder = os.listdir(rir_path)
 
     rir, sr = sf.read(rir_path + rir_file[0])
 
@@ -83,7 +83,7 @@ def find_params_merged(rir_path: str,
 
         fade_in = int(5 * sr * 0.001)
 
-        current_rir_path = result_path + rir_folder[ref_idx] + '/'
+        current_rir_path = result_path + rir_folder[ref_idx].replace('.wav', '') + '/'
         if not os.path.exists(current_rir_path):
             os.makedirs(current_rir_path)
 
