@@ -8,7 +8,7 @@ from scripts.parameters_learning import *
 from scripts.audio_functions.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
-from scripts.direct_sound_eq import *
+from scripts.old.direct_sound_eq import *
 
 #plt.switch_backend('agg')
 

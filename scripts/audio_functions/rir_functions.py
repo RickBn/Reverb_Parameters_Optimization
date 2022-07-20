@@ -9,7 +9,7 @@ from scripts.audio_functions.audio_manipulation import *
 from scripts.audio_functions.audio_metrics import *
 
 
-def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500, save_path=None):
+def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500, ms_encoding=False, save_path=None):
 
 	arm_dict = {}
 	psd_dict = {}
@@ -29,14 +29,15 @@ def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500,
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
 
-		rir_ms = ms_matrix(rir)
+		if ms_encoding:
+			rir = ms_matrix(rir)
 
-		for rir in rir_ms:
-			a_ms = []
-			p_ms = []
-			l_ms = []
+		for r_i in rir:
+			a_r = []
+			p_r = []
+			l_r = []
 
-			rir_first_msec = rir[:er]
+			rir_first_msec = r_i[:er]
 
 			xpad = pad_windowed_signal(rir_first_msec, frame_size)
 
@@ -44,33 +45,34 @@ def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500,
 				xchunk = xpad[:chunk]
 				xfaded = xchunk * cosine_fade(len(xchunk), fade_length)
 				ar = armodel(xfaded, 2 * math.floor(2 + sr / 1000))
-				a_ms.append(ar)
+				a_r.append(ar)
 
 				rir_psd = ar2psd(ar, 2048)
-				p_ms.append(rir_psd)
+				p_r.append(rir_psd)
 
-			for psd_idx in range(1, len(p_ms), 1):
-				l_ms.append(log_spectral_distance(p_ms[psd_idx], p_ms[psd_idx - 1]))
+			for psd_idx in range(1, len(p_r), 1):
+				l_r.append(log_spectral_distance(p_r[psd_idx], p_r[psd_idx - 1]))
 
-			a_a.append(a_ms)
-			p_a.append(p_ms)
-			l_a.append(l_ms)
+			a_a.append(a_r)
+			p_a.append(p_r)
+			l_a.append(l_r)
 
 		arm_dict[rir_file] = a_a
 		psd_dict[rir_file] = p_a
 		lsd_dict[rir_file] = l_a
 
 		if save_path is not None:
-			print('Hi')
-			#'audio/armodels/arm_dict_ms.npy'
-			np.save(save_path + '/arm_dict_ms.npy', arm_dict)
-			np.save(save_path + '/psd_dict_ms.npy', psd_dict)
-			np.save(save_path + '/lsd_dict_ms.npy', lsd_dict)
+			if not os.path.exists(save_path):
+				os.makedirs(save_path)
+
+			np.save(save_path + '/arm_dict.npy', arm_dict)
+			np.save(save_path + '/psd_dict.npy', psd_dict)
+			np.save(save_path + '/lsd_dict.npy', lsd_dict)
 
 	return arm_dict, psd_dict, lsd_dict
 
 
-def rir_er_detection(rir_path, lsd_dict, early_trim=500, img_path=None, cut_dict_path=None):
+def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_path=None, cut_dict_path=None):
 
 	cut_dict = {}
 
@@ -81,7 +83,8 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, img_path=None, cut_dict
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
 
-		rir = ms_matrix(rir)[0]
+		if ms_encoding:
+			rir = ms_matrix(rir)[0]
 
 		fig = plt.figure()
 		ax = fig.add_subplot(1, 1, 1)
@@ -105,11 +108,15 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, img_path=None, cut_dict
 		plt.axvline(kn, linestyle='--', color='red')
 
 		if img_path is not None:
-			# 'images/lsd/'
+			if not os.path.exists(img_path):
+				os.makedirs(img_path)
+
 			fig.savefig(img_path + rir_file.replace('.wav', '.pdf'))
 
 		if cut_dict_path is not None:
-			# 'audio/armodels/
+			if not os.path.exists(cut_dict_path):
+				os.makedirs(cut_dict_path)
+
 			model_store(cut_dict_path + 'cut_idx_kl.json', cut_dict)
 
 	return cut_dict
@@ -140,12 +147,15 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 
 		trimmed_rir_dict[rir_file] = trimmed_rir_faded
 
-		fig = plt.figure()
-		ax = fig.add_subplot(1, 1, 1)
-
-		ax.plot(trimmed_rir[0])
+		# fig = plt.figure()
+		# ax = fig.add_subplot(1, 1, 1)
+		#
+		# ax.plot(trimmed_rir[0])
 
 		if save_path is not None:
+			if not os.path.exists(save_path):
+				os.makedirs(save_path)
+
 			sf.write(save_path + rir_file, trimmed_rir_faded.T, sr)
 
 	return trimmed_rir_dict
@@ -169,22 +179,22 @@ def rir_maximum(rir_path):
 
 if __name__ == "__main__":
 	frame_size = 512
-	sr = 44100
+	sr = 48000
 	fade_factor = 4
 	early_trim = 500
 
-	rir_path = 'audio/input/chosen_rirs/'
+	rir_path = 'audio/input/chosen_rirs/FOA_B/'
 	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim)
 
-	knee_save_path = 'images/lsd/'
-	cut_dict_save_path = 'audio/armodels/'
+	knee_save_path = 'images/lsd/FOA_B/'
+	cut_dict_save_path = 'audio/armodels/FOA_B/'
 
 	# arm_dict = np.load('audio/armodels/arm_dict_ms.npy', allow_pickle=True)[()]
-	lsd_dict = np.load('audio/armodels/lsd_dict_ms.npy', allow_pickle=True)[()]
+	lsd_dict = np.load('audio/armodels/FOA_B/lsd_dict.npy', allow_pickle=True)[()]
 
-	cut_dict = rir_er_detection(rir_path, lsd_dict)
+	cut_dict = rir_er_detection(rir_path, lsd_dict, cut_dict_path=cut_dict_save_path)
 
-	trim_rir_save_path = 'audio/trimmed_rirs/'
+	trim_rir_save_path = 'audio/trimmed_rirs/FOA_B/'
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
 
-	rir_max = rir_maximum(rir_path)
+	#rir_max = rir_maximum(rir_path)
