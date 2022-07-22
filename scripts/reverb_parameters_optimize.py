@@ -24,8 +24,8 @@ def find_params_merged(rir_path: str,
 
     rir, sr = sf.read(rir_path + rir_file[0])
 
-    impulse = create_impulse(sr * 3, stereo=True)
-    sweep = create_log_sweep(3, 20, 20000, sr, 0, stereo=True)
+    impulse = create_impulse(sr * 3, n_channels=4)
+    sweep = create_log_sweep(3, 20, 20000, sr, 0, n_channels=4)
 
     test_sound = sweep
 

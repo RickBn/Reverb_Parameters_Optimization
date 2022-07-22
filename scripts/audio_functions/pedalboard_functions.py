@@ -32,46 +32,6 @@ def external_vst3_set_params(params: dict, vst3: pedalboard.pedalboard.VST3Plugi
     return vst3
 
 
-def external_vst3_fix_param_ranges(params: dict, vst3: pedalboard.pedalboard.VST3Plugin):
-    for p in params:
-        par = vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]
-
-        if par.approximate_step_size is not None:
-            if par.approximate_step_size >= 0.5:
-                step = 0.1
-            elif par.approximate_step_size <= 0.05:
-                step = 0.01
-
-            new_range = np.arange(par.min_value, par.max_value + step, step).round(str(step)[::-1].find('.'))
-
-            vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]. \
-                range = (par.min_value, par.max_value, step)
-
-            vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]. \
-                valid_values = new_range
-
-            vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]. \
-                step_size = step
-
-            vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]. \
-                approximate_step_size = None
-
-            nnr = np.array([1 / len(new_range)] * len(new_range))
-            nnr[0] = 0
-            nnr = list(np.cumsum(nnr))
-            nnr.append(1)
-
-            nvtr = {}
-
-            for i, v in enumerate(new_range):
-                nvtr[v] = (nnr[i], nnr[i + 1])
-
-            vst3.__getattr__(p)._AudioProcessorParameter__get_cpp_parameter().args[0]. \
-                _value_to_raw_value_ranges = nvtr
-
-    return
-
-
 def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard_native.Reverb:
     #r = Reverb(freeze_mode=0)
 
@@ -90,7 +50,12 @@ def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard_native.R
 
 
 def plugin_process(vst3, audio, sr):
-    effected = vst3(audio, sample_rate=sr)
+    if audio.shape[0] > 2:
+        effected = [vst3(audio[0], sample_rate=sr)]
+        for ch in range(1, audio.shape[0]):
+            effected = np.concatenate((effected, [vst3(audio[ch], sample_rate=sr)]), axis=0)
+    else:
+        effected = vst3(audio, sample_rate=sr)
 
     return effected
 

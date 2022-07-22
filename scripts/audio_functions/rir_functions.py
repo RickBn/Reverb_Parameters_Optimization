@@ -8,9 +8,17 @@ from scripts.audio_functions.DSPfunc import *
 from scripts.audio_functions.audio_manipulation import *
 from scripts.audio_functions.audio_metrics import *
 
+plt.switch_backend('agg')
 
-def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500, ms_encoding=False, save_path=None):
 
+def rir_psd_metrics(rir_path: str,
+                    sr: float,
+                    frame_size: int = 512,
+                    fade_factor: int = 4,
+                    early_trim: int = 500,
+                    direct_offset: bool = False,
+                    ms_encoding: bool = False,
+                    save_path: str = None):
 	arm_dict = {}
 	psd_dict = {}
 	lsd_dict = {}
@@ -37,7 +45,17 @@ def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500,
 			p_r = []
 			l_r = []
 
-			rir_first_msec = r_i[:er]
+			if direct_offset:
+				offset = np.argmax(r_i > 0.0025)
+			else:
+				offset = 0
+
+			rir_first_msec = r_i[offset:er]
+
+			# fig = plt.figure()
+			# ax = fig.add_subplot(1, 1, 1)
+			# ax.plot(normalize_audio(r_i[:er]))
+			# plt.axvline(offset, linestyle='--', color='red')
 
 			xpad = pad_windowed_signal(rir_first_msec, frame_size)
 
@@ -73,12 +91,12 @@ def rir_psd_metrics(rir_path, sr, frame_size=512, fade_factor=4, early_trim=500,
 
 
 def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_path=None, cut_dict_path=None):
-
 	cut_dict = {}
 
 	rir_files = os.listdir(rir_path)
 
 	for rir_file in rir_files:
+		cut_idx_list = []
 
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
@@ -86,44 +104,47 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 		if ms_encoding:
 			rir = ms_matrix(rir)[0]
 
-		fig = plt.figure()
-		ax = fig.add_subplot(1, 1, 1)
+		for idx, r_i in enumerate(rir):
+			er = int((sr * 0.001) * early_trim)
 
-		er = int((sr * 0.001) * early_trim)
-		ax.plot(normalize_audio(rir[:er]))
+			offset = np.argmax(r_i > 0.0025)
+			x = []
+			y = []
+			cur_lsd = lsd_dict[rir_file][idx]
+			stride = 512#int(er / len(cur_lsd))
 
-		x = []
-		y = []
-		cur_lsd = lsd_dict[rir_file][0]
-		stride = int(er / len(cur_lsd))
+			for i, lsd in enumerate(cur_lsd):
+				x.append(offset + ((i + 1) * stride))
+				y.append(lsd)  # / max(cur_lsd))
 
-		for i, lsd in enumerate(cur_lsd):
-			x.append(((i + 1) * stride))
-			y.append(lsd)  # / max(cur_lsd))
+			kn = KneeLocator(x, y, S=1.0, curve="convex", direction="decreasing").knee
+			cut_idx_list.append(float(kn))
 
-		kn = KneeLocator(x, y, S=1.0, curve="convex", direction="decreasing").knee
-		cut_dict[rir_file] = float(kn)
+			fig = plt.figure()
+			ax = fig.add_subplot(1, 1, 1)
+			ax.plot(normalize_audio(r_i[:er]))
+			ax.plot(x, y / np.max(y), 'o-', color='darkorange')
+			plt.axvline(kn, linestyle='--', color='red')
 
-		ax.plot(x, y / np.max(y), 'o-', color='darkorange')
-		plt.axvline(kn, linestyle='--', color='red')
+			if img_path is not None:
+				if not os.path.exists(img_path):
+					os.makedirs(img_path)
 
-		if img_path is not None:
-			if not os.path.exists(img_path):
-				os.makedirs(img_path)
+				fig.savefig(img_path + rir_file.replace('.wav', '_') + str(idx) + '.pdf')
+				plt.close(fig)
 
-			fig.savefig(img_path + rir_file.replace('.wav', '.pdf'))
+			if cut_dict_path is not None:
+				if not os.path.exists(cut_dict_path):
+					os.makedirs(cut_dict_path)
 
-		if cut_dict_path is not None:
-			if not os.path.exists(cut_dict_path):
-				os.makedirs(cut_dict_path)
+				model_store(cut_dict_path + 'cut_idx_kl.json', cut_dict)
 
-			model_store(cut_dict_path + 'cut_idx_kl.json', cut_dict)
+		cut_dict[rir_file] = cut_idx_list
 
 	return cut_dict
 
 
 def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
-
 	trimmed_rir_dict = {}
 
 	rir_files = os.listdir(rir_path)
@@ -133,7 +154,7 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
 
-		cut_idx = int(cut_dict[rir_file])
+		cut_idx = int(np.max(cut_dict[rir_file]))
 
 		if rir.ndim > 1:
 			trimmed_rir = rir[:, :cut_idx]
@@ -162,13 +183,11 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 
 
 def rir_maximum(rir_path):
-
 	rir_files = os.listdir(rir_path)
 
 	rir_max_dict = {}
 
 	for rir_file in rir_files:
-
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
 
@@ -184,17 +203,19 @@ if __name__ == "__main__":
 	early_trim = 500
 
 	rir_path = 'audio/input/chosen_rirs/FOA_B/'
-	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim)
+	armodel_path = 'audio/armodels/FOA_B/'
+
+	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,
+	                                ms_encoding=False, save_path=armodel_path)
 
 	knee_save_path = 'images/lsd/FOA_B/'
-	cut_dict_save_path = 'audio/armodels/FOA_B/'
 
 	# arm_dict = np.load('audio/armodels/arm_dict_ms.npy', allow_pickle=True)[()]
 	lsd_dict = np.load('audio/armodels/FOA_B/lsd_dict.npy', allow_pickle=True)[()]
 
-	cut_dict = rir_er_detection(rir_path, lsd_dict, cut_dict_path=cut_dict_save_path)
+	cut_dict = rir_er_detection(rir_path, lsd_dict, img_path=knee_save_path, cut_dict_path=armodel_path)
 
 	trim_rir_save_path = 'audio/trimmed_rirs/FOA_B/'
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
 
-	#rir_max = rir_maximum(rir_path)
+# rir_max = rir_maximum(rir_path)

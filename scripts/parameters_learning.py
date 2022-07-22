@@ -84,8 +84,14 @@ def merged_rir_distance(params, params_dict, input_audio, ref_audio, er_path, sa
         ref_audio = normalize_audio(ref_audio, nan_check=True)
         audio_to_match = normalize_audio(audio_to_match, nan_check=True)
 
-    loss = np.mean([mel_spectrogram_l1_distance(ref_audio[0], audio_to_match[0], sample_rate),
-                    mel_spectrogram_l1_distance(ref_audio[1], audio_to_match[1], sample_rate)])
+
+    l = [mel_spectrogram_l1_distance(ref_audio[0], audio_to_match[0], sample_rate)]
+
+    for ch in range(1, ref_audio.shape[0]):
+        l = np.concatenate((l, [mel_spectrogram_l1_distance(ref_audio[ch], audio_to_match[ch], sample_rate)]), axis=0)
+
+    loss = np.mean(l)#np.mean([mel_spectrogram_l1_distance(ref_audio[0], audio_to_match[0], sample_rate),
+                    #mel_spectrogram_l1_distance(ref_audio[1], audio_to_match[1], sample_rate)])
 
     return loss
 
