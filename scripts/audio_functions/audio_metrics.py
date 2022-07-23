@@ -1,29 +1,51 @@
+from typing import List
 import numpy as np
+from scripts.utils.array_functions import *
 
 import librosa
 import librosa.display
 
-def mel_spectrogram_l1_distance(h_1: np.ndarray, h_2: np.ndarray, sr: int,
-                                fft_sizes: list = [256, 512, 1024, 2048, 4096], trim: bool = True) -> float:
-    distance = 0.0
-    for n_fft in fft_sizes:
-        w_1 = librosa.feature.melspectrogram(y=h_1, sr=sr, n_fft=n_fft, hop_length=int(n_fft * 0.25), center=False)
-        w_1 = librosa.power_to_db(w_1, ref=np.max)
 
-        w_2 = librosa.feature.melspectrogram(y=h_2, sr=sr, n_fft=n_fft, hop_length=int(n_fft * 0.25), center=False)
-        w_2 = librosa.power_to_db(w_2, ref=np.max)
+def mel_spectrogram_l1_distance(h_1: np.ndarray,
+                                h_2: np.ndarray,
+                                sr: int,
+                                fft_sizes: List[int] = (256, 512, 1024, 2048, 4096),
+                                trim: bool = True,
+                                by_row: bool = True) -> float:
 
-        if trim:
-            w_1[np.where(w_1 < -60.0)] = -60.0
-            w_2[np.where(w_2 < -60.0)] = -60.0
+    if not by_row:
+        h_1 = h_1.T
+        h_2 = h_2.T
 
-        distance += np.mean(abs(w_1 - w_2))
+    array_dimensions_match_check(h_1, h_2)
 
-    return distance
+    h_1, h_2 = enlist_1D_array(h_1, h_2)
+
+    distance = np.zeros(h_1.shape[0])
+
+    for idx in range(0, h_1.shape[0]):
+        for n_fft in fft_sizes:
+            w_1 = librosa.feature.melspectrogram(y=h_1[idx], sr=sr, n_fft=n_fft, hop_length=int(n_fft * 0.25),
+                                                 center=False)
+            w_1 = librosa.power_to_db(w_1, ref=np.max)
+
+            w_2 = librosa.feature.melspectrogram(y=h_2[idx], sr=sr, n_fft=n_fft, hop_length=int(n_fft * 0.25),
+                                                 center=False)
+            w_2 = librosa.power_to_db(w_2, ref=np.max)
+
+            if trim:
+                w_1[np.where(w_1 < -60.0)] = -60.0
+                w_2[np.where(w_2 < -60.0)] = -60.0
+
+            distance[idx] += np.mean(abs(w_1 - w_2))
+
+    mean_distance = float(np.mean(distance))
+
+    return mean_distance
 
 
 def mfcc_l1_distance(h_1: np.ndarray, h_2: np.ndarray, sr: int,
-                                fft_sizes: list = [256, 512, 1024, 2048, 4096]) -> float:
+                     fft_sizes: List[int] = (256, 512, 1024, 2048, 4096)) -> float:
     distance = 0.0
 
     func = np.sqrt(np.arange(0.0, 1.0, 0.05))

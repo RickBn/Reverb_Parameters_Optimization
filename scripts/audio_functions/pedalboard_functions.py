@@ -50,12 +50,12 @@ def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard_native.R
 
 
 def plugin_process(vst3, audio, sr):
-    if audio.shape[0] > 2:
-        effected = [vst3(audio[0], sample_rate=sr)]
-        for ch in range(1, audio.shape[0]):
-            effected = np.concatenate((effected, [vst3(audio[ch], sample_rate=sr)]), axis=0)
-    else:
-        effected = vst3(audio, sample_rate=sr)
+    # if audio.shape[0] > 2:
+    #     effected = [vst3(audio[0], sample_rate=sr)]
+    #     for ch in range(1, audio.shape[0]):
+    #         effected = np.concatenate((effected, [vst3(audio[ch], sample_rate=sr)]), axis=0)
+    # else:
+    effected = vst3(audio, sample_rate=sr)
 
     return effected
 
@@ -67,7 +67,6 @@ def board_process(board, audio):
 
 
 def pd_highpass_filter(audio: np.ndarray, order: int, sr: int, cutoff=20.0):
-
     filter = np.array([pedalboard.HighpassFilter(cutoff_frequency_hz=cutoff)] * audio.ndim)
 
     if audio.ndim == len(filter):
