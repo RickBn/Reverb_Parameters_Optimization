@@ -31,6 +31,15 @@ def find_params_merged(rir_path: str,
 
     test_sound = sweep
 
+    # rir, sr = sf.read('audio/input/chosen_rirs/HOA/MARCo/0deg_066_Eigen_4th_Bformat_ACN_SN3D.wav')
+    # rir = rir.T
+    # speech, sr_2 = sf.read('audio/input/sounds/speech.wav')
+    # speech = speech.T
+    # speech = np.stack([speech] * rir.shape[0])
+    # a = scipy.signal.fftconvolve(impulse, rir, mode='full', axes=1)
+    # sf.write('audio/a.wav', a.T, sr)
+
+
     #rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
     # rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
 
