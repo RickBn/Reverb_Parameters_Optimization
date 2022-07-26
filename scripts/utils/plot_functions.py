@@ -28,6 +28,7 @@ def plot_rir_pair(path1, path2, save_path=None, ch=0):
     if save_path is not None:
         plt.savefig(save_path, format='pdf')
 
+
 def plot_melspec_pair(audio1, audio2, n_fft, hop_length, sample_rate=44100, save_path=None):
     fig = plt.figure()
 

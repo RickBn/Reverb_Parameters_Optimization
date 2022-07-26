@@ -8,10 +8,10 @@ from scripts.parameters_learning import *
 from scripts.audio_functions.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
-from scripts.old.direct_sound_eq import *
 import scipy.signal
 
 #plt.switch_backend('agg')
+#plt.switch_backend('TkAgg')
 
 
 def find_params_merged(rir_path: str,
@@ -66,17 +66,17 @@ def find_params_merged(rir_path: str,
     rev_plugins = {'Freeverb': [None, rev_param_names_nat, rev_param_ranges_nat],
                    'FdnReverb': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
 
-    convolution = prepare_batch_convolve(rir_path, mix=1.0)
-    audio_file = prepare_batch_input_stereo(input_path)
+    convolution = prepare_batch_pb_convolve(rir_path, mix=1.0)
+    audio_file = prepare_batch_input_multichannel(input_path, num_channels=2)
 
     input_file_names = os.listdir(input_path)
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
     if generate_references:
-        batch_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.70,
+        batch_pb_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.70,
                        norm=True, save_path=result_path)
 
-    reference_audio = batch_convolve([test_sound], convolution, result_file_names, rir_path, sr, 1.0, norm=False)
+    reference_audio = batch_pb_convolve([test_sound], convolution, result_file_names, rir_path, sr, 1.0, norm=False)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     overall_time = 0
