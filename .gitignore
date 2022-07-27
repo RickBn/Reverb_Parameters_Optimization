@@ -3,3 +3,5 @@ __pycache__
 scripts/old
 venv
 *.reapeaks
+em32/
+sofa/
