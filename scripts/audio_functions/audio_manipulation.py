@@ -65,6 +65,29 @@ def prepare_batch_input_multichannel(input_audio_path: str, num_channels: int = 
     return audio_file
 
 
+def batch_concatenate_multichannel(input_audio_path: str, save_path: str = None):
+    first_file_name = os.listdir(input_audio_path)[0]
+    first_file, sr = sf.read(input_audio_path + first_file_name)
+    first_file = first_file.T
+    cat_file = [first_file]
+
+    for file_name in os.listdir(input_audio_path)[1:]:
+        next_file, sr = sf.read(input_audio_path + file_name)
+        next_file = next_file.T
+        cat_file = np.concatenate((cat_file, [next_file]), axis=0)
+
+    if save_path is not None:
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        split_path_name = input_audio_path.split('/')
+        folder_name = split_path_name[-2] if input_audio_path[-1] is '/' else split_path_name[-1]
+
+        sf.write(save_path + folder_name + '.wav', cat_file.T, sr)
+
+    return cat_file
+
+
 def batch_fft_convolve(input_path: str, rir_path: str, save_path: str = None):
     for input in os.listdir(input_path):
         input_sound, input_sr = sf.read(input_path + input)
