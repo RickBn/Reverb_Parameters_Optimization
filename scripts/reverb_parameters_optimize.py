@@ -8,6 +8,7 @@ from scripts.parameters_learning import *
 from scripts.audio_functions.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
+from scripts.utils.json_functions import *
 import scipy.signal
 
 #plt.switch_backend('agg')
@@ -24,29 +25,22 @@ def find_params_merged(rir_path: str,
     rir_file = os.listdir(rir_path)
     rir_folder = os.listdir(rir_path)
 
-    rir, sr = sf.read(rir_path + rir_file[0])
+    # rir, sr = sf.read(rir_path + rir_file[0])
 
-    impulse = create_impulse(sr * 3, n_channels=25)
-    sweep = create_log_sweep(3, 20, 20000, sr, 0, n_channels=25)
+    sr = 48000
+
+    impulse = create_impulse(sr * 6, n_channels=1)
+    sweep = create_log_sweep(3, 20, 20000, sr, 3, n_channels=1)
 
     test_sound = sweep
 
-    # rir, sr = sf.read('audio/input/chosen_rirs/HOA/MARCo/0deg_066_Eigen_4th_Bformat_ACN_SN3D.wav')
-    # rir = rir.T
-    # speech, sr_2 = sf.read('audio/input/sounds/speech.wav')
-    # speech = speech.T
-    # speech = np.stack([speech] * rir.shape[0])
-    # a = scipy.signal.fftconvolve(impulse, rir, mode='full', axes=1)
-    # sf.write('audio/a.wav', a.T, sr)
+    scale_parameter = skopt.space.space.Real(0.0, 1.0, transform='identity')
 
-
-    #rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
+    # rev_param_ranges_nat = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
     # rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'wet_level': 0.0, 'dry_level': 0.0, 'width': 0.0}
 
-    scale_parameter = skopt.space.space.Real(0.0, 1.0, transform='identity')
-    rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
-
-    rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
+    # rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
+    # rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
 
     rev_external = pedalboard.load_plugin("vst3/FdnReverb.vst3")
     rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
@@ -63,20 +57,25 @@ def find_params_merged(rir_path: str,
 
     rev_external.__setattr__('dry_wet', 1.0)
 
-    rev_plugins = {'Freeverb': [None, rev_param_names_nat, rev_param_ranges_nat],
-                   'FdnReverb': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
+    # rev_plugins = {'Freeverb': [None, rev_param_names_nat, rev_param_ranges_nat],
+    #                'FdnReverb': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
 
-    convolution = prepare_batch_pb_convolve(rir_path, mix=1.0)
-    audio_file = prepare_batch_input_multichannel(input_path, num_channels=2)
+    rev_plugins = {'FdnReverb': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
+
+    # convolution = prepare_batch_pb_convolve(rir_path, mix=1.0)
+    audio_file = prepare_batch_input_multichannel(input_path, num_channels=1)
 
     input_file_names = os.listdir(input_path)
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
     if generate_references:
-        batch_pb_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.70,
-                       norm=True, save_path=result_path)
+        batch_fft_convolve(input_path, result_file_names, rir_path, result_path, scale_factor=0.70, norm=True)
+        # batch_pb_convolve(audio_file, convolution, result_file_names, rir_path, sr, 0.70,
+                       # norm=True, save_path=result_path)
 
-    reference_audio = batch_pb_convolve([test_sound], convolution, result_file_names, rir_path, sr, 1.0, norm=False)
+    # reference_audio = batch_pb_convolve([test_sound], convolution, result_file_names, rir_path, sr, 1.0, norm=False)
+    reference_audio = batch_fft_convolve([test_sound], result_file_names,
+                                         rir_path, save_path=None, scale_factor=1.00, norm=False)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     overall_time = 0
@@ -147,14 +146,18 @@ def find_params_merged(rir_path: str,
             rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
 
             # Merge tail with ER
-            merged_rir = merge_er_tail_rir(rir_er, rir_tail, sr, fade_length=fade_in, trim=3)
+            merged_rir = merge_er_tail_rir(rir_er, np.stack([rir_tail] * rir_er.shape[0]),
+                                           sr, fade_length=fade_in, trim=3)
 
             current_merged_rir = merged_rir_path + rir_folder[ref_idx] + '_' + current_effect + '.wav'
             sf.write(current_merged_rir, merged_rir.T, sr)
 
             # Prepare convolution and generate/save reverberated sweep
-            conv = pedalboard.Convolution(current_merged_rir, mix=1.0)
-            reverberated_sweep = conv(test_sound, sr)
+            # conv = pedalboard.Convolution(current_merged_rir, mix=1.0)
+            # reverberated_sweep = conv(test_sound, sr)
+
+            reverberated_sweep = scipy.signal.fftconvolve(np.stack([test_sound] * merged_rir.shape[0]), merged_rir,
+                                                          mode='full', axes=1)
 
             fig = plt.figure()
             plot_convergence(res_rev)
@@ -166,10 +169,12 @@ def find_params_merged(rir_path: str,
             # Convolve with all input files
             for audio_idx, input_audio in enumerate(audio_file):
 
-                reverb_native = conv(input_audio, sr)
-                reverb_norm = normalize_audio(reverb_native, 0.70)
+                reverb_audio = scipy.signal.fftconvolve(np.stack([input_audio] * merged_rir.shape[0]), merged_rir,
+                                                        mode='full', axes=1)
 
-                current_sound = os.listdir('audio/input/sounds/')[audio_idx]
+                reverb_norm = normalize_audio(reverb_audio, 0.70)
+
+                current_sound = os.listdir(input_path)[audio_idx]
 
                 sf.write(current_rir_path + current_sound.replace('.wav', '') + '_' + current_effect + '.wav',
                          reverb_norm.T, sr)

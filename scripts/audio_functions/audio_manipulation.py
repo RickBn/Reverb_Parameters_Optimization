@@ -1,4 +1,4 @@
-from typing import Tuple, Any
+from typing import Tuple, Any, Union, List
 
 import numpy as np
 from numpy import ndarray
@@ -57,9 +57,9 @@ def prepare_batch_input_multichannel(input_audio_path: str, num_channels: int = 
     input_audio_file = os.listdir(input_audio_path)
 
     for idx, wav in enumerate(input_audio_file):
-        audio_file.append(sf.read(input_audio_path + input_audio_file[idx])[0])
+        audio_file.append(sf.read(input_audio_path + input_audio_file[idx])[0].T)
 
-        if audio_file[idx].ndim is 1:
+        if num_channels > 1:
             audio_file[idx] = np.stack([audio_file[idx]] * num_channels)
 
     return audio_file
@@ -88,34 +88,56 @@ def batch_concatenate_multichannel(input_audio_path: str, save_path: str = None)
     return cat_file
 
 
-def batch_fft_convolve(input_path: str, rir_path: str, save_path: str = None):
-    for input in os.listdir(input_path):
-        input_sound, input_sr = sf.read(input_path + input)
-        input_sound = input_sound.T
+def batch_fft_convolve(input_path: Union[str, List[np.ndarray]],
+                       input_name: List[str],
+                       rir_path: str,
+                       save_path: str = None,
+                       scale_factor: float = 1.0,
+                       norm: bool = False,
+                       sr: int = 48000):
 
+    convolved = []
+    input_list = []
+
+    if type(input_path) is str:
+        input_list = []
+        for input in os.listdir(input_path):
+            input_sound, input_sr = sf.read(input_path + input)
+            input_sound = input_sound.T
+            input_list.append(input_sound)
+
+    elif type(input_path) is list:
+        input_list = input_path
+
+    for idx, input_sound in enumerate(input_list):
         for rir in os.listdir(rir_path):
             input_rir, rir_sr = sf.read(rir_path + rir)
             input_rir = input_rir.T
             input_multichannel = np.stack([input_sound] * input_rir.shape[0])
             convolved_sound = scipy.signal.fftconvolve(input_multichannel, input_rir, mode='full', axes=1)
 
-            if save_path is not None:
-                sr = rir_sr if rir_sr > input_sr else input_sr
+            if norm:
+                convolved_sound = normalize_audio(convolved_sound, scale_factor=scale_factor, nan_check=True)
 
-                if rir_sr != input_sr:
-                    warnings.warn("Warning...sample rate mismatch between RIR and input. "
-                                  "RIR sr = " + str(rir_sr) +
-                                  'and input sr = ' + str(input_sr) +
-                                  ". Using sr = " + str(sr))
+            convolved.append(convolved_sound)
+
+            if save_path is not None:
+                # sr = rir_sr if rir_sr > input_sr else input_sr
+                #
+                # if rir_sr != input_sr:
+                #     warnings.warn("Warning...sample rate mismatch between RIR and input. "
+                #                   "RIR sr = " + str(rir_sr) +
+                #                   'and input sr = ' + str(input_sr) +
+                #                   ". Using sr = " + str(sr))
 
                 sp = save_path + '/' + rir.replace('.wav', "") + '/'
 
                 if not os.path.exists(sp):
                     os.makedirs(sp)
 
-                sf.write(sp + input, convolved_sound.T, sr)
+                sf.write(sp + input_name[idx], convolved_sound.T, sr)
 
-    return
+    return convolved
 
 
 def prepare_batch_pb_convolve(rir_path, mix=1.0):

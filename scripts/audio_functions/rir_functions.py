@@ -202,20 +202,20 @@ if __name__ == "__main__":
 	fade_factor = 4
 	early_trim = 500
 
-	rir_path = 'audio/input/chosen_rirs/FOA_B/'
-	armodel_path = 'audio/armodels/FOA_B/'
+	rir_path = 'audio/input/chosen_rirs/HOA/MARCo/bf4/'
+	armodel_path = 'audio/armodels/HOA/MARCo/bf4/'
 
 	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,
 	                                ms_encoding=False, save_path=armodel_path)
 
-	knee_save_path = 'images/lsd/FOA_B/'
+	knee_save_path = 'images/lsd/HOA/MARCo/bf4/'
 
 	# arm_dict = np.load('audio/armodels/arm_dict_ms.npy', allow_pickle=True)[()]
-	lsd_dict = np.load('audio/armodels/FOA_B/lsd_dict.npy', allow_pickle=True)[()]
+	lsd_dict = np.load('audio/armodels/HOA/MARCo/bf4/lsd_dict.npy', allow_pickle=True)[()]
 
 	cut_dict = rir_er_detection(rir_path, lsd_dict, img_path=knee_save_path, cut_dict_path=armodel_path)
 
-	trim_rir_save_path = 'audio/trimmed_rirs/FOA_B/'
+	trim_rir_save_path = 'audio/trimmed_rirs/HOA/MARCo/bf4/'
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
 
 # rir_max = rir_maximum(rir_path)

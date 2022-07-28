@@ -13,7 +13,7 @@ def merged_rir_distance(params, params_dict, input_audio, ref_audio, er_path, sa
     for idx, par in enumerate(params_dict):
         params_dict[par] = params[idx]
 
-    impulse = create_impulse(sample_rate * 6, n_channels=2)
+    impulse = create_impulse(sample_rate * 6, n_channels=1)
 
     scale = params_dict['scale']
     par = exclude_keys(params_dict, 'scale')
@@ -24,19 +24,29 @@ def merged_rir_distance(params, params_dict, input_audio, ref_audio, er_path, sa
     rir_er = rir_er.T
 
     fade_in = int(5 * sample_rate * 0.001)
-    merged_rir = merge_er_tail_rir(rir_er, rir_tail, sample_rate, fade_length=fade_in, trim=3)
+    merged_rir = merge_er_tail_rir(rir_er, np.stack([rir_tail] * ref_audio.shape[0]),
+                                                    sample_rate, fade_length=fade_in, trim=3)
 
-    sf.write('audio/conv/current_rir.wav', merged_rir.T, sample_rate)
+    audio_to_match = scipy.signal.fftconvolve(np.stack([input_audio] * ref_audio.shape[0]),
+                                                       merged_rir, mode='full', axes=1)
 
-    conv = pedalboard.Convolution('audio/conv/current_rir.wav', mix=1.0)
+    ref_audio = ref_audio[:, :len(input_audio)]
+    audio_to_match = audio_to_match[:, :len(input_audio)]
 
-    audio_to_match = conv(input_audio, sample_rate)
+    # sf.write('audio/conv/current_rir.wav', merged_rir.T, sample_rate)
+    #
+    # conv = pedalboard.Convolution('audio/conv/current_rir.wav', mix=1.0)
+    #
+    # audio_to_match = conv(input_audio, sample_rate)
+
+    print(ref_audio.shape)
+    print(audio_to_match.shape)
 
     if pre_norm:
         ref_audio = normalize_audio(ref_audio, nan_check=True)
         audio_to_match = normalize_audio(audio_to_match, nan_check=True)
 
-    loss = mel_spectrogram_l1_distance(ref_audio, np.stack([audio_to_match] * ref_audio.shape[0]), sample_rate)
+    loss = mel_spectrogram_l1_distance(ref_audio, audio_to_match, sample_rate)
 
     return loss
 
