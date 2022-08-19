@@ -15,8 +15,8 @@ def array_dimensions_match_check(arr_1: np.ndarray, arr_2: np.ndarray, by_row: b
 
 def enlist_1D_array(arr_1: np.ndarray, arr_2: np.ndarray):
 	if arr_1.ndim is 1 and arr_2.ndim is 1:
-		arr_1 = [arr_1]
-		arr_2 = [arr_2]
+		arr_1 = np.array([arr_1])
+		arr_2 = np.array([arr_2])
 
 	# else:
 	# 	raise Exception("Attention! Input np.ndarray are not 1D!"

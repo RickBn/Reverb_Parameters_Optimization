@@ -35,6 +35,7 @@ class TkPyplot(TkAudioWidget):
         #self.audio_files = dict()
         self.index = tk.IntVar()
         self.channel = tk.IntVar()
+        self.numCh = 2
 
         self.fig = figure.Figure(figsize=(fig_w/fig_dpi, fig_h/fig_dpi), dpi=fig_dpi)
 
@@ -90,7 +91,7 @@ class TkPyplot(TkAudioWidget):
         self.canvas.draw()
 
     def switch_channel(self):
-        self.channel.set((self.channel.get() + 1) % 2)
+        self.channel.set((self.channel.get() + 1) % self.numCh)
 
         idx = self.index.get()
         ch = self.channel.get()
@@ -107,6 +108,7 @@ class TkPyplot(TkAudioWidget):
         self.index.set(i)
 
         ch = self.channel.get()
+        self.numCh = len(get_dict_idx_value(self.audio_buffer, i))
 
         audio = get_dict_idx_value(self.audio_buffer, i)[ch]
         title = get_dict_idx_key(self.audio_buffer, i)
@@ -119,6 +121,7 @@ class TkPyplot(TkAudioWidget):
             self.update_plot(get_dict_idx_value(self.audio_buffer, 0)[0],
                              get_dict_idx_key(self.audio_buffer, 0),
                              0)
+            self.numCh = len(get_dict_idx_value(self.audio_buffer, 0))
 
             if self.next_plot_button["state"] == "disabled":
                 self.next_plot_button.config(state="normal")

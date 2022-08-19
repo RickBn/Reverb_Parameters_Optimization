@@ -180,9 +180,12 @@ def batch_pb_convolve(input_files, convolution_array, input_files_names, rir_pat
     return convolved
 
 
-def pad_signal(input_signal: np.ndarray, n_dim: int, pad_length: int):
+def pad_signal(input_signal: Any, n_dim: int, pad_length: int, pad_end=True):
 
-    padded_signal = np.concatenate([input_signal, np.zeros((n_dim, pad_length))], axis=1)
+    if pad_end:
+        padded_signal = np.concatenate([input_signal, np.zeros((n_dim, pad_length))], axis=1)
+    else:
+        padded_signal = np.concatenate([np.zeros((n_dim, pad_length)), input_signal], axis=1)
 
     return padded_signal
 
@@ -199,9 +202,21 @@ def pad_windowed_signal(input_signal: np.array, window_size: int):
 
 def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
     t = np.linspace(0, np.pi, fade_length)
+
+    if signal_length < fade_length:
+        fade_length = signal_length
+
     no_fade = np.ones(signal_length - fade_length)
 
     if fade_out is True:
         return np.concatenate([no_fade, (np.cos(t) + 1) * 0.5], axis=0)
     else:
         return np.concatenate([((-np.cos(t)) + 1) * 0.5, no_fade], axis=0)
+
+if __name__ == "__main__":
+
+    e32 = 'audio/input/chosen_rirs/HOA/spergair/em32/'
+    save_path = 'audio/input/chosen_rirs/HOA/spergair/bf4/'
+
+    for folder in os.listdir(e32):
+        batch_concatenate_multichannel(e32 + folder + '/', save_path)

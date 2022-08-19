@@ -92,11 +92,13 @@ def rir_psd_metrics(rir_path: str,
 
 def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_path=None, cut_dict_path=None):
 	cut_dict = {}
+	offset_dict = {}
 
 	rir_files = os.listdir(rir_path)
 
 	for rir_file in rir_files:
 		cut_idx_list = []
+		offset_list = []
 
 		rir, sr = sf.read(rir_path + rir_file)
 		rir = rir.T
@@ -108,6 +110,9 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 			er = int((sr * 0.001) * early_trim)
 
 			offset = np.argmax(r_i > 0.0025)
+			offset_list.append(offset)
+
+			print(str(offset))
 			x = []
 			y = []
 			cur_lsd = lsd_dict[rir_file][idx]
@@ -122,8 +127,8 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 
 			fig = plt.figure()
 			ax = fig.add_subplot(1, 1, 1)
-			ax.plot(normalize_audio(r_i[:er]))
-			ax.plot(x, y / np.max(y), 'o-', color='darkorange')
+			ax.plot(r_i[:er])
+			ax.plot(x, y, 'o-', color='darkorange')
 			plt.axvline(kn, linestyle='--', color='red')
 
 			if img_path is not None:
@@ -133,15 +138,17 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 				fig.savefig(img_path + rir_file.replace('.wav', '_') + str(idx) + '.pdf')
 				plt.close(fig)
 
-			if cut_dict_path is not None:
-				if not os.path.exists(cut_dict_path):
-					os.makedirs(cut_dict_path)
-
-				model_store(cut_dict_path + 'cut_idx_kl.json', cut_dict)
-
 		cut_dict[rir_file] = cut_idx_list
+		offset_dict[rir_file] = offset_list
 
-	return cut_dict
+		if cut_dict_path is not None:
+			if not os.path.exists(cut_dict_path):
+				os.makedirs(cut_dict_path)
+
+			np.save(cut_dict_path + 'cut_idx_kl', cut_dict)
+			np.save(cut_dict_path + 'rir_offset', offset_dict)
+
+	return [cut_dict, offset_dict]
 
 
 def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
@@ -202,20 +209,22 @@ if __name__ == "__main__":
 	fade_factor = 4
 	early_trim = 500
 
-	rir_path = 'audio/input/chosen_rirs/HOA/MARCo/bf4/'
-	armodel_path = 'audio/armodels/HOA/MARCo/bf4/'
+	folder = 'spergair/bf4/'
+
+	rir_path = 'audio/input/chosen_rirs/HOA/' + folder
+	armodel_path = 'audio/armodels/HOA/' + folder
 
 	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,
 	                                ms_encoding=False, save_path=armodel_path)
 
-	knee_save_path = 'images/lsd/HOA/MARCo/bf4/'
+	knee_save_path = 'images/lsd/HOA/' + folder
 
 	# arm_dict = np.load('audio/armodels/arm_dict_ms.npy', allow_pickle=True)[()]
-	lsd_dict = np.load('audio/armodels/HOA/MARCo/bf4/lsd_dict.npy', allow_pickle=True)[()]
+	lsd_dict = np.load('audio/armodels/HOA/' + folder + 'lsd_dict.npy', allow_pickle=True)[()]
 
-	cut_dict = rir_er_detection(rir_path, lsd_dict, img_path=knee_save_path, cut_dict_path=armodel_path)
+	cut_dict, offset_dict = rir_er_detection(rir_path, lsd_dict, img_path=knee_save_path, cut_dict_path=armodel_path)
 
-	trim_rir_save_path = 'audio/trimmed_rirs/HOA/MARCo/bf4/'
+	trim_rir_save_path = 'audio/trimmed_rirs/HOA/' + folder
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
 
 # rir_max = rir_maximum(rir_path)

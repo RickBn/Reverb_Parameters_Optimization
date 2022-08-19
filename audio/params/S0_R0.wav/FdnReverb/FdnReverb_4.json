@@ -1,0 +1,1 @@
+{"room_size": 1.0, "reverberation_time_s": 0.1, "lows_cutoff_frequency_hz": 14050.023704977526, "lows_q_factor": 0.01, "lows_gain_db_s": -65.1795478825945, "highs_cutoff_frequency_hz": 5173.827711336247, "highs_q_factor": 0.7552470865132459, "highs_gain_db_s": -80.0, "fade_in_time_s": 3.6287385353867165, "scale": 0.9443774891960534}
