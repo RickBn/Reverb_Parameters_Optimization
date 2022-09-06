@@ -220,3 +220,22 @@ if __name__ == "__main__":
 
     for folder in os.listdir(e32):
         batch_concatenate_multichannel(e32 + folder + '/', save_path)
+
+    input_path = 'audio/input/sounds/48/mozart/'
+    rir_path = 'audio/input/chosen_rirs/HOA/MARCo/_done/'
+    result_path = f'audio/results/HOA/MARCo/bf4/mozart/'
+
+    input_file_names = os.listdir(input_path)
+    result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
+
+    batch_fft_convolve(input_path, result_file_names, rir_path, result_path, scale_factor=1.0, norm=False)
+
+
+
+    for rir in os.listdir(rir_path):
+        current_rir_path = f'{rir_path}{rir}/_done/'
+        result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
+
+        batch_fft_convolve(input_path, result_file_names, current_rir_path, result_path, scale_factor=1.0, norm=False)
+
+
