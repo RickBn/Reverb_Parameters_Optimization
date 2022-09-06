@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import math
 
 from scripts.utils.json_functions import *
 from scripts.utils.plot_functions import *
@@ -16,6 +17,10 @@ def mape(reference, data, round_value: int = 1):
     mape = (diff / len(reference)) * 100
 
     return round(mape, round_value)
+
+
+def poisson(k, l):
+    return (np.e**(-l) * l**k) / math.factorial(k)
 
 
 

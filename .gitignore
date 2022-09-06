@@ -1,10 +1,17 @@
+# Folders
+
 .idea
-__pycache__
-scripts/old
 venv
-*.reapeaks
+__pycache__
+
+scripts/old
 em32/
 sofa/
+mat/
 chosen_rirs/
 results/
 armodels/
+images/
+
+# Extensions
+*.reapeaks

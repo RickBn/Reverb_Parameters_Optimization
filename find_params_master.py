@@ -4,7 +4,7 @@ plt.switch_backend('agg')
 
 if __name__ == "__main__":
 
-    folder = 'spergair/bf4/'
+    folder = 'MARCo/bf4/'
 
     rir_path = 'audio/input/chosen_rirs/HOA/' + folder
     er_path = 'audio/trimmed_rirs/HOA/' + folder
