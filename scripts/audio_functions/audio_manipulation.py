@@ -92,6 +92,7 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray]],
                        input_name: List[str],
                        rir_path: str,
                        save_path: str = None,
+                       return_convolved=True,
                        scale_factor: float = 1.0,
                        norm: bool = False,
                        sr: int = 48000):
@@ -119,7 +120,8 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray]],
             if norm:
                 convolved_sound = normalize_audio(convolved_sound, scale_factor=scale_factor, nan_check=True)
 
-            convolved.append(convolved_sound)
+            if return_convolved:
+                convolved.append(convolved_sound)
 
             if save_path is not None:
                 # sr = rir_sr if rir_sr > input_sr else input_sr
@@ -167,7 +169,7 @@ def batch_pb_convolve(input_files, convolution_array, input_files_names, rir_pat
             if norm:
                 convolved_input = normalize_audio(convolved_input) * scale_factor
 
-            convolved.append(convolved_input)
+            #convolved.append(convolved_input)
 
             if save_path is not None:
                 sp = save_path + '/' + rir_files_names[dir].replace('.wav', "") + '/'
@@ -221,16 +223,32 @@ if __name__ == "__main__":
     for folder in os.listdir(e32):
         batch_concatenate_multichannel(e32 + folder + '/', save_path)
 
-    input_path = 'audio/input/sounds/48/mozart/'
-    rir_path = 'audio/input/chosen_rirs/HOA/MARCo/_done/'
-    result_path = f'audio/results/HOA/MARCo/bf4/mozart/'
+    input_path = 'audio/input/sounds/48/mozart/_trimmed/'
+    rir = 'spergair'
+
+    # /////////////////////////////////////////////////////////////////////////////
+
+    rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_done/'
+    result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
 
     input_file_names = os.listdir(input_path)
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
-    batch_fft_convolve(input_path, result_file_names, rir_path, result_path, scale_factor=1.0, norm=False)
+    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+                       return_convolved=False, scale_factor=1.0, norm=False)
 
+    #   /////////////////////////////////////////////////////////////////////////////
 
+    rir_path = f'audio/merged_rirs/HOA/{rir}/bf4/'
+    result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
+
+    input_file_names = os.listdir(input_path)
+    result_file_names = [x.replace(".wav", '_freeverb.wav') for x in input_file_names]
+
+    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+                       return_convolved=False, scale_factor=1.0, norm=False)
+
+    # /////////////////////////////////////////////////////////////////////////////
 
     for rir in os.listdir(rir_path):
         current_rir_path = f'{rir_path}{rir}/_done/'

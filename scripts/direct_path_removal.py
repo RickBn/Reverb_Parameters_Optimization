@@ -31,7 +31,7 @@ if __name__ == "__main__":
 	merged_rirs_path = 'audio/merged_rirs/'
 	save_path = 'audio/nd_merged_rirs/'
 
-	sr = 44100
+	sr = 48000
 	trim_length = int(5 * sr * 0.001)
 
 	nd_merged = batch_trim(audio_path=merged_rirs_path, trim_length=trim_length, trim_tail=False, save_path=save_path)
