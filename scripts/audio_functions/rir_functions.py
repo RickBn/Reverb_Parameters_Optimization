@@ -210,7 +210,7 @@ if __name__ == "__main__":
 	early_trim = 500
 
 	#folder = 'HOA/spergair/bf4/'
-	folder = 'stereo/MARCo/'
+	folder = 'stereo/spergair/'
 
 	rir_path = 'audio/input/chosen_rirs/' + folder
 	armodel_path = 'audio/armodels/' + folder

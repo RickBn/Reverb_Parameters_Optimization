@@ -215,6 +215,7 @@ def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
     else:
         return np.concatenate([((-np.cos(t)) + 1) * 0.5, no_fade], axis=0)
 
+
 if __name__ == "__main__":
 
     e32 = 'audio/input/chosen_rirs/HOA/spergair/em32/'
@@ -224,7 +225,7 @@ if __name__ == "__main__":
         batch_concatenate_multichannel(e32 + folder + '/', save_path)
 
     input_path = 'audio/input/sounds/48/mozart/_trimmed/'
-    rir = 'spergair'
+    rir = 'Living Room'
 
     # /////////////////////////////////////////////////////////////////////////////
 
@@ -250,10 +251,24 @@ if __name__ == "__main__":
 
     # /////////////////////////////////////////////////////////////////////////////
 
-    for rir in os.listdir(rir_path):
-        current_rir_path = f'{rir_path}{rir}/_done/'
-        result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
+    rir_path = f'audio/vst_rirs/stereo/{rir}/'
+    result_path = f'audio/results/stereo/{rir}/mozart/late_only/'
 
-        batch_fft_convolve(input_path, result_file_names, current_rir_path, result_path, scale_factor=1.0, norm=False)
+    input_file_names = os.listdir(input_path)
+    result_file_names = [x.replace(".wav", '_late_fv.wav') for x in input_file_names]
+
+    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+                       return_convolved=False, scale_factor=1.0, norm=False)
+
+    # /////////////////////////////////////////////////////////////////////////////
+
+    rir_path = f'audio/trimmed_rirs/HOA/{rir}/_done/'
+    result_path = f'audio/results/HOA/{rir}/bf4/mozart/early_only/'
+
+    input_file_names = os.listdir(input_path)
+    result_file_names = [x.replace(".wav", '_early_fv.wav') for x in input_file_names]
+
+    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+                       return_convolved=False, scale_factor=1.0, norm=False)
 
 

@@ -159,7 +159,8 @@ def find_params_merged(rir_path: str,
                     optimal_params[p] = res_rev.x[i]
 
                 # Save params
-                current_params_path = 'audio/params/' + rir_folder[ref_idx] + '/' + effect_folder + '/'
+                current_params_path = f'audio/params/' + rir_folder[ref_idx].replace('.wav', '') + \
+                                      '/' + effect_folder + '/'
 
                 if not os.path.exists(current_params_path):
                     os.makedirs(current_params_path)
