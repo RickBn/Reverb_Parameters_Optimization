@@ -100,7 +100,7 @@ def edr_l1_distance(h_1: np.ndarray, h_2: np.ndarray, sr: int) -> float:
     return np.mean(abs(e_1 - e_2))
 
 
-def env_l1_distance(h_1: np.ndarray, h_2: np.ndarray) -> float:
+def env_l1_distance(h_1: np.ndarray, h_2: np.ndarray):
 
     l = np.max([len(h_1), len(h_2)])
     lam = -np.log(0.1) / l
@@ -111,30 +111,12 @@ def env_l1_distance(h_1: np.ndarray, h_2: np.ndarray) -> float:
     p_1 = h_1 * np.conjugate(h_1)
     p_2 = h_2 * np.conjugate(h_2)
 
-    return np.mean(abs(p_1 - p_2)*exp_d)
+    diff = abs(p_1 - p_2)*exp_d
+    mean = np.mean(diff)
+
+    return mean
 
 
 def log_spectral_distance(p1: np.ndarray, p2: np.ndarray):
 
     return np.sqrt(np.mean((10 * np.log10(p1 / p2))**2))
-
-
-
-
-# func = np.sqrt(np.arange(0.0, 1.0, 0.05))
-# func = (func * 10 + 1)
-# func = func.reshape(20, 1)
-#
-# h_1 = reference_audio
-# n_fft = 2048
-#
-# w_1 = librosa.feature.melspectrogram(y=h_1[0], sr=sr, n_fft=n_fft, hop_length=int(n_fft * 0.25))
-# w_1 = librosa.power_to_db(w_1, ref=np.max)
-# mfcc = librosa.feature.mfcc(S=w_1, n_mfcc=20)
-# plt.bar(np.arange(0,20,1), np.mean(mfcc * func, axis=1))
-
-# for wav in os.listdir(path)[1:]:
-# 	ms = b_format_to_ms_stereo(path + '/' + wav)
-# 	lr = ms_matrix(ms)
-# 	lr = lr / np.max(abs(lr))
-# 	sf.write('audio_functions/input/' + wav, lr.T, sr)
