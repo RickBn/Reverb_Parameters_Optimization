@@ -73,7 +73,8 @@ def find_params_merged(rir_path: str,
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
     if generate_references:
-        batch_fft_convolve(input_path, result_file_names, rir_path, result_path, scale_factor=1.0, norm=False)
+        batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+                           return_convolved=False, scale_factor=1.0, norm=False)
 
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
                                          rir_path, save_path=None, scale_factor=1.00, norm=False)
@@ -175,7 +176,11 @@ def find_params_merged(rir_path: str,
                 #rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
 
                 rt = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
+
                 rt = rt * cosine_fade(len(rt), fade_length=abs(len(rir_er[ch]) - offset_list[ch]), fade_out=False)
+                print(f'Fade Length {abs(len(rir_er[ch]) - offset_list[ch])}')
+                print(f'Len ER {len(rir_er[ch])}')
+
                 rt = pad_signal([rt], 1, offset_list[ch], pad_end=False)[:, :(sr*3)]
 
                 if ch == 0:

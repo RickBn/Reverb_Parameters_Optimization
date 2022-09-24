@@ -109,7 +109,7 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 		for idx, r_i in enumerate(rir):
 			er = int((sr * 0.001) * early_trim)
 
-			offset = np.argmax(r_i > 0.0025)
+			offset = np.argmax(r_i) - 128
 			offset_list.append(offset)
 
 			print(str(offset))
@@ -130,6 +130,7 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 			ax.plot(r_i[:er])
 			ax.plot(x, y, 'o-', color='darkorange')
 			plt.axvline(kn, linestyle='--', color='red')
+			plt.axvline(offset, linestyle='--', color='green')
 
 			if img_path is not None:
 				if not os.path.exists(img_path):
@@ -209,8 +210,8 @@ if __name__ == "__main__":
 	fade_factor = 4
 	early_trim = 500
 
-	#folder = 'HOA/spergair/bf4/'
-	folder = 'stereo/spergair/'
+	#folder = 'HOA/sdn_project/bf4/'
+	folder = 'stereo/sdn_project/'
 
 	rir_path = 'audio/input/chosen_rirs/' + folder
 	armodel_path = 'audio/armodels/' + folder
