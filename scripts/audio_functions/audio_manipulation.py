@@ -4,13 +4,15 @@ import numpy as np
 from numpy import ndarray
 import os
 import soundfile as sf
+import pyloudnorm as pyln
 import scipy.signal
 import librosa
 import librosa.display
-from scripts.utils.dict_functions import *
 import matplotlib.pyplot as plt
 import warnings
 
+from scripts.utils.dict_functions import *
+from scripts.utils.directory_functions import *
 from scripts.audio_functions.pedalboard_functions import *
 
 
@@ -33,6 +35,22 @@ def normalize_multidimensional(input: np.ndarray, byrow: bool = True) -> np.ndar
         norm = np.divide(input, np.max(abs(input), axis=0))
 
     return norm
+
+
+def batch_loudnorm(input_path: str, target_lufs: float):
+    for input_file in directory_filter(input_path):
+        file, sr = sf.read(f'{input_path}/{input_file}')
+        meter = pyln.Meter(sr)
+        loudness = meter.integrated_loudness(file)
+
+        # loudness normalize audio to -12 dB LUFS
+        loudness_normalized_audio = pyln.normalize.loudness(file, loudness, target_lufs)
+
+        sp = f'{input_path}/loudnorm/ln_{input_file}'
+
+        if not os.path.exists(sp):
+            os.makedirs(sp)
+        sf.write(sp, loudness_normalized_audio, sr)
 
 
 def ms_matrix(stereo_audio: np.ndarray) -> np.ndarray:
@@ -223,52 +241,3 @@ if __name__ == "__main__":
 
     for folder in os.listdir(e32):
         batch_concatenate_multichannel(e32 + folder + '/', save_path)
-
-    input_path = 'audio/input/sounds/48/mozart/_trimmed/'
-    rir = 'Living Room'
-
-    # /////////////////////////////////////////////////////////////////////////////
-
-    rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_done/'
-    result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
-
-    input_file_names = os.listdir(input_path)
-    result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
-
-    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
-                       return_convolved=False, scale_factor=1.0, norm=False)
-
-    #   /////////////////////////////////////////////////////////////////////////////
-
-    rir_path = f'audio/merged_rirs/HOA/{rir}/bf4/'
-    result_path = f'audio/results/HOA/{rir}/bf4/mozart/'
-
-    input_file_names = os.listdir(input_path)
-    result_file_names = [x.replace(".wav", '_freeverb.wav') for x in input_file_names]
-
-    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
-                       return_convolved=False, scale_factor=1.0, norm=False)
-
-    # /////////////////////////////////////////////////////////////////////////////
-
-    rir_path = f'audio/vst_rirs/stereo/{rir}/'
-    result_path = f'audio/results/stereo/{rir}/mozart/late_only/'
-
-    input_file_names = os.listdir(input_path)
-    result_file_names = [x.replace(".wav", '_late_fv.wav') for x in input_file_names]
-
-    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
-                       return_convolved=False, scale_factor=1.0, norm=False)
-
-    # /////////////////////////////////////////////////////////////////////////////
-
-    rir_path = f'audio/trimmed_rirs/HOA/{rir}/_done/'
-    result_path = f'audio/results/HOA/{rir}/bf4/mozart/early_only/'
-
-    input_file_names = os.listdir(input_path)
-    result_file_names = [x.replace(".wav", '_early_fv.wav') for x in input_file_names]
-
-    batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
-                       return_convolved=False, scale_factor=1.0, norm=False)
-
-

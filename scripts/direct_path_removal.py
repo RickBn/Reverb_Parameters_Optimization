@@ -1,8 +1,3 @@
-import os
-
-import numpy as np
-from typing import List
-
 from scripts.audio_functions.audio_manipulation import *
 
 
@@ -42,8 +37,48 @@ if __name__ == "__main__":
 
 	batch_trim(input_path, armodel_path, save_path, trim_tail=False)
 
+	input_path = 'audio/input/sounds/48/speech/_trimmed/'
+
+	batch_loudnorm(input_path, -30)
+
+	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm'
+	input_name = 'speech'
+
+	# /////////////////////////////////////////////////////////////////////////////
+	for rir in os.listdir('audio/input/chosen_rirs/HOA/'):
+
+		rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_done/'
+		result_path = f'audio/results/HOA/{rir}/bf4/{input_name}/'
+
+		input_file_names = os.listdir(input_path)
+		result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
+
+		batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+		                   return_convolved=False, scale_factor=1.0, norm=False)
+
+		# /////////////////////////////////////////////////////////////////////////////
+
+		rir_path = f'audio/vst_rirs/stereo/{rir}/'
+		result_path = f'audio/results/stereo/{rir}/{input_name}/late_only/'
+
+		input_file_names = os.listdir(input_path)
+		result_file_names = [x.replace(".wav", '_late_fv.wav') for x in input_file_names]
+
+		batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+		                   return_convolved=False, scale_factor=1.0, norm=False)
+
+		# /////////////////////////////////////////////////////////////////////////////
+
+		rir_path = f'audio/trimmed_rirs/HOA/{rir}/_done/'
+		result_path = f'audio/results/HOA/{rir}/bf4/{input_name}/early_only/'
+
+		input_file_names = os.listdir(input_path)
+		result_file_names = [x.replace(".wav", '_early_fv.wav') for x in input_file_names]
+
+		batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+		                   return_convolved=False, scale_factor=1.0, norm=False)
+
 	# ///////////////////////////////////////////////////////////////////
-	input_path = 'audio/input/sounds/48/mozart/_trimmed/'
 
 	rir_path = 'audio/trimmed_rirs/bin/'
 	result_path = f'audio/results/bin/late_only/'
@@ -52,11 +87,6 @@ if __name__ == "__main__":
 	result_file_names = [x.replace(".wav", '_late_bin.wav') for x in input_file_names]
 
 	for rir in os.listdir(rir_path):
-		save_path = f'{result_path}{rir}/mozart/'
+		save_path = f'{result_path}{rir}/{input_name}/'
 		batch_fft_convolve(input_path, result_file_names, f'{rir_path}{rir}/', save_path,
 		                   return_convolved=False, scale_factor=1.0, norm=False)
-
-
-
-
-

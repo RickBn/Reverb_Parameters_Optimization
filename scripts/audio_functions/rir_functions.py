@@ -210,8 +210,8 @@ if __name__ == "__main__":
 	fade_factor = 4
 	early_trim = 500
 
-	#folder = 'HOA/sdn_project/bf4/'
-	folder = 'stereo/sdn_project/'
+	folder = 'HOA/sdn_project/_done/'
+	#folder = 'stereo/sdn_project/'
 
 	rir_path = 'audio/input/chosen_rirs/' + folder
 	armodel_path = 'audio/armodels/' + folder
