@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
 	batch_loudnorm(input_path, -30)
 
-	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm'
+	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm/'
 	input_name = 'speech'
 
 	# /////////////////////////////////////////////////////////////////////////////

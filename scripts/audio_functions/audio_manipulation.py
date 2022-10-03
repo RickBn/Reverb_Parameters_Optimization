@@ -16,41 +16,35 @@ from scripts.utils.directory_functions import *
 from scripts.audio_functions.pedalboard_functions import *
 
 
-def normalize_audio(audio: np.ndarray, scale_factor=1.0, nan_check=False) -> np.ndarray:
+def normalize_audio(audio: np.ndarray,
+                    scale_factor: float = 1.0, nan_check: bool = False, by_row: bool = True) -> np.ndarray:
 
-    norm_audio = np.divide(audio, np.max(abs(audio))) * scale_factor
+    if by_row:
+        norm_audio = np.divide(audio.T, np.max(abs(audio), axis=1)).T
+
+    else:
+        norm_audio = np.divide(audio, np.max(abs(audio), axis=0))
 
     if nan_check:
         norm_audio[np.isnan(norm_audio)] = 0
 
-    return norm_audio
-
-
-def normalize_multidimensional(input: np.ndarray, byrow: bool = True) -> np.ndarray:
-
-    if byrow:
-        norm = np.divide(input.T, np.max(abs(input), axis=1)).T
-
-    else:
-        norm = np.divide(input, np.max(abs(input), axis=0))
-
-    return norm
+    return norm_audio * scale_factor
 
 
 def batch_loudnorm(input_path: str, target_lufs: float):
     for input_file in directory_filter(input_path):
-        file, sr = sf.read(f'{input_path}/{input_file}')
+        file, sr = sf.read(f'{input_path}{input_file}')
         meter = pyln.Meter(sr)
         loudness = meter.integrated_loudness(file)
 
         # loudness normalize audio to -12 dB LUFS
         loudness_normalized_audio = pyln.normalize.loudness(file, loudness, target_lufs)
 
-        sp = f'{input_path}/loudnorm/ln_{input_file}'
+        sp = f'{input_path}loudnorm/'
 
         if not os.path.exists(sp):
             os.makedirs(sp)
-        sf.write(sp, loudness_normalized_audio, sr)
+        sf.write(f'{sp}{input_file}', loudness_normalized_audio, sr)
 
 
 def ms_matrix(stereo_audio: np.ndarray) -> np.ndarray:
