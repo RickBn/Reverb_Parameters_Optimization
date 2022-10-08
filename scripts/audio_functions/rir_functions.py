@@ -1,12 +1,10 @@
-import os
-from typing import Dict, Optional, Any
-
 from kneed import KneeLocator
 
-from scripts.utils.json_functions import *
 from scripts.audio_functions.DSPfunc import *
 from scripts.audio_functions.audio_manipulation import *
 from scripts.audio_functions.audio_metrics import *
+from scripts.utils.dict_functions import save_or_merge
+
 
 plt.switch_backend('agg')
 
@@ -83,9 +81,9 @@ def rir_psd_metrics(rir_path: str,
 			if not os.path.exists(save_path):
 				os.makedirs(save_path)
 
-			np.save(save_path + '/arm_dict.npy', arm_dict)
-			np.save(save_path + '/psd_dict.npy', psd_dict)
-			np.save(save_path + '/lsd_dict.npy', lsd_dict)
+			save_or_merge(save_path + '/arm_dict.npy', arm_dict)
+			save_or_merge(save_path + '/psd_dict.npy', psd_dict)
+			save_or_merge(save_path + '/lsd_dict.npy', lsd_dict)
 
 	return arm_dict, psd_dict, lsd_dict
 
@@ -146,8 +144,8 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 			if not os.path.exists(cut_dict_path):
 				os.makedirs(cut_dict_path)
 
-			np.save(cut_dict_path + 'cut_idx_kl', cut_dict)
-			np.save(cut_dict_path + 'rir_offset', offset_dict)
+			save_or_merge(cut_dict_path + 'cut_idx_kl.npy', cut_dict)
+			save_or_merge(cut_dict_path + 'rir_offset.npy', offset_dict)
 
 	return [cut_dict, offset_dict]
 
@@ -190,30 +188,16 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 	return trimmed_rir_dict
 
 
-def rir_maximum(rir_path):
-	rir_files = os.listdir(rir_path)
-
-	rir_max_dict = {}
-
-	for rir_file in rir_files:
-		rir, sr = sf.read(rir_path + rir_file)
-		rir = rir.T
-
-		rir_max_dict[rir_file] = np.max(rir)
-
-	return rir_max_dict
-
-
 if __name__ == "__main__":
 	frame_size = 512
 	sr = 48000
 	fade_factor = 4
 	early_trim = 500
 
-	folder = 'HOA/sdn_project/_done/'
-	#folder = 'stereo/sdn_project/'
+	# folder = 'HOA/spergair/'
+	folder = 'stereo/spergair/'
 
-	rir_path = 'audio/input/chosen_rirs/' + folder
+	rir_path = 'audio/input/chosen_rirs/' + folder + '/_todo/'
 	armodel_path = 'audio/armodels/' + folder
 
 	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,
@@ -224,9 +208,9 @@ if __name__ == "__main__":
 	# arm_dict = np.load('audio/armodels/arm_dict_ms.npy', allow_pickle=True)[()]
 	lsd_dict = np.load('audio/armodels/' + folder + 'lsd_dict.npy', allow_pickle=True)[()]
 
-	cut_dict, offset_dict = rir_er_detection(rir_path, lsd_dict, img_path=knee_save_path, cut_dict_path=armodel_path)
+	cut_dict, offset_dict = rir_er_detection(rir_path, lsd_dict, img_path=None, cut_dict_path=armodel_path)
 
 	trim_rir_save_path = 'audio/trimmed_rirs/' + folder
 	trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
 
-# rir_max = rir_maximum(rir_path)
+	print(0)

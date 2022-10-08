@@ -100,7 +100,7 @@ def batch_concatenate_multichannel(input_audio_path: str, save_path: str = None)
     return cat_file
 
 
-def batch_fft_convolve(input_path: Union[str, List[np.ndarray]],
+def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
                        input_name: List[str],
                        rir_path: str,
                        save_path: str = None,
@@ -113,17 +113,22 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray]],
     input_list = []
 
     if type(input_path) is str:
-        input_list = []
-        for input in os.listdir(input_path):
+        for input in directory_filter(input_path):
             input_sound, input_sr = sf.read(input_path + input)
             input_sound = input_sound.T
             input_list.append(input_sound)
 
     elif type(input_path) is list:
-        input_list = input_path
+        if all(isinstance(n, np.ndarray) for n in input_list):
+            input_list = input_path
+        elif all(isinstance(n, str) for n in input_list):
+            for input in input_list:
+                input_sound, input_sr = sf.read(input_path + input)
+                input_sound = input_sound.T
+                input_list.append(input_sound)
 
     for idx, input_sound in enumerate(input_list):
-        for rir in os.listdir(rir_path):
+        for rir in directory_filter(rir_path):
             input_rir, rir_sr = sf.read(rir_path + rir)
             input_rir = input_rir.T
             input_multichannel = np.stack([input_sound] * input_rir.shape[0])

@@ -26,11 +26,10 @@ def find_params_late(rir_path: str,
                      generate_references: bool = True,
                      pre_norm: bool = True):
 
-    rir_file = os.listdir(rir_path)
     rir_folder = os.listdir(rir_path)
     rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
 
-    rir, sr = sf.read(rir_path + rir_file[0])
+    rir, sr = sf.read(rir_path + rir_folder[0])
     print(sr)
 
     impulse = create_impulse(sr * 3, n_channels=2)
@@ -93,8 +92,10 @@ def find_params_late(rir_path: str,
 
     for ref_idx, ref in enumerate(reference_audio):
 
-        rir_name = rir_folder[ref_idx].replace('.wav', '')
-        rir_er_path = er_path + os.listdir(er_path)[ref_idx]
+        rir_file = rir_folder[ref_idx]
+        rir_name = rir_file.replace('.wav', '')
+
+        rir_er_path = er_path + rir_file
 
         rir_er, sr_er = sf.read(rir_er_path)
         rir_er = rir_er.T
@@ -103,7 +104,7 @@ def find_params_late(rir_path: str,
         if not os.path.exists(current_rir_path):
             os.makedirs(current_rir_path)
 
-        offset_list = rir_offset[rir_folder[ref_idx]]
+        offset_list = rir_offset[rir_file]
         max_offset = np.max(offset_list)
 
         for rev in rev_plugins:
@@ -124,6 +125,7 @@ def find_params_late(rir_path: str,
                                               offset=max_offset,
                                               sample_rate=sr,
                                               vst3=rev_plugin,
+                                              merged=True,
                                               pre_norm=pre_norm)
 
             res_rev = gp_minimize(distance_func, rev_param_ranges, acq_func="gp_hedge",
@@ -182,14 +184,14 @@ def find_params_late(rir_path: str,
             #                   'images/melspec/' + rir_folder[ref_idx] + '_' + current_effect + '.pdf')
 
             # Convolve with all input files
-            for audio_idx, input_audio in enumerate(audio_file):
-
-                reverb_audio = scipy.signal.fftconvolve(np.stack([input_audio] * merged_rir.shape[0]), merged_rir,
-                                                        mode='full', axes=1)
-
-                current_sound = os.listdir(input_path)[audio_idx].replace('.wav', '')
-
-                sf.write(f'{current_rir_path}{current_sound}_{current_effect}.wav', reverb_audio.T, sr)
+            # for audio_idx, input_audio in enumerate(audio_file):
+            #
+            #     reverb_audio = scipy.signal.fftconvolve(np.stack([input_audio] * merged_rir.shape[0]), merged_rir,
+            #                                             mode='full', axes=1)
+            #
+            #     current_sound = os.listdir(input_path)[audio_idx].replace('.wav', '')
+            #
+            #     sf.write(f'{current_rir_path}{current_sound}_{current_effect}.wav', reverb_audio.T, sr)
 
             # with open('audio/' + current_effect + '_times.txt', 'w') as f:
             #     for item in times:
@@ -202,16 +204,16 @@ def find_params_merged(rir_path: str,
                        armodel_path: str,
                        merged_rir_path: str,
                        vst_rir_path: str,
+                       params_path: str,
                        result_path: str,
                        input_path: str,
                        generate_references: bool = True,
-                       pre_norm: bool = True):
+                       pre_norm: bool = False):
 
-    rir_file = os.listdir(rir_path)
     rir_folder = os.listdir(rir_path)
     rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
 
-    rir, sr = sf.read(rir_path + rir_file[0])
+    rir, sr = sf.read(rir_path + rir_folder[0])
     print(sr)
 
     impulse = create_impulse(sr * 3, n_channels=1)
@@ -259,7 +261,7 @@ def find_params_merged(rir_path: str,
                            return_convolved=False, scale_factor=1.0, norm=False)
 
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
-                                         rir_path, save_path=None, scale_factor=1.00, norm=False)
+                                         rir_path, save_path=None, scale_factor=1.0, norm=False)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -274,18 +276,22 @@ def find_params_merged(rir_path: str,
 
     for ref_idx, ref in enumerate(reference_audio):
 
-        rir_er_path = er_path + os.listdir(er_path)[ref_idx]
+        rir_file = rir_folder[ref_idx]
+        rir_name = rir_file.replace('.wav', '')
+        print(rir_name)
+
+        rir_er_path = er_path + rir_file
 
         rir_er, sr_er = sf.read(rir_er_path)
         rir_er = rir_er.T
 
         fade_in = int(5 * sr * 0.001)
 
-        current_rir_path = result_path + rir_folder[ref_idx].replace('.wav', '') + '/'
+        current_rir_path = f'{result_path}{rir_name}/'
         if not os.path.exists(current_rir_path):
             os.makedirs(current_rir_path)
 
-        offset_list = rir_offset[rir_folder[ref_idx]]
+        offset_list = rir_offset[rir_file]
 
         for rev in rev_plugins:
 
@@ -315,11 +321,11 @@ def find_params_merged(rir_path: str,
                 #start = timeit.default_timer()
 
                 res_rev = gp_minimize(distance_func, rev_param_ranges, acq_func="gp_hedge",
-                                      n_calls=180, n_random_starts=10, random_state=1234)
+                                      n_calls=100, n_random_starts=10, random_state=1234)
 
                 fig = plt.figure()
                 plot_convergence(res_rev)
-                plt.savefig('images/convergence/' + rir_folder[ref_idx] + '_' + current_effect + '_' + str(ch) + '.png')
+                plt.savefig(f'images/convergence/{rir_name}_{current_effect}_{str(ch)}.png')
 
                 #stop = timeit.default_timer()
 
@@ -333,13 +339,11 @@ def find_params_merged(rir_path: str,
                     optimal_params[p] = res_rev.x[i]
 
                 # Save params
-                current_params_path = f'audio/params/' + rir_folder[ref_idx].replace('.wav', '') + \
-                                      '/' + effect_folder + '/'
-
+                current_params_path = f'{params_path}{rir_name}/{effect_folder}/'
                 if not os.path.exists(current_params_path):
                     os.makedirs(current_params_path)
 
-                model_store(current_params_path + current_effect + '_' + str(ch) + '.json', optimal_params)
+                model_store(f'{current_params_path}{current_effect}_{ch}.json', optimal_params)
 
                 scale = optimal_params['scale']
                 opt_params = exclude_keys(optimal_params, 'scale')
@@ -363,7 +367,7 @@ def find_params_merged(rir_path: str,
 
             # Save VST generated RIR tail
 
-            sf.write(vst_rir_path + rir_folder[ref_idx].replace('.wav', '') + '_' + current_effect + '.wav',
+            sf.write(vst_rir_path + rir_name + '_' + current_effect + '.wav',
                      rir_tail.T, sr)
 
             # Merge tail with ER
@@ -374,7 +378,7 @@ def find_params_merged(rir_path: str,
             merged_rir = merge_er_tail_rir(rir_er, rir_tail,
                                            sr, fade_length=fade_in, trim=3, fade=False)
 
-            sf.write(merged_rir_path + rir_folder[ref_idx].replace('.wav', '') + '_' + current_effect + '.wav',
+            sf.write(merged_rir_path + rir_name + '_' + current_effect + '.wav',
                      merged_rir.T, sr)
 
             # Prepare convolution and generate/save reverberated sweep
