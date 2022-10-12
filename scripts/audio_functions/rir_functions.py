@@ -194,10 +194,10 @@ if __name__ == "__main__":
 	fade_factor = 4
 	early_trim = 500
 
-	# folder = 'HOA/spergair/'
-	folder = 'stereo/spergair/'
+	# folder = 'HOA/Living Room/'
+	folder = 'stereo/Living Room/'
 
-	rir_path = 'audio/input/chosen_rirs/' + folder + '/_todo/'
+	rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
 	armodel_path = 'audio/armodels/' + folder
 
 	a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,

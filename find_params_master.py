@@ -5,10 +5,10 @@ plt.switch_backend('agg')
 if __name__ == "__main__":
 
     #folder = 'HOA/sdn_project/bf4/'
-    rir_name = 'sdn_project'
+    rir_name = 'Living Room'
     folder = f'stereo/{rir_name}/'
 
-    rir_path = f'audio/input/chosen_rirs/{folder}/'
+    rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
     er_path = f'audio/trimmed_rirs/{folder}'
     armodel_path = f'audio/armodels/{folder}'
     merged_rir_path = f'audio/merged_rirs/{folder}'

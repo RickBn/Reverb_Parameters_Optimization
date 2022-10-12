@@ -257,11 +257,11 @@ def find_params_merged(rir_path: str,
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
     if generate_references:
-        batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+        batch_fft_convolve(input_path, result_file_names, rir_path, rir_names=None, save_path=result_path,
                            return_convolved=False, scale_factor=1.0, norm=False)
 
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
-                                         rir_path, save_path=None, scale_factor=1.0, norm=False)
+                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

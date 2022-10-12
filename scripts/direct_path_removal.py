@@ -28,7 +28,7 @@ def batch_trim(input_path: str, armodel_path: str, save_path=None, trim_tail: bo
 
 if __name__ == "__main__":
 	sr = 48000
-	rir = 'sdn_project'
+	rir = 'Living Room'
 
 	input_path = f'audio/input/chosen_rirs/stereo/{rir}/_todo/'
 	armodel_path = f'audio/armodels/stereo/{rir}/'
@@ -44,10 +44,12 @@ if __name__ == "__main__":
 	input_name = 'speech'
 
 	# /////////////////////////////////////////////////////////////////////////////
-	rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_done/'
+	rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_todo/'
+	rir_file_names = directory_filter(rir_path)
+	input_file_names = os.listdir(input_path)
+
 	result_path = f'audio/results/HOA/{rir}/{input_name}/'
 
-	input_file_names = os.listdir(input_path)
 	result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
 	batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
@@ -55,33 +57,33 @@ if __name__ == "__main__":
 
 	# /////////////////////////////////////////////////////////////////////////////
 
-	rir_path = f'audio/vst_rirs/stereo/{rir}/'
-	result_path = f'audio/results/stereo/{rir}/{input_name}/late_only/'
+	vst_rir_path = f'audio/vst_rirs/stereo/{rir}/'
+	vst_rir_names = [x.replace(".wav", '_Freeverb.wav') for x in rir_file_names]
 
-	input_file_names = os.listdir(input_path)
+	result_path = f'audio/results/stereo/{rir}/{input_name}/late_only/'
 	result_file_names = [x.replace(".wav", '_late_fv.wav') for x in input_file_names]
 
-	batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+	batch_fft_convolve(input_path, result_file_names, vst_rir_path, vst_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
 	# /////////////////////////////////////////////////////////////////////////////
 
-	rir_path = f'audio/trimmed_rirs/HOA/{rir}/'
-	result_path = f'audio/results/HOA/{rir}/{input_name}/early_only/'
+	trimmed_rir_path = f'audio/trimmed_rirs/HOA/{rir}/'
+	trimmed_rir_names = rir_file_names
 
-	input_file_names = os.listdir(input_path)
+	result_path = f'audio/results/HOA/{rir}/{input_name}/early_only/'
 	result_file_names = [x.replace(".wav", '_early_fv.wav') for x in input_file_names]
 
-	batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+	batch_fft_convolve(input_path, result_file_names, trimmed_rir_path, trimmed_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
 	# ///////////////////////////////////////////////////////////////////
 
-	rir_path = f'audio/trimmed_rirs/bin/{rir}/'
-	result_path = f'audio/results/bin/late_only/{rir}/{input_name}/'
+	late_rir_path = f'audio/trimmed_rirs/bin/{rir}/'
+	late_rir_names = rir_file_names
 
-	input_file_names = os.listdir(input_path)
+	result_path = f'audio/results/bin/late_only/{rir}/{input_name}/'
 	result_file_names = [x.replace(".wav", '_late_bin.wav') for x in input_file_names]
 
-	batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+	batch_fft_convolve(input_path, result_file_names, late_rir_path, late_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)

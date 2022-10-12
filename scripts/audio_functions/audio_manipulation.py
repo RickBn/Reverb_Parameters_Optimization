@@ -103,6 +103,7 @@ def batch_concatenate_multichannel(input_audio_path: str, save_path: str = None)
 def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
                        input_name: List[str],
                        rir_path: str,
+                       rir_names: List[str] = None,
                        save_path: str = None,
                        return_convolved=True,
                        scale_factor: float = 1.0,
@@ -119,18 +120,24 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
             input_list.append(input_sound)
 
     elif type(input_path) is list:
-        if all(isinstance(n, np.ndarray) for n in input_list):
+        if all(isinstance(n, np.ndarray) for n in input_path):
             input_list = input_path
-        elif all(isinstance(n, str) for n in input_list):
-            for input in input_list:
-                input_sound, input_sr = sf.read(input_path + input)
+        elif all(isinstance(n, str) for n in input_path):
+            for input_file in input_path:
+                input_sound, input_sr = sf.read(input_file)
                 input_sound = input_sound.T
                 input_list.append(input_sound)
 
-    for idx, input_sound in enumerate(input_list):
-        for rir in directory_filter(rir_path):
-            input_rir, rir_sr = sf.read(rir_path + rir)
+    if rir_names is None:
+        rir_names = directory_filter(rir_path)
+
+    rir_list = [f'{rir_path}{rir_name}' for rir_name in rir_names]
+
+    for input_idx, input_sound in enumerate(input_list):
+        for rir_idx, rir in enumerate(rir_list):
+            input_rir, rir_sr = sf.read(rir)
             input_rir = input_rir.T
+
             input_multichannel = np.stack([input_sound] * input_rir.shape[0])
             convolved_sound = scipy.signal.fftconvolve(input_multichannel, input_rir, mode='full', axes=1)
 
@@ -149,12 +156,12 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
                 #                   'and input sr = ' + str(input_sr) +
                 #                   ". Using sr = " + str(sr))
 
-                sp = save_path + '/' + rir.replace('.wav', "") + '/'
+                sp = save_path + '/' + rir_names[rir_idx].replace('.wav', "") + '/'
 
                 if not os.path.exists(sp):
                     os.makedirs(sp)
 
-                sf.write(sp + input_name[idx], convolved_sound.T, sr)
+                sf.write(sp + input_name[input_idx], convolved_sound.T, sr)
 
     return convolved
 
