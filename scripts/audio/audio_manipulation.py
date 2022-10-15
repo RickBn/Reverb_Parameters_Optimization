@@ -13,7 +13,7 @@ import warnings
 
 from scripts.utils.dict_functions import *
 from scripts.utils.directory_functions import *
-from scripts.audio_functions.pedalboard_functions import *
+from scripts.audio.pedalboard_functions import *
 
 
 def normalize_audio(audio: np.ndarray,

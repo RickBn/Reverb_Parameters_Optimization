@@ -1,6 +1,6 @@
 import os
 
-from scripts.audio_functions.audio_manipulation import *
+from scripts.audio.audio_manipulation import *
 
 
 def batch_trim(input_path: str, armodel_path: str, save_path=None, trim_tail: bool = True):

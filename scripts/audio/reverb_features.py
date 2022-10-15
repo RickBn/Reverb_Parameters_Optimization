@@ -1,7 +1,7 @@
 import librosa.display
-from scripts.audio_functions.signal_generation import create_impulse
-from scripts.audio_functions.audio_manipulation import *
-from scripts.audio_functions.pedalboard_functions import *
+from scripts.audio.signal_generation import create_impulse
+from scripts.audio.audio_manipulation import *
+from scripts.audio.pedalboard_functions import *
 
 
 def rev_tr(ir, sr, interval: np.ndarray = np.array([-5, -25])):

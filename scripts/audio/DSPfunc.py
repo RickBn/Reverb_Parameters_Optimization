@@ -82,7 +82,7 @@ def mp32wav( infile, outfile, frames=-1, start=0 ):
         raise Exception("Error executing {0}\n\rffmpeg may be missing".format(cmd))    
 
 def audioinfo( infile ):
-    '''Get audio_functions file stream info using ffprobe'''
+    '''Get audio file stream info using ffprobe'''
     '''returns an object with attributes Fs, ch, bit, duration, length, codec'''
     '''WARNING: info.bit = 0 in case of lossy codec'''
     
@@ -109,7 +109,7 @@ def audioinfo( infile ):
     return info
 
 def audioread( filename, frames=-1, start=0, fill_val=None ):
-    '''Returns audio_functions data in range -1:1 together with sample rate'''
+    '''Returns audio data in range -1:1 together with sample rate'''
     '''Additional params: start, frames, fill_value'''
     '''WARNING: mp3 read may end in len(data)!=frames'''
     if (filename[-3:].lower() == 'mp3'):
@@ -126,7 +126,7 @@ def audioread( filename, frames=-1, start=0, fill_val=None ):
     return data, Fs
 
 def audiowrite( filename, data, Fs, subtype=None ):
-    '''Write audio_functions data into file'''
+    '''Write audio data into file'''
     '''Additional params: subtype'''
     '''PCM_24': 'Signed 24 bit PCM'''
     '''PCM_16': 'Signed 16 bit PCM'''

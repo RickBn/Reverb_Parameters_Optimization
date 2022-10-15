@@ -7,10 +7,10 @@ from scripts.parameters_learning import *
 from scripts.utils.json_functions import *
 from scripts.utils.plot_functions import *
 
-from scripts.audio_functions.audio_manipulation import *
-from scripts.audio_functions.signal_generation import *
-from scripts.audio_functions.reverb_features import *
-from scripts.audio_functions.DSPfunc import *
+from scripts.audio.audio_manipulation import *
+from scripts.audio.signal_generation import *
+from scripts.audio.reverb_features import *
+from scripts.audio.DSPfunc import *
 
 rir_path = '../audio/input/chosen_rirs/'
 rir_file = os.listdir(rir_path)
@@ -76,7 +76,7 @@ for ref_idx, ref in enumerate(reference_norm):
 
         for model in os.listdir(model_path):
 
-            params = model_load(model_path + model)
+            params = json_load(model_path + model)
 
             if effect_params == 'fdn':
                 #print('fdn ---', params)

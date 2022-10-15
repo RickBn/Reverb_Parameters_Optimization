@@ -5,7 +5,7 @@ from skopt.plots import plot_convergence
 import timeit
 
 from scripts.parameters_learning import *
-from scripts.audio_functions.signal_generation import *
+from scripts.audio.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
 from scripts.utils.json_functions import *
@@ -145,7 +145,7 @@ def find_params_late(rir_path: str,
             if not os.path.exists(current_params_path):
                 os.makedirs(current_params_path)
 
-            model_store(f'{current_params_path}{current_effect}.json', optimal_params)
+            json_store(f'{current_params_path}{current_effect}.json', optimal_params)
 
             scale = optimal_params['scale']
             opt_params = exclude_keys(optimal_params, 'scale')
@@ -343,7 +343,7 @@ def find_params_merged(rir_path: str,
                 if not os.path.exists(current_params_path):
                     os.makedirs(current_params_path)
 
-                model_store(f'{current_params_path}{current_effect}_{ch}.json', optimal_params)
+                json_store(f'{current_params_path}{current_effect}_{ch}.json', optimal_params)
 
                 scale = optimal_params['scale']
                 opt_params = exclude_keys(optimal_params, 'scale')

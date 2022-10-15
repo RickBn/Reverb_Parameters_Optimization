@@ -1,9 +1,9 @@
 from scripts.parameters_learning import *
 from scripts.utils.plot_functions import *
 
-from scripts.audio_functions.signal_generation import *
-from scripts.audio_functions.pedalboard_functions import *
-from scripts.audio_functions.rir_functions import *
+from scripts.audio.signal_generation import *
+from scripts.audio.pedalboard_functions import *
+from scripts.audio.rir_functions import *
 
 
 def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,

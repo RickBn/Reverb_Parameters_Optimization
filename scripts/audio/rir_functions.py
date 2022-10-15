@@ -1,8 +1,8 @@
 from kneed import KneeLocator
 
-from scripts.audio_functions.DSPfunc import *
-from scripts.audio_functions.audio_manipulation import *
-from scripts.audio_functions.audio_metrics import *
+from scripts.audio.DSPfunc import *
+from scripts.audio.audio_manipulation import *
+from scripts.audio.audio_metrics import *
 from scripts.utils.dict_functions import save_or_merge
 
 

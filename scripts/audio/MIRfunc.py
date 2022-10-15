@@ -1,5 +1,5 @@
 from __future__ import division
-from scripts.audio_functions.DSPfunc import *
+from scripts.audio.DSPfunc import *
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt

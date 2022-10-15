@@ -1,9 +1,9 @@
 import pedalboard
 
-from scripts.audio_functions.audio_manipulation import *
-from scripts.audio_functions.pedalboard_functions import *
-from scripts.audio_functions.audio_metrics import *
-from scripts.audio_functions.signal_generation import create_impulse
+from scripts.audio.audio_manipulation import *
+from scripts.audio.pedalboard_functions import *
+from scripts.audio.audio_metrics import *
+from scripts.audio.signal_generation import create_impulse
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.dict_functions import exclude_keys
 
