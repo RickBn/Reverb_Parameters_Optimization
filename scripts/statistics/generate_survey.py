@@ -21,6 +21,7 @@ class SurveyGenerator:
 	def __init__(self, setup_dict: Dict[str, List] = None,
 	             nested_conditions: List[Tuple[str, str]] = None,
 	             subject_id: int = 0):
+
 		self.setup_dict = setup_dict
 		self.nested_conditions = nested_conditions
 
@@ -35,17 +36,31 @@ class SurveyGenerator:
 
 		self.randomized_dict = {}
 
-	def randomize_conditions(self):
-		for condition in nested_conditions:
-			condition_name = condition[0]
-			random_tpye = condition[1]
-
-			if random_tpye is "latin":
-				self.randomize_latin(condition_name)
-			elif random_tpye is "shuffle":
-				self.randomize_shuffle(condition_name)
-
+	def get_randomized_dict(self):
+		self.randomized_dict = self.nested_randomization()
 		return self.randomized_dict
+
+	def nested_randomization(self, start: int = 0):
+		idx = start
+		output_dict = {}
+		shuffled_conditions = self.randomize_conditions(self.nested_conditions[idx])
+
+		if idx < len(self.nested_conditions) - 1:
+			for condition in shuffled_conditions:
+				output_dict[condition] = self.nested_randomization(idx + 1)
+		else:
+			return shuffled_conditions
+
+		return output_dict
+
+	def randomize_conditions(self, condition: Tuple[str, str]):
+		condition_name = condition[0]
+		random_type = condition[1]
+
+		if random_type is "latin":
+			return self.randomize_latin(condition_name)
+		elif random_type is "shuffle":
+			return self.randomize_shuffle(condition_name)
 
 	def randomize_latin(self, condition_name: str):
 		condition_list = self.setup_dict[condition_name]
@@ -54,24 +69,29 @@ class SurveyGenerator:
 
 		shuffled_list = []
 		for idx in self.latin_row:
-			shuffled_list.append(condition_list[idx])
+			shuffled_list.append(str(condition_list[idx]))
 
-		self.randomized_dict[condition_name] = shuffled_list
+		return shuffled_list
 
 	def randomize_shuffle(self, condition_name: str):
-		shuffled_list = self.setup_dict[condition_name]
-		random.shuffle(shuffled_list)
+		condition_list = self.setup_dict[condition_name]
+		shuffled_list = random.sample(condition_list, len(condition_list))
 
-		self.randomized_dict[condition_name] = shuffled_list
+		return shuffled_list
 
 
 if __name__ == "__main__":
-	id = 0
+	subject_idx = 0
 	survey_setup = json_load("scripts/statistics/survey_setup.json")
-	nested_conditions = [("complexity", "latin"),
-	                     ("room", "shuffle"),
-	                     ("conditions", "shuffle"),
-	                     ("speaker", "shuffle")]
+	conditions = [("complexity", "latin"),
+	              ("room", "shuffle"),
+	              ("conditions", "shuffle"),
+	              ("speaker", "shuffle")]
 
-	sg = SurveyGenerator(survey_setup, nested_conditions, id)
-	sg.randomize_conditions()
+	sg = SurveyGenerator(survey_setup, conditions, subject_idx)
+	randomized_dict = sg.get_randomized_dict()
+
+	for complexity, rooms in randomized_dict.items():
+		for room, conditions in rooms.items():
+			for condition, speakers in conditions.items():
+				conditions[condition] = speakers[:int(complexity)]
