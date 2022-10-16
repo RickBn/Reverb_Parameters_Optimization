@@ -1,9 +1,5 @@
-import os
-
-import numpy as np
-import pandas as pd
-import math
 import random
+import xlsxwriter
 
 from scripts.utils.json_functions import json_load
 from scripts.utils.plot_functions import *
@@ -34,11 +30,9 @@ class SurveyGenerator:
 		subject_offset = idx * latin_size
 		self.latin_row = latin_square[subject_offset: subject_offset + latin_size]
 
-		self.randomized_dict = {}
-
 	def get_randomized_dict(self):
-		self.randomized_dict = self.nested_randomization()
-		return self.randomized_dict
+		randomized_dict = self.nested_randomization()
+		return randomized_dict
 
 	def nested_randomization(self, start: int = 0):
 		idx = start
@@ -61,6 +55,9 @@ class SurveyGenerator:
 			return self.randomize_latin(condition_name)
 		elif random_type is "shuffle":
 			return self.randomize_shuffle(condition_name)
+		else:
+			raise Exception("Attention! "
+			                "The randomization type for each condition must be a string = [latin, shuffle]).")
 
 	def randomize_latin(self, condition_name: str):
 		condition_list = self.setup_dict[condition_name]
@@ -95,3 +92,29 @@ if __name__ == "__main__":
 		for room, conditions in rooms.items():
 			for condition, speakers in conditions.items():
 				conditions[condition] = speakers[:int(complexity)]
+
+workbook = xlsxwriter.Workbook('Survey.xlsx')
+worksheet = workbook.add_worksheet()
+
+merge_format = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter'})
+
+for c_col, complexity in enumerate(randomized_dict.keys()):
+	worksheet.merge_range(0,
+	                      (c_col * 4),
+	                      0,
+	                      (c_col * 4) + 3,
+	                      f'Complexity {complexity}',
+	                      merge_format)
+	for r_row, room in enumerate(randomized_dict[complexity].keys()):
+		worksheet.merge_range(r_row * (int(complexity) + 1) + 1,
+		                      (c_col * 4),
+		                      r_row * (int(complexity) + 1) + 1,
+		                      (c_col * 4) + 3,
+		                      room,
+		                      merge_format)
+
+workbook.close()
