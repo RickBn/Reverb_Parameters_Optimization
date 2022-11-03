@@ -28,7 +28,7 @@ def batch_trim(input_path: str, armodel_path: str, save_path=None, trim_tail: bo
 
 if __name__ == "__main__":
 	sr = 48000
-	rir = 'Living Room'
+	rir = 'spergair'
 
 	input_path = f'audio/input/chosen_rirs/stereo/{rir}/_todo/'
 	armodel_path = f'audio/armodels/stereo/{rir}/'
@@ -40,10 +40,12 @@ if __name__ == "__main__":
 
 	batch_loudnorm(input_path, -30)
 
-	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm/'
+	# /////////////////////////////////////////////////////////////////////////////
+	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm/_todo/'
 	input_name = 'speech'
 
-	# /////////////////////////////////////////////////////////////////////////////
+	rir = 'spergair'
+
 	rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_todo/'
 	rir_file_names = directory_filter(rir_path)
 	input_file_names = os.listdir(input_path)
@@ -52,7 +54,7 @@ if __name__ == "__main__":
 
 	result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
-	batch_fft_convolve(input_path, result_file_names, rir_path, result_path,
+	batch_fft_convolve(input_path, result_file_names, rir_path, save_path=result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
 	# /////////////////////////////////////////////////////////////////////////////
@@ -87,3 +89,5 @@ if __name__ == "__main__":
 
 	batch_fft_convolve(input_path, result_file_names, late_rir_path, late_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
+
+	print(0)

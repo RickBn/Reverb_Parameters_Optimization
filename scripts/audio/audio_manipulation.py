@@ -34,10 +34,9 @@ def normalize_audio(audio: np.ndarray,
 def batch_loudnorm(input_path: str, target_lufs: float):
     for input_file in directory_filter(input_path):
         file, sr = sf.read(f'{input_path}{input_file}')
-        meter = pyln.Meter(sr)
+        meter = pyln.Meter(sr, block_size=0.200)
         loudness = meter.integrated_loudness(file)
 
-        # loudness normalize audio to -12 dB LUFS
         loudness_normalized_audio = pyln.normalize.loudness(file, loudness, target_lufs)
 
         sp = f'{input_path}loudnorm/'
