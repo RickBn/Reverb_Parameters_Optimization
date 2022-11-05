@@ -46,6 +46,38 @@ def batch_loudnorm(input_path: str, target_lufs: float):
         sf.write(f'{sp}{input_file}', loudness_normalized_audio, sr)
 
 
+def batch_phase_shift(input_audio_path: str, phase_shift_ir: str, save_path: str):
+    ps, sr_ps = sf.read(phase_shift_ir)
+    ps = ps.T
+
+    if ps.ndim != 1:
+        raise Exception("The phase shift signal should be a mono audio file!")
+
+    for audio in directory_filter(input_audio_path):
+        stereo_audio, sr_sa = sf.read(f'{input_audio_path}{audio}')
+        stereo_audio = stereo_audio.T
+
+        if sr_ps != sr_sa:
+            raise Exception("Sample rate mismatch!")
+
+        if stereo_audio.ndim != 2:
+            raise Exception("This method is intended to decorrelate two stereo channels!")
+
+        if len(stereo_audio) != 2:
+            raise Exception("This method is intended to decorrelate two stereo channels!")
+
+        stereo_audio[1] = scipy.signal.fftconvolve(stereo_audio[1], ps, mode='same', axes=0)
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        file_name = audio.replace('.wav', '_shifted.wav')
+
+        sf.write(f'{save_path}{file_name}', stereo_audio.T, sr_sa)
+
+    print(0)
+
+
 def ms_matrix(stereo_audio: np.ndarray) -> np.ndarray:
     inv_sq = 1 / np.sqrt(2)
     mid = (stereo_audio[0] + stereo_audio[1]) * inv_sq

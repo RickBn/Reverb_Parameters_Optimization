@@ -40,11 +40,19 @@ if __name__ == "__main__":
 
 	batch_loudnorm(input_path, -30)
 
-	# /////////////////////////////////////////////////////////////////////////////
+	# CREATE PHASE SHIFTED RIR VERSION ///////////////////////////////////////////
+	rir = 'sdn_project'
+	vst_rir_path = f'audio/vst_rirs/stereo/{rir}/'
+	phase_shift_ir = 'audio/input/filters/phase_rot/90_deg_phaseShift.wav'
+
+	batch_phase_shift(vst_rir_path, phase_shift_ir, f'{vst_rir_path}shifted/')
+
+	# // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+	# HOA ////////////////////////////////////////////////////////////////////////
 	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm/_todo/'
 	input_name = 'speech'
 
-	rir = 'spergair'
+	rir = 'Living Room'
 
 	rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_todo/'
 	rir_file_names = directory_filter(rir_path)
@@ -57,7 +65,7 @@ if __name__ == "__main__":
 	batch_fft_convolve(input_path, result_file_names, rir_path, save_path=result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
-	# /////////////////////////////////////////////////////////////////////////////
+	# FREEVERB LATE ///////////////////////////////////////////////////////////////
 
 	vst_rir_path = f'audio/vst_rirs/stereo/{rir}/'
 	vst_rir_names = [x.replace(".wav", '_Freeverb.wav') for x in rir_file_names]
@@ -68,7 +76,18 @@ if __name__ == "__main__":
 	batch_fft_convolve(input_path, result_file_names, vst_rir_path, vst_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
-	# /////////////////////////////////////////////////////////////////////////////
+	# 90 SHIFT ////////////////////////////////////////////////////////////////////
+
+	vst_rir_path = f'audio/vst_rirs/stereo/{rir}/shifted/'
+	vst_rir_names = os.listdir(vst_rir_path)
+
+	result_path = f'audio/results/stereo/{rir}/{input_name}/shifted/'
+	result_file_names = [x.replace(".wav", '_shifted_fv.wav') for x in input_file_names]
+
+	batch_fft_convolve(input_path, result_file_names, vst_rir_path, vst_rir_names, result_path,
+	                   return_convolved=False, scale_factor=1.0, norm=False)
+
+	# HOA ER //////////////////////////////////////////////////////////////////////
 
 	trimmed_rir_path = f'audio/trimmed_rirs/HOA/{rir}/'
 	trimmed_rir_names = rir_file_names
@@ -79,7 +98,7 @@ if __name__ == "__main__":
 	batch_fft_convolve(input_path, result_file_names, trimmed_rir_path, trimmed_rir_names, result_path,
 	                   return_convolved=False, scale_factor=1.0, norm=False)
 
-	# ///////////////////////////////////////////////////////////////////
+	# HOA/BIN LATE /////////////////////////////////////////////////////////////////
 
 	late_rir_path = f'audio/trimmed_rirs/bin/{rir}/'
 	late_rir_names = rir_file_names
