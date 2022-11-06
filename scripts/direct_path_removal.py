@@ -52,7 +52,7 @@ if __name__ == "__main__":
 	input_path = 'audio/input/sounds/48/speech/_trimmed/loudnorm/_todo/'
 	input_name = 'speech'
 
-	rir = 'Living Room'
+	rir = 'spergair'
 
 	rir_path = f'audio/input/chosen_rirs/HOA/{rir}/_todo/'
 	rir_file_names = directory_filter(rir_path)

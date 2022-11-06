@@ -2,7 +2,7 @@
   "complexity":  [2, 3, 4],
   "room": ["3D_MARCo", "METU", "LIVING_ROOM", "AALBORG"],
   "conditions": ["HOA_Bin", "Freeverb"],
-  "speaker": ["001_Bob", "014_Mark", "031_George", "049_Alice", "063_Sarah"],
+  "speaker": ["001_DAVID", "026_RICHARD", "032_SUSAN", "058_MARIA"],
   "trial_setups" :
   {
     "3D_MARCo":
