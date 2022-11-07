@@ -6,11 +6,17 @@ from scripts.utils.plot_functions import *
 
 from typing import Dict, List, Tuple
 
-latin_size = 4
-latin_square = np.array([1, 3, 0, 2,
-                         3, 0, 2, 1,
-                         0, 2, 1, 3,
-                         2, 1, 3, 0])
+latin_size = 3
+latin_square = np.array([1, 0, 2,
+                         0, 2, 1,
+                         0, 2, 1,
+                         2, 1, 0])
+
+# latin_size = 4
+# latin_square = np.array([1, 3, 0, 2,
+#                          3, 0, 2, 1,
+#                          0, 2, 1, 3,
+#                          2, 1, 3, 0])
 
 
 class SurveyGenerator:
@@ -98,7 +104,8 @@ if __name__ == "__main__":
     worksheet = workbook.add_worksheet()
 
     cell_format = workbook.add_format({'border': 1, 'align': 'left'})
-    impostor_format = workbook.add_format({'border': 1, 'align': 'left', 'bg_color': 'cyan'})
+    impostor_format = workbook.add_format({'border': 1, 'align': 'left', 'bg_color': 'purple'})
+    speaker_colors = {"DAVID": 'red', "RICHARD": 'cyan', "SUSAN": 'lime', "MARIA": 'yellow'}
 
     worksheet.set_column(0, 7, 17)
 
@@ -143,10 +150,13 @@ if __name__ == "__main__":
                     impostor = trial_setups[room][complexity]['impostor'][condition]
                     position = trial_setups[room][complexity]['position'][i]
                     if impostor != position:
-                        pos_format = cell_format
+                        color = speaker_colors[speaker]
+                        speaker_format = workbook.add_format({'border': 1, 'align': 'left', 'bg_color': color})
+                        pos_format = speaker_format
                     else:
                         pos_format = impostor_format
                     worksheet.write(cond_row + i + 2, c_idx, f'{position}-{speaker}', pos_format)
                     worksheet.write_blank(cond_row + i + 2, c_idx + 1, None, cell_format)
 
     workbook.close()
+    print(0)
