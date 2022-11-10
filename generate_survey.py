@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     cell_format = workbook.add_format({'border': 1, 'align': 'left'})
     impostor_format = workbook.add_format({'border': 1, 'align': 'left', 'bg_color': 'purple'})
-    speaker_colors = {"DAVID": 'red', "RICHARD": 'cyan', "SUSAN": 'lime', "MARIA": 'yellow'}
+    speaker_colors = {"DAVID": 'red', "ALEX": 'cyan', "SUSAN": 'lime', "MARIA": 'yellow'}
 
     worksheet.set_column(0, 7, 17)
 
