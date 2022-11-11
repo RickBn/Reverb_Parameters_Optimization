@@ -1,56 +1,56 @@
 {
   "complexity":  [2, 3, 4],
   "room": ["3D_MARCo", "METU", "LIVING_ROOM", "AALBORG"],
-  "conditions": ["HOA_Bin", "Freeverb"],
+  "conditions": ["HOA_Bin", "Freeverb", "NONE"],
   "speaker": ["DAVID", "ALEX", "SUSAN", "MARIA"],
   "trial_setups" :
   {
     "3D_MARCo":
     {
       "2" :  {
-        "impostor": {"HOA_Bin": "-90", "Freeverb": "+30"},
-        "position": ["+30", "-90"]},
+        "impostor": {"HOA_Bin": "+90", "Freeverb": "-30", "NONE":  ""},
+        "position": ["+90", "-30"]},
       "3" :  {
-        "impostor": {"HOA_Bin": "0",   "Freeverb": "-90"},
-        "position": ["+30", "0", "-90"]},
+        "impostor": {"HOA_Bin": "0",   "Freeverb": "+90", "NONE":  ""},
+        "position": ["+90", "0", "-30"]},
       "4" :  {
-        "impostor": {"HOA_Bin": "+30", "Freeverb": "-30"},
-        "position": ["+30", "0", "-90", "-30"]}
+        "impostor": {"HOA_Bin": "+30", "Freeverb": "-30", "NONE":  ""},
+        "position": ["+90", "+30", "0", "-30"]}
     },
     "METU" :
     {
       "2" :  {
-        "impostor": {"HOA_Bin": "032", "Freeverb": "302"},
+        "impostor": {"HOA_Bin": "032", "Freeverb": "302", "NONE":  ""},
         "position": ["302", "032"]},
       "3" :  {
-        "impostor": {"HOA_Bin": "302", "Freeverb": "152"},
+        "impostor": {"HOA_Bin": "302", "Freeverb": "152", "NONE":  ""},
         "position": ["302", "032", "152"]},
       "4" :  {
-        "impostor": {"HOA_Bin": "032", "Freeverb": "112"},
+        "impostor": {"HOA_Bin": "032", "Freeverb": "112", "NONE":  ""},
         "position": ["302", "112", "032", "152"]}
     },
     "LIVING_ROOM" :
     {
       "2" :  {
-        "impostor": {"HOA_Bin": "S5", "Freeverb": "SG4"},
+        "impostor": {"HOA_Bin": "S5", "Freeverb": "SG4", "NONE":  ""},
         "position": ["SG4", "S5"]},
       "3" :  {
-        "impostor": {"HOA_Bin": "STV", "Freeverb": "SG4"},
+        "impostor": {"HOA_Bin": "STV", "Freeverb": "SG4", "NONE":  ""},
         "position": ["SG4", "STV", "S5"]},
       "4" :  {
-        "impostor": {"HOA_Bin": "S5", "Freeverb": "SG4"},
+        "impostor": {"HOA_Bin": "S5", "Freeverb": "SG4", "NONE":  ""},
         "position": ["SG6", "SG4", "STV", "S5"]}
     },
     "AALBORG" :
     {
       "2" :  {
-        "impostor": {"HOA_Bin": "-60", "Freeverb": "+30"},
+        "impostor": {"HOA_Bin": "-60", "Freeverb": "+30", "NONE":  ""},
         "position": ["+30", "-60"]},
       "3" :  {
-        "impostor": {"HOA_Bin": "0", "Freeverb": "+30"},
+        "impostor": {"HOA_Bin": "0", "Freeverb": "+30", "NONE":  ""},
         "position": ["+30", "0", "-60"]},
       "4" :  {
-        "impostor": {"HOA_Bin": "0", "Freeverb": "-60"},
+        "impostor": {"HOA_Bin": "0", "Freeverb": "-60", "NONE":  ""},
         "position": ["+120", "+30", "0", "-60"]}
     }
   }
