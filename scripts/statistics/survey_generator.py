@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple
 latin_size = 3
 latin_square = np.array([1, 0, 2,
                          0, 2, 1,
-                         0, 2, 1,
                          2, 1, 0])
 
 # latin_size = 4

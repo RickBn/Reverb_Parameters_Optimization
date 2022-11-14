@@ -1,7 +1,9 @@
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    subject_idx = 1
+    subject_idx = 0
+    subject_hrtf = "050"
+
     survey_setup = json_load("scripts/statistics/survey_setup.json")
     trial_setups = survey_setup["trial_setups"]
     conditions = [("complexity", "latin"),
@@ -17,7 +19,7 @@ if __name__ == "__main__":
             for condition, speakers in conditions.items():
                 conditions[condition] = speakers[:int(complexity)]
 
-    workbook = xlsxwriter.Workbook(f'test_results/Subject_{subject_idx}.xlsx')
+    workbook = xlsxwriter.Workbook(f'test_results/Subject_{subject_idx}_{subject_hrtf}.xlsx')
     worksheet = workbook.add_worksheet()
 
     cell_format = workbook.add_format({'border': 1, 'align': 'left'})
