@@ -1,6 +1,6 @@
 {
   "complexity":  [2, 3, 4],
-  "room": ["3D_MARCo", "METU", "LIVING_ROOM", "AALBORG"],
+  "room": ["3D_MARCo", "METU", "LIVING_ROOM"],
   "conditions": ["HOA_Bin", "Freeverb", "NONE"],
   "speaker": ["DAVID", "ALEX", "SUSAN", "MARIA"],
   "trial_setups" :

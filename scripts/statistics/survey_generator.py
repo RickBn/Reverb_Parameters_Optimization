@@ -6,34 +6,37 @@ from scripts.utils.plot_functions import *
 
 from typing import Dict, List, Tuple
 
-latin_size = 3
-latin_square = np.array([1, 0, 2,
-                         0, 2, 1,
-                         2, 1, 0])
 
-# latin_size = 4
-# latin_square = np.array([1, 3, 0, 2,
-#                          3, 0, 2, 1,
-#                          0, 2, 1, 3,
-#                          2, 1, 3, 0])
+latin_square_3 = np.array([1, 0, 2,
+                           0, 2, 1,
+                           2, 1, 0])
+
+latin_square_4 = np.array([1, 3, 0, 2,
+                           3, 0, 2, 1,
+                           0, 2, 1, 3,
+                           2, 1, 3, 0])
+
+latin_squares = {"3": latin_square_3, "4": latin_square_4}
 
 
 class SurveyGenerator:
     def __init__(self, setup_dict: Dict[str, List] = None,
                  nested_conditions: List[Tuple[str, str]] = None,
-                 subject_id: int = 0):
+                 subject_id: int = 0, latin_size: int = 3):
 
         self.setup_dict = setup_dict
         self.nested_conditions = nested_conditions
+        self.latin_size = latin_size
 
         for condition in nested_conditions:
             if condition[1] not in ["latin", "shuffle"]:
                 raise Exception("Attention! "
                                 "The randomization type for each condition must be a string = [latin, shuffle]).")
 
-        idx = subject_id % latin_size
-        subject_offset = idx * latin_size
-        self.latin_row = latin_square[subject_offset: subject_offset + latin_size]
+        idx = subject_id % self.latin_size
+        subject_offset = idx * self.latin_size
+        latin_square = latin_squares[str(self.latin_size)]
+        self.latin_row = latin_square[subject_offset: subject_offset + self.latin_size]
 
     def get_randomized_dict(self):
         randomized_dict = self.nested_randomization()
@@ -66,7 +69,7 @@ class SurveyGenerator:
 
     def randomize_latin(self, condition_name: str):
         condition_list = self.setup_dict[condition_name]
-        if len(condition_list) != latin_size:
+        if len(condition_list) != self.latin_size:
             raise Exception("Attention! Mismatch between chosen latin square size and condition list.")
 
         shuffled_list = []
