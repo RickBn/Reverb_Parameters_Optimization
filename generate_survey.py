@@ -1,8 +1,10 @@
+import random
+
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    subject_idx = 0
-    subject_hrtf = "050"
+    subject_idx = 2
+    subject_hrtf = "028"
 
     survey_setup = json_load("scripts/statistics/survey_setup.json")
     trial_setups = survey_setup["trial_setups"]
@@ -85,6 +87,7 @@ if __name__ == "__main__":
 
     rooms = survey_setup['room']
     speakers = survey_setup['speaker']
+    conditions = ['Ref', 'HOA_Bin', 'FV']
 
     latin_size = len(speakers)
     latin_square = latin_squares[str(latin_size)]
@@ -120,9 +123,11 @@ if __name__ == "__main__":
         questionnaire.write(row_idx + 2, 0, rooms[idx], cell_format)
         questionnaire.write(row_idx + 3, 0, rooms[idx], cell_format)
 
-        questionnaire.write(row_idx + 1, 1, 'Ref', cell_format)
-        questionnaire.write(row_idx + 2, 1, 'HOA_Bin', cell_format)
-        questionnaire.write(row_idx + 3, 1, 'FV', cell_format)
+        conditions = random.sample(conditions, len(conditions))
+
+        questionnaire.write(row_idx + 1, 1, conditions[0], cell_format)
+        questionnaire.write(row_idx + 2, 1, conditions[1], cell_format)
+        questionnaire.write(row_idx + 3, 1, conditions[2], cell_format)
 
         questionnaire.write(row_idx + 1, 2, speakers[speaker], speaker_format)
         questionnaire.write(row_idx + 2, 2, speakers[speaker], speaker_format)
