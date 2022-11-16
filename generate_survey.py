@@ -4,6 +4,7 @@ from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
     subject_idx = 2
+    subject_cod = '05'
     subject_hrtf = "028"
 
     survey_setup = json_load("scripts/statistics/survey_setup.json")
@@ -21,7 +22,7 @@ if __name__ == "__main__":
             for condition, speakers in conditions.items():
                 conditions[condition] = speakers[:int(complexity)]
 
-    workbook = xlsxwriter.Workbook(f'test_results/Subject_{subject_idx}_{subject_hrtf}.xlsx')
+    workbook = xlsxwriter.Workbook(f'test_results/0{subject_idx}_{subject_cod}_{subject_hrtf}.xlsx')
 
     cell_format = workbook.add_format({'border': 1, 'align': 'left'})
     impostor_format = workbook.add_format({'italic': 1, 'border': 1, 'align': 'left', 'bg_color': 'pink'})
