@@ -1,12 +1,12 @@
 import pandas as pd
 
-df = pd.read_excel("test_results/Subject_1_028.xlsx", engine='openpyxl', sheet_name=None)
+df = pd.read_excel("test_results/03_06_152.xlsx", engine='openpyxl', sheet_name=None)
 questionnaire = df.pop('Questionnaire')
 
 rooms = ['LIVING_ROOM', 'METU', '3D_MARCo']
 conditions = ['NONE', 'HOA_Bin', 'FV']
 
-df_2 = pd.DataFrame(columns=['Complexity', 'Room', 'Condition', 'Answer', 'Speaker'])
+df_2 = pd.DataFrame(columns=['Complexity', 'Room', 'Condition', 'Same', 'Impostor', 'Speaker'])
 
 for complexity in df.keys():
     for r in range(0, len(rooms)):
@@ -25,14 +25,14 @@ for complexity in df.keys():
 
             if condition == 'NONE':
                 if b.iloc[1, 1] == 'Yes':
-                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 1, 'None']
+                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 1, 1, 'None']
                 else:
                     speaker = b.iloc[2:, ].dropna().iloc[0, 0]
-                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 0, speaker]
+                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 0, 0, speaker]
 
             else:
                 if b.iloc[1, 1] == 'No':
                     row = b.iloc[2:, ].dropna()
-                    df_2.loc[len(df_2.index)] = [complexity, room, condition, row.iloc[0, 1], row.iloc[0, 0]]
+                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 1, row.iloc[0, 1], row.iloc[0, 0]]
                 else:
-                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 0, 'None']
+                    df_2.loc[len(df_2.index)] = [complexity, room, condition, 0, 0, 'None']
