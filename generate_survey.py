@@ -3,9 +3,9 @@ import random
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    subject_idx = 2
-    subject_cod = '05'
-    subject_hrtf = "028"
+    subject_idx = 4
+    subject_cod = '11'
+    subject_hrtf = "152"
 
     survey_setup = json_load("scripts/statistics/survey_setup.json")
     trial_setups = survey_setup["trial_setups"]
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     for complexity, rooms in randomized_dict.items():
         for room, conditions in rooms.items():
             for condition, speakers in conditions.items():
-                conditions[condition] = speakers[:int(complexity)]
+                conditions[condition] = random.sample(speakers, int(complexity))
 
     workbook = xlsxwriter.Workbook(f'test_results/0{subject_idx}_{subject_cod}_{subject_hrtf}.xlsx')
 
@@ -39,17 +39,11 @@ if __name__ == "__main__":
         comp = int(complexity)
         compsheet = workbook.add_worksheet(f'Complexity_{complexity}')
         compsheet.set_column(0, 7, 17)
-    # worksheet.merge_range(0,
-    #                       c_idx,
-    #                       0,
-    #                       c_idx + 1,
-    #                       f'Complexity_{complexity}',
-    #                       merge_format)
 
         for r_col, room in enumerate(randomized_dict[complexity].keys()):
             conditions = randomized_dict[complexity][room].keys()
             n_conditions = len(conditions)
-            #r_idx = (r_row * ((comp + 2) * n_conditions)) + r_row
+
             r_idx = r_col * 2
             compsheet.merge_range(0,
                                   r_idx,
@@ -133,7 +127,6 @@ if __name__ == "__main__":
         questionnaire.write(row_idx + 1, 2, speakers[speaker], speaker_format)
         questionnaire.write(row_idx + 2, 2, speakers[speaker], speaker_format)
         questionnaire.write(row_idx + 3, 2, speakers[speaker], speaker_format)
-        # questionnaire.write_blank(i + 1, 1, cell_format)
 
     workbook.close()
     print(0)
