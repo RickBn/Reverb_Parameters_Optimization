@@ -3,9 +3,9 @@ import random
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    subject_idx = 4
-    subject_cod = '11'
-    subject_hrtf = "152"
+    subject_idx = 13
+    subject_cod = "20"
+    subject_hrtf = "028"
 
     survey_setup = json_load("scripts/statistics/survey_setup.json")
     trial_setups = survey_setup["trial_setups"]
@@ -22,7 +22,7 @@ if __name__ == "__main__":
             for condition, speakers in conditions.items():
                 conditions[condition] = random.sample(speakers, int(complexity))
 
-    workbook = xlsxwriter.Workbook(f'test_results/0{subject_idx}_{subject_cod}_{subject_hrtf}.xlsx')
+    workbook = xlsxwriter.Workbook(f'test_results/{subject_idx}_{subject_cod}_{subject_hrtf}.xlsx')
 
     cell_format = workbook.add_format({'border': 1, 'align': 'left'})
     impostor_format = workbook.add_format({'italic': 1, 'border': 1, 'align': 'left', 'bg_color': 'pink'})
@@ -80,7 +80,11 @@ if __name__ == "__main__":
     questionnaire.set_column(0, 6, 17)
     questionnaire.set_column(6, 6, 100)
 
-    rooms = survey_setup['room']
+    rooms = {'ALEX': 'METU',
+             'DAVID': '3D_MARCo',
+             'SUSAN': 'LIVING_ROOM',
+             'MARIA': '3D_MARCo'}
+
     speakers = survey_setup['speaker']
     conditions = ['Ref', 'HOA_Bin', 'FV']
 
@@ -102,21 +106,25 @@ if __name__ == "__main__":
     questionnaire.write(3, 4, "Reverberation", cell_format)
     questionnaire.write(4, 4, "VR", cell_format)
     questionnaire.write(5, 4, "Impairment", cell_format)
+    questionnaire.write(6, 4, "Start (Preliminary)", cell_format)
+    questionnaire.write(7, 4, "End (Test)", cell_format)
+    questionnaire.write(8, 4, "Duration", cell_format)
 
     questionnaire.write(0, 5, "Answer", merge_format)
     questionnaire.write(0, 6, "Feedback", merge_format)
 
     for i, speaker in enumerate(latin_row):
         idx = i % len(rooms)
+        sp = speakers[speaker]
 
-        color = speaker_colors[speakers[speaker]]
+        color = speaker_colors[sp]
         speaker_format = workbook.add_format({'border': 1, 'align': 'left', 'bg_color': color})
 
         row_idx = i * 3
 
-        questionnaire.write(row_idx + 1, 0, rooms[idx], cell_format)
-        questionnaire.write(row_idx + 2, 0, rooms[idx], cell_format)
-        questionnaire.write(row_idx + 3, 0, rooms[idx], cell_format)
+        questionnaire.write(row_idx + 1, 0, rooms[sp], cell_format)
+        questionnaire.write(row_idx + 2, 0, rooms[sp], cell_format)
+        questionnaire.write(row_idx + 3, 0, rooms[sp], cell_format)
 
         conditions = random.sample(conditions, len(conditions))
 
@@ -124,9 +132,9 @@ if __name__ == "__main__":
         questionnaire.write(row_idx + 2, 1, conditions[1], cell_format)
         questionnaire.write(row_idx + 3, 1, conditions[2], cell_format)
 
-        questionnaire.write(row_idx + 1, 2, speakers[speaker], speaker_format)
-        questionnaire.write(row_idx + 2, 2, speakers[speaker], speaker_format)
-        questionnaire.write(row_idx + 3, 2, speakers[speaker], speaker_format)
+        questionnaire.write(row_idx + 1, 2, sp, speaker_format)
+        questionnaire.write(row_idx + 2, 2, sp, speaker_format)
+        questionnaire.write(row_idx + 3, 2, sp, speaker_format)
 
     workbook.close()
     print(0)
