@@ -1,11 +1,17 @@
 import random
+import sys
 
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    subject_idx = 13
-    subject_cod = "20"
-    subject_hrtf = "028"
+    if not sys.argv:
+        subject_idx = 00
+        subject_cod = str(00)
+        subject_hrtf = str(000)
+    else:
+        subject_idx = int(sys.argv[1])
+        subject_cod = str(sys.argv[2])
+        subject_hrtf = str(sys.argv[3])
 
     survey_setup = json_load("scripts/statistics/survey_setup.json")
     trial_setups = survey_setup["trial_setups"]
