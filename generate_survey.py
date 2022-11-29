@@ -4,7 +4,7 @@ import sys
 from scripts.statistics.survey_generator import *
 
 if __name__ == "__main__":
-    if not sys.argv:
+    if len(sys.argv) <= 1:
         subject_idx = 00
         subject_cod = str(00)
         subject_hrtf = str(000)

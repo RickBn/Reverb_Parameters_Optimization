@@ -13,11 +13,25 @@ if __name__ == "__main__":
                                'complexity', 'room', 'condition',
                                'same', 'impostor',
                                'speaker', 'position'])
+
+    preliminary = pd.DataFrame(columns=['subject_id', 'hrtf', 'room', 'condition', 'speaker', 'externalization'])
+    subject_info = pd.DataFrame(columns=['subject_id', 'age', 'sex', 'reverberation', 'vr', 'impairment', 'duration'])
     
     for test_file in directory_filter(test_path):
         subject_id, subject_hrtf = test_file.replace('.xlsx', "").split('_')[1:3]
         results = pd.read_excel(f'{test_path}{test_file}', engine='openpyxl', sheet_name=None, error_bad_lines=False)
         questionnaire = results.pop('Questionnaire')
+
+        questionnaire.columns = map(str.lower, questionnaire.columns)
+        questionnaire.columns = [s.replace(' ', '') for s in questionnaire.columns]
+        pre_df = questionnaire[['room', 'condition', 'speaker', 'externalization']]
+        pre_df.insert(0, 'hrtf', subject_hrtf)
+        pre_df.insert(0, 'subject_id', subject_id)
+
+        preliminary = preliminary.append(pre_df)
+
+        ans = questionnaire['answer']
+        subject_info.loc[len(subject_info.index)] = [subject_id, ans[0], ans[1], ans[2], ans[3], ans[4], ans[7]]
         
         rooms = ['LIVING_ROOM', 'METU', '3D_MARCo']
         conditions = ['NONE', 'HOA_Bin', 'FV']
@@ -63,4 +77,6 @@ if __name__ == "__main__":
                                                      complexity, room, condition, 0, 0,
                                                      'None', 'None']
 
-print(0)
+    df.to_csv('test_dataframes/experiment.csv')
+    preliminary.to_csv('test_dataframes/preliminary.csv')
+    subject_info.to_csv('test_dataframes/subject_info.csv')
