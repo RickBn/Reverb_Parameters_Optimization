@@ -5,7 +5,7 @@ subject_matlab_id,subject_progressive_id,age,sex,reverberation,vr,impairment,dur
 06,03,28-37,Male,Intermediate,None,No,60
 14,04,18-27,Female,Intermediate,Intermediate,No,60
 15,05,38-47,Male,Expert,None,No,60
-03,06,18-27,Male,Intermediate,None,No,60
+03,06,18-27,Male,Intermediate,None,No,30
 16,07,18-27,Male,Intermediate,None,No,60
 08,08,18-27,F,Intermedio,Nessuno,No,60
 07,09,18-27,Female,None,None,No,42

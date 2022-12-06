@@ -1,4 +1,4 @@
-,subject_matlab_id,subject_progressive_id,hrtf,room,condition,speaker,externalization
+trial_id_per_subject,subject_matlab_id,subject_progressive_id,hrtf,room,condition,speaker,externalization
 0,04,00,050,METU,Ref,ALEX,Outside
 1,04,00,050,METU,HOA_Bin,ALEX,Outside
 2,04,00,050,METU,FV,ALEX,Outside
