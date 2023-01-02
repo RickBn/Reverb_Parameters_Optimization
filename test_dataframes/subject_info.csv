@@ -1,29 +1,32 @@
-subject_matlab_id,subject_progressive_id,age,sex,reverberation,vr,impairment,duration
-04,00,18-27,Male,Intermediate,None,No,60
-02,01,18-27,Male,None,None,No,60
-05,02,28-37,Male,Intermediate,None,No,60
-06,03,28-37,Male,Intermediate,None,No,60
-14,04,18-27,Female,Intermediate,Intermediate,No,60
-15,05,38-47,Male,Expert,None,No,60
-03,06,18-27,Male,Intermediate,None,No,30
-16,07,18-27,Male,Intermediate,None,No,60
-08,08,18-27,F,Intermedio,Nessuno,No,60
-07,09,18-27,Female,None,None,No,42
-11,10,18-27,Female,None,None,No,43
-19,11,18-27,Male,Intermediate,None,No,63
-18,12,18-27,Male,Intermediate,Intermediate,No,42
-20,13,28-37,Female,None,None,No,38
-00,14,28-37,Male,Intermediate,None,No,54
-17,15,18-27,Male,None,Intermediate,No,44
-21,16,18-27,Female,None,None,No,55
-22,17,18-27,Male,Intermediate,None,No,78
-23,18,18-27,Male,None,None,No,36
-24,19,18-27,Male,None,None,No,37
-10,20,18-27,Male,Intermediate,None,No,75
-25,21,18-27,None,Intermedio,Nessuno,No,56
-26,22,18-27,Male,Intermediate,None,No,30
-01,23,18-27,Male,Intermediate,Expert,Yes,49
-27,24,18-27,Male,Intermediate,None,No,50
-09,25,18-27,Female,Intermediate,None,No,56
-28,26,28-37,Male,None,None,No,60
-29,27,28-37,Male,Expert,Expert,No,44
+subject_matlab_id,subject_progressive_id,age,sex,reverberation,vr,impairment,duration,identification_strategy,confidence,vr_sickness,other_comments
+04,00,18-27,Male,Intermediate,None,No,60,"Ruotare testa, immaginare dimensioni stanza. ",In alcuni casi molto sicuro ma nella maggior parte dei casi non molto sicuro.,,
+02,01,18-27,Male,None,None,No,60,Ascoltare singolarmente e identificare chi aveva più/meno riverbero. Se simili erano nella stessa stanza altrimenti impostori.,A volte non sicurissimo ma a spesso molto sicuro.,Peso visore dopo un po' dà problemi.,Dichiarata una curva di apprendimento. Più complicato classificare con solo due persone.
+05,02,28-37,Male,Intermediate,None,No,60,"Sentire coda di riverbero, timbrica. Appartamento: alcune un po' più riverberate. ",Qualche volta incerto ma un po' di volte abbastanza sicuro. Sentiva che le due voci diverse ma non quale non era nella stanza.,No fastidio con visore.,
+06,03,28-37,Male,Intermediate,None,No,60,Riverberi più lunghi davano maggiori informazioni. Quello corto dell'appartamento più difficile,Si è concentrato sui tempi del riverbero. In un caso gli è sembrata la timbrica diversa.,In generale molto indeciso in un paio di casi più convinto. Più complicato con 4 voci.,No problemi con VR.
+14,04,18-27,Female,Intermediate,Intermediate,No,60,"Muovere la testa, capire se audio corrispondesse al punto dello spazio che il soggetto immaginava.",Non molto sicuro delle risposte. Maggior parte delle risposte incerte. Task complesso.,Visore non molto comodo.,Difficoltà a rispondere con complessità 2
+15,05,38-47,Male,Expert,None,No,60,Isolare le voci. Non subito. Quando erano 4 (inzio test) un po' spiazzato. Aspettava che qualcuno parlasse da solo per analizzare la coda.,Al proseguire dell'esperimento più confidente (Complessità 4-3-2).,No problemi VR.,
+03,06,18-27,Male,Intermediate,None,No,30,Usato il tipo di riverbero per discriminare. Focalizzarsi su una voce alla volta.,Livello di confidenza medio/basso. Un paio di prove più siucro.,No problemi VR.,Ha risposto molto velocemente.
+16,07,18-27,Male,Intermediate,None,No,60,Muovere la testa. Cercare di mettere il presunto impostore dietro/farlo girare.,"60% certo, 40% incerto.",No problemi VR. Visore un po' pesante,Complessità 2 rifatta per problema con allineamento visore. Risposte praticamente uguali tranne un Freeverb riconosciuto.
+08,08,18-27,Female,Intermediate,None,No,60,Differenza di riverbero/eco. Ascoltare singolarmente le varie voci.,Alcune volte un po' indecisa ma in generale abbastanza sicura,No problemi VR.,
+07,09,18-27,Female,None,None,No,42,Capire se c'erano raggruppamenti e identificare chi non aveva nulla a che fare. Se spostare la testa risultava non naturale.,Non sempre confidente. 70/80% delle volte abbastanza sicura.,No problemi VR.,
+11,10,18-27,Female,None,None,No,43,A volte intensità del suono o collocazione diversa nello spazio ha influenzato.Più consapevolezza con l'avanzare del test.,Livello di confidenza basso per quasi tutto il test.,No problemi VR.,Pensa di aver avuto troppe poche informazioni all'inizio.
+19,11,18-27,Male,Intermediate,None,No,63,"Concentrato su quanto le voci fossero ""filtrate"" / colorazione / ""metallicità"". In alcune stanze erano più scure. Tempo di riverberazione e quanto simili fossero i riverberi degli speaker.",Maggior parte non molto sicuro. 60%/70% sicuro.,No problemi VR.,Alcune volte difficoltà dovuta alla sovrapposizione tra le voci. Next time dialoghi con più alternanza tra interlocutori.
+18,12,18-27,Male,Intermediate,Intermediate,No,42,"Fatto attenzione al riverbero, soprattutto alla coda.","A volte molto convinto. Quando indeciso diceva ""Stessa stanza"". 65% sicuro. Meno sicuro con 4 persone.",No problemi VR.,Fatto confusione col task. Cercava di mettere i presunti impostori nelle altre stanze.
+20,13,28-37,Female,None,None,No,38,"Spostare la testa, cercare di collocare lo speaker nell'ipotetica stanza. Se percepiva qualcosa di diverso nell'eco/riverberazione, voce più ovattata vs riverberata.",80% non sicura.,No problemi VR.,Dice: aiuterebbe molto vedere la stanza.
+00,14,28-37,Male,Intermediate,None,No,54,"Per ogni ascolto: inizialmente istinto, dopodiché ha cercato di capire le caratteristiche del riverbero. Ascoltare ogni voce singolarmente (mettendola dritta davanti o solo in un orecchio)",Livello di confidenza basso. Alcune differenze abbastanza nette. C2 gli sembravano quasi sempre nella stessa stanza.,No problemi VR.,Impressione di avere un bias (in particolare su David). Meno differenza tra le voci femminili e più tra quelle maschili. Forse metteva in un'altra stanza in base alla voce.
+17,15,18-27,Male,None,Intermediate,No,44,"Si concentrava sull'esternalizzazione e sulla ""distanza"" della voce.",50% di confidenza.,No problemi VR.,Voci distanti tra di loro nello spazio dava difficoltà: eg. stessa classe o classi differenti?
+21,16,18-27,Female,None,None,No,55,Si concentrava sul riverbero. Cercava di capire quali si assomigliavano e quale no.,Qualche dubbio ma nella maggior parte sicura.,No problemi VR.,
+22,17,18-27,Male,Intermediate,None,No,78,Primi trial imparato ad orientarsi. Chiudere gli occhi. La voce di Maria essendo più acuta/caratteristica l'ha messo in difficoltà nella Living Room (sembrava meno nella stanza),70% sicuro.,Minimo fastidio il visore. ,Più difficile con 2 voci dire chi non fosse nella stessa stanza. Timbro voce specifica può aver condizionato.
+23,18,18-27,Male,None,None,No,36,Cercare la voce più diversa in base al tipo di stanza in cui erano.,Con più persone faticoso. Livingroom più facile capire se qualcuno ha un'eco che incongruente.,No problemi VR.,Cuffie aperte forse influenzava sulla sensazione di edge/outside.
+24,19,18-27,Male,None,None,No,37,Cercava chi aveva un riverbero diverso. Aspettare quando uno speaker parlava da solo.,Bassa confidenza nelle risposta. Ragazze quasi coperte dai maschi.,No problemi VR. Voci sovrapposte sì.,"Volume troppo alto. NDA: ha risposto molto velocemente soprattutto verso la fine. Ha detto che dandogli fastidio ""qualcuno"" avrebbe potuto rispondere a caso."
+10,20,18-27,Male,Intermediate,None,No,75,"Quanto riverbero sulla voce, se era un po' ovattata o meno.",Confidenza medio/bassa. Con 3 voci un pochino più semplice.,No problemi VR.,"David voce più grave quindi forse un po' più portato a dire fosse in un'altra stanza. NDA: Molto indeciso su grado di esternalizzazione: quando punta la sorgente è più dentro, mentre quando è ai lati è più fuori."
+25,21,18-27,Not specified,Intermediate,None,No,56,"Girarsi verso una direzione e vedere se la voce veniva ancora da quella direzione. Andando ""a senso"" sull'intensità della riverberazione.",65/70%,No problemi VR.,
+26,22,18-27,Male,Intermediate,None,No,30,Ascoltare l'eco delle diverse voci. Riverberi più lunghi/corti giudicati impostori. Ignorato volume.,"50%. A volte un pochino più sicuro, soprattutto con complessità basse.",No problemi VR.,
+01,23,18-27,Male,Intermediate,Expert,Yes,49,"Confronto con quelli che sembravano simili: clusterizzare quelli coerenti e muovendosi individuare il meno coerente. Con C2, in base alla descrizione della stanza.","In alcuni casi abbastanza sicuro, altri molto poco: 60%",No problemi VR.,
+27,24,18-27,Male,Intermediate,None,No,50,"Quando la voce era riverberata, leggermente ascoltato distanza/volume. Confrontare riverberazioni.","Maggior parte delle volte non confidente, sulle risposte ""No"". Per quasi tutte le ""Yes"" confidente. Più voci più facile rispondere ""Yes""",No problemi VR.,
+09,25,18-27,Female,Intermediate,None,No,56,Cercare voci con riverbero diverso o più internalizzate.,"Verso la fine meno confidente. Con più di 2 voci, meno confidente.",No problemi VR.,
+28,26,28-37,Male,None,None,No,60,Tante persone: ascoltare prima le voci più diverse timbricamente e concentrarsi sul riverbero. 3 voci: stessa cosa ma in maniera più comparativa. Con 2: se riverbero diverso immaginrsi la stanza.,Confidenza 50%,No problemi VR. Un pochino stancante.,Più difficile con meno voci: meno riferimenti.
+29,27,28-37,Male,Expert,Expert,No,44,"Componente di quanto sembrava ""suonasse"" la stanza. Cerca di capire quelli che erano più integrati tra loro con ER e tempo di rivebrero. Pecepire differenze nell'equalizzazione. A volte sembrava che la voce fosse più o meno equalizzata e quindi giudicata impostore anche se stesso tipo di riverbero. Infine sensazione a pelle.",Confidenza crescente ma meno sicuro di star ascoltando la scena in maniera naturale. C2 più semplice. C4 effetto di sovrapposizione che poteva mascherare ma poteva aiutare a percepire di impatto le differenze dell'impostore. Più confidenza con Auditorium e Appartamento. Meno con la Classe.,No problemi VR.,
+30,28,28-37,Female,None,Expert,No,49,2 strategie. 1) quello fuori posto a sensazione 2) poi cercato di sentire i riverberi di ognuno puntandoli con la testa. ,"Confidenza medio-alta. auditorium più difficile, mentre living room più semplice. metu nel mezzo. complessità nessuna differenza.",No problemi VR.,
+31,29,28-37,Female,None,None,No,45,"Con più di 2, analizza 1 alla volta e capire se ognuna era coerente col tipo di stanza. Capire se una delle voce si distingueva dalle altre. Non ha aiutato la rotazione della testa.",Molto basso. Meno persone più facile. Più confindente nell'appartamento. calsse e auditorium simili.,No,Task difficile. Il test preliminare anche è stato difficile
+32,30,18-27,Male,Intermediate,Intermediate,No,90,Stimare quanto si diffondono le voci e qaunto riverbero. Dove sono nella stanza,"80% di confidenza, non completamente sicuro",No,Con 4 voci confuso. stancante

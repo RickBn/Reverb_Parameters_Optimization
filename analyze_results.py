@@ -23,7 +23,8 @@ if __name__ == "__main__":
                                         'speaker', 'externalization'])
 
     subject_info = pd.DataFrame(columns=['subject_matlab_id', 'subject_progressive_id', 'age', 'sex', 'reverberation',
-                                         'vr', 'impairment', 'duration'])
+                                         'vr', 'impairment', 'duration', 'identification_strategy', 'confidence',
+                                         'vr_sickness', 'other_comments'])
 
     for test_file in directory_filter(test_path):
         subject_progressive_id, subject_matlab_id, subject_hrtf = test_file.replace('.xlsx', "").split('_')[0:3]
@@ -41,8 +42,10 @@ if __name__ == "__main__":
         preliminary = preliminary.append(pre_df)
 
         ans = questionnaire['answer']
+        feedback = questionnaire['feedback']
         subject_info.loc[len(subject_info.index)] = [subject_matlab_id, subject_progressive_id, ans[0], ans[1],
-                                                     ans[2], ans[3], ans[4], ans[7]]
+                                                     ans[2], ans[3], ans[4], ans[7], feedback[0], feedback[1],
+                                                     feedback[2], feedback[3]]
         
         rooms = ['LIVING_ROOM', 'METU', '3D_MARCo']
         conditions = ['NONE', 'HOA_Bin', 'FV']
@@ -52,7 +55,7 @@ if __name__ == "__main__":
             for r in range(0, len(rooms)):
                 comp_df = results[complexity].iloc[:, [r * 2, (r * 2) + 1]]
 
-                room = comp_df.columns[0]
+                room = comp_df.columns[0].strip().upper().replace(' ', '_')
         
                 comp_df = comp_df.rename(columns={comp_df.columns[1]: f'{room}_answer'})
         
@@ -71,7 +74,7 @@ if __name__ == "__main__":
                             # [TRUE NEGATIVE] Correctly answered that they are in the same room
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 1,
-                                                     'None', 'None', 'None', 'None', 1]
+                                                     'NONE', 'NONE', 'NONE', 'NONE', 1]
 
                         else:
                             # [FALSE NEGATIVE] Incorrectly answered that they are in the same room
@@ -79,7 +82,7 @@ if __name__ == "__main__":
 
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 0,
-                                                     'None', 'None', speaker, position, 0]
+                                                     'NONE', 'NONE', speaker, position, 0]
         
                     else:
                         impostor_row = [l[0].font.italic for l in b_wb].index(True)
@@ -99,7 +102,7 @@ if __name__ == "__main__":
                             # [FALSE POSITIVE] Incorrectly answered that there is an impostor
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 0,
-                                                     speaker_impostor, position_impostor, 'None', 'None', 0]
+                                                     speaker_impostor, position_impostor, 'NONE', 'NONE', 0]
 
     df.to_csv('test_dataframes/experiment.csv')
     preliminary.index.name = 'trial_id_per_subject'
