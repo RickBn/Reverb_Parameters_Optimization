@@ -7,6 +7,20 @@ from openpyxl import load_workbook
 import string
 abc = list(string.ascii_uppercase)
 
+speakers_sex = {'ALEX': 'M',
+                'DAVID': 'M',
+                'MARIA': 'F',
+                'SUSAN': 'F'}
+
+def ilocnan(df, r):
+    try:
+        res = df[r]
+    except (IndexError, KeyError):
+        res = float('nan')
+
+    return res
+
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         test_path = 'test_results/'
@@ -15,8 +29,9 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(columns=['subject_matlab_id', 'subject_progressive_id', 'hrtf',
                                'complexity', 'room', 'condition', 'same_room_answer', 'same_correct_answer',
-                               'speaker_impostor', 'position_impostor', 'speaker_answer', 'position_answer',
-                               'impostor_correct_answer'])
+                               'speaker_impostor', 'sex_impostor', 'position_impostor', 'speaker_answer', 'position_answer',
+                               'impostor_correct_answer', 'speaker1', 'speaker2', 'speaker3', 'speaker4',
+                               'speaker1_sex', 'speaker2_sex', 'speaker3_sex', 'speaker4_sex'])
     df.index.name = 'trial_id'
 
     preliminary = pd.DataFrame(columns=['subject_matlab_id', 'subject_progressive_id', 'hrtf', 'room', 'condition',
@@ -69,20 +84,37 @@ if __name__ == "__main__":
                     condition = b.iloc[0, 0]
                     same_room_answer = b.iloc[1, 1]
 
+                    # Retrieve speakers names
+                    speakers = b.iloc[2:, 0].str.split(' - ', expand=True)[1].tolist()
+
                     if condition == 'NONE':
                         if same_room_answer == 'Yes':
                             # [TRUE NEGATIVE] Correctly answered that they are in the same room
+                            # CASE 1
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 1,
-                                                     'NONE', 'NONE', 'NONE', 'NONE', 1]
+                                                     'NONE', 'NONE', 'NONE', 'NONE', 'NONE', 1,
+                                                     ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
+                                                     ilocnan(speakers, 3),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 0)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 1)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 2)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 3))]
 
                         else:
                             # [FALSE NEGATIVE] Incorrectly answered that they are in the same room
-                            position, speaker = b.iloc[2:, ].dropna().iloc[0, 0].split(' - ')
+                            position_ans, speaker_ans = b.iloc[2:, ].dropna().iloc[0, 0].split(' - ')
 
+                            # CASE 2
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 0,
-                                                     'NONE', 'NONE', speaker, position, 0]
+                                                     'NONE', 'NONE', 'NONE', speaker_ans, position_ans, 0,
+                                                     ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
+                                                     ilocnan(speakers, 3),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 0)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 1)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 2)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 3))]
         
                     else:
                         impostor_row = [l[0].font.italic for l in b_wb].index(True)
@@ -91,18 +123,32 @@ if __name__ == "__main__":
                         if same_room_answer == 'No':
                             # [TRUE POSITIVE] Correctly answered that there is an impostor
                             row = b.iloc[2:, ].dropna()
-                            position, speaker = row.iloc[0, 0].split(' - ')
+                            position_ans, speaker_ans = row.iloc[0, 0].split(' - ')
 
+                            # CASE 3
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 1,
-                                                     speaker_impostor, position_impostor, speaker, position,
-                                                     row.iloc[0, 1]]
+                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor, position_ans, speaker_ans,
+                                                     row.iloc[0, 1],
+                                                     ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
+                                                     ilocnan(speakers, 3),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 0)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 1)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 2)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 3))]
 
                         else:
                             # [FALSE POSITIVE] Incorrectly answered that there is an impostor
+                            # CASE 4
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 0,
-                                                     speaker_impostor, position_impostor, 'NONE', 'NONE', 0]
+                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor, 'NONE', 'NONE', 0,
+                                                     ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
+                                                     ilocnan(speakers, 3),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 0)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 1)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 2)),
+                                                     ilocnan(speakers_sex, ilocnan(speakers, 3))]
 
     df.to_csv('test_dataframes/experiment.csv')
     preliminary.index.name = 'trial_id_per_subject'
