@@ -28,8 +28,8 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
             rir_tail = np.stack([rir_tail] * rir_er.shape[0])
         final_rir = merge_er_tail_rir(rir_er, rir_tail, sample_rate, trim=3, offset=offset)
     else:
-        rir_tail = rir_tail * cosine_fade(len(impulse.T), abs(len(rir_er.T) - offset), False)
-        final_rir = pad_signal(rir_tail, n_channels, offset, pad_end=False)
+        # rir_tail = rir_tail * cosine_fade(len(impulse.T), abs(len(rir_er.T) - offset), False)
+        final_rir = pad_signal(rir_tail, n_channels, np.max(offset), pad_end=False)
 
     if input_audio.ndim == 1 and input_audio.ndim != ref_audio.ndim:
         input_audio = np.stack([input_audio] * ref_audio.shape[0])

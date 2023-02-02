@@ -237,12 +237,12 @@ def batch_pb_convolve(input_files, convolution_array, input_files_names, rir_pat
     return convolved
 
 
-def pad_signal(input_signal: Any, n_dim: int, pad_length: int, pad_end=True):
+def pad_signal(input_signal: Any, n_channels: int, pad_length: int, pad_end=True):
 
     if pad_end:
-        padded_signal = np.concatenate([input_signal, np.zeros((n_dim, pad_length))], axis=1)
+        padded_signal = np.concatenate([input_signal, np.zeros((n_channels, pad_length))], axis=1)
     else:
-        padded_signal = np.concatenate([np.zeros((n_dim, pad_length)), input_signal], axis=1)
+        padded_signal = np.concatenate([np.zeros((n_channels, pad_length)), input_signal], axis=1)
 
     return padded_signal
 

@@ -29,17 +29,6 @@ def convolve_rir(rir_name: str):
     batch_fft_convolve(input_path, result_file_names, vst_rir_path, vst_rir_names, result_path,
                        return_convolved=False, scale_factor=1.0, norm=False)
 
-    # 90 SHIFT ////////////////////////////////////////////////////////////////////
-
-    # vst_rir_path = f'audio/vst_rirs/stereo/{rir}/shifted/'
-    # vst_rir_names = os.listdir(vst_rir_path)
-    #
-    # result_path = f'audio/results/stereo/{rir}/{input_name}/shifted/'
-    # result_file_names = [x.replace(".wav", '_shifted_fv.wav') for x in input_file_names]
-    #
-    # batch_fft_convolve(input_path, result_file_names, vst_rir_path, vst_rir_names, result_path,
-    #                    return_convolved=False, scale_factor=1.0, norm=False)
-
     # HOA ER //////////////////////////////////////////////////////////////////////
 
     trimmed_rir_path = f'audio/trimmed_rirs/HOA/{rir}/'

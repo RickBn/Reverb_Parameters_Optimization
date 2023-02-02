@@ -6,8 +6,8 @@ if __name__ == "__main__":
     fade_factor = 4
     early_trim = 500
 
-    # folder = 'HOA/spergair/'
-    folder = 'stereo/spergair/'
+    rir_name = 'MARCo'
+    folder = f'stereo/{rir_name}/'
 
     rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
     armodel_path = 'audio/armodels/' + folder
