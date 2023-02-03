@@ -128,8 +128,8 @@ if __name__ == "__main__":
                             # CASE 3
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 1,
-                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor, position_ans, speaker_ans,
-                                                     row.iloc[0, 1],
+                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor,
+                                                     speaker_ans, position_ans, row.iloc[0, 1],
                                                      ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
                                                      ilocnan(speakers, 3),
                                                      ilocnan(speakers_sex, ilocnan(speakers, 0)),
@@ -142,7 +142,8 @@ if __name__ == "__main__":
                             # CASE 4
                             df.loc[len(df.index)] = [subject_matlab_id, subject_progressive_id, subject_hrtf,
                                                      complexity_n, room, condition, same_room_answer, 0,
-                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor, 'NONE', 'NONE', 0,
+                                                     speaker_impostor, speakers_sex[speaker_impostor], position_impostor,
+                                                     'NONE', 'NONE', 0,
                                                      ilocnan(speakers, 0), ilocnan(speakers, 1), ilocnan(speakers, 2),
                                                      ilocnan(speakers, 3),
                                                      ilocnan(speakers_sex, ilocnan(speakers, 0)),
