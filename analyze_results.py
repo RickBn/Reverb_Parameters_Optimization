@@ -12,6 +12,11 @@ speakers_sex = {'ALEX': 'M',
                 'MARIA': 'F',
                 'SUSAN': 'F'}
 
+speakers_prel_room = {'ALEX': 'METU',
+                      'DAVID': '3D_MARCo',
+                      'MARIA': '3D_MARCo',
+                      'SUSAN': 'LIVING_ROOM'}
+
 def ilocnan(df, r):
     try:
         res = df[r]
@@ -153,5 +158,8 @@ if __name__ == "__main__":
 
     df.to_csv('test_dataframes/experiment.csv')
     preliminary.index.name = 'trial_id_per_subject'
+    # Replace the rooms values that are fixed, but they were wrong in the excel files
+    for sp, ro in speakers_prel_room.items():
+        preliminary.loc[preliminary.speaker == sp, 'room'] = ro
     preliminary.to_csv('test_dataframes/preliminary.csv')
     subject_info.to_csv('test_dataframes/subject_info.csv', index=False)
