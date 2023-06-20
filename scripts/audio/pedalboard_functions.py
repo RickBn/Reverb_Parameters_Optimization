@@ -5,7 +5,7 @@ import skopt
 from pedalboard import Pedalboard, Reverb, load_plugin
 
 
-def retrieve_external_vst3_params(vst3: pedalboard.pedalboard.VST3Plugin) -> (dict, list):
+def retrieve_external_vst3_params(vst3: pedalboard.VST3Plugin) -> (dict, list):
     params = vst3.parameters
 
     param_names = list(params.keys())
@@ -22,8 +22,8 @@ def retrieve_external_vst3_params(vst3: pedalboard.pedalboard.VST3Plugin) -> (di
     return parameters, ranges
 
 
-def external_vst3_set_params(params: dict, vst3: pedalboard.pedalboard.VST3Plugin) \
-        -> pedalboard.pedalboard.VST3Plugin:
+def external_vst3_set_params(params: dict, vst3: pedalboard.VST3Plugin) \
+        -> pedalboard.VST3Plugin:
     for p in params:
         vst3.__setattr__(p, params[p])
 

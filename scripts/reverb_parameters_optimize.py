@@ -25,7 +25,10 @@ def find_params(rir_path: str,
                 input_path: str,
                 generate_references: bool = True,
                 original_er: bool = False,
-                pre_norm: bool = False):
+                pre_norm: bool = False,
+                vst_path: str = "vst3/Real time SDN.vst3",
+                fixed_params: dict = dict(),
+                n_iterations: int = 200):
 
     rir_folder = os.listdir(rir_path)
     rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
@@ -43,7 +46,7 @@ def find_params(rir_path: str,
     rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
     rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
 
-    rev_external = pedalboard.load_plugin("vst3/Real time SDN.vst3")
+    rev_external = pedalboard.load_plugin(vst_path)
     rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
 
     rev_param_names_ex['scale'] = 0.5
@@ -58,6 +61,7 @@ def find_params(rir_path: str,
         batch_fft_convolve(input_path, result_file_names, rir_path, rir_names=None, save_path=result_path,
                            return_convolved=False, scale_factor=1.0, norm=False)
 
+    # Convolve the sweep with RIRs
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
                                          rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False)
 
@@ -119,11 +123,13 @@ def find_params(rir_path: str,
             # start = timeit.default_timer()
 
             res_rev = gp_minimize(distance_func, rev_param_ranges, acq_func="gp_hedge",
-                                  n_calls=200, n_random_starts=10, random_state=1234)
+                                  n_calls=n_iterations, n_random_starts=10, random_state=1234)
 
             fig = plt.figure()
             plot_convergence(res_rev)
-            plt.savefig(f'images/convergence/{rir_name}_{current_effect}.png')
+            converge_img_path = f'images/convergence/{rir_name}_{current_effect}.png'
+            os.makedirs(os.path.dirname(converge_img_path), exist_ok=True)
+            plt.savefig(converge_img_path)
 
             # stop = timeit.default_timer()
 
@@ -161,9 +167,10 @@ def find_params(rir_path: str,
             # rir_tail = np.concatenate((rir_tail, rt))
 
             # Save VST generated RIR tail
-
-            sf.write(vst_rir_path + rir_name + '_' + current_effect + '.wav',
-                     rir_tail.T, sr)
+            matched_rir_folder = vst_rir_path + current_effect + '/'
+            matched_rir_filename = matched_rir_folder + rir_name + '_' + current_effect + '.wav'
+            os.makedirs(os.path.dirname(matched_rir_folder), exist_ok=True)
+            sf.write(matched_rir_filename, rir_tail.T, sr)
 
             # Merge tail with ER
 
@@ -173,8 +180,10 @@ def find_params(rir_path: str,
             merged_rir = merge_er_tail_rir(rir_er, rir_tail,
                                            sr, fade_length=fade_in, trim=3, fade=False)
 
-            sf.write(merged_rir_path + rir_name + '_' + current_effect + '.wav',
-                     merged_rir.T, sr)
+            merged_rir_folder = merged_rir_path + current_effect + '/'
+            merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
+            os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
+            sf.write(merged_rir_filename, merged_rir.T, sr)
 
 
 def find_params_merged(rir_path: str,

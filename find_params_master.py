@@ -2,10 +2,17 @@ from scripts.reverb_parameters_optimize import *
 
 plt.switch_backend('agg')
 
+sdn_params = dict()
+# sdn_params['Living Room']['S4'][] =
+
 if __name__ == "__main__":
 
-    rir_name = 'spergair'
+    rir_name = 'METu'
     folder = f'stereo/{rir_name}/'
+
+    vst_path = "vst3/Real time SDN.vst3"
+
+    n_iterations = 10#200
 
     rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
     er_path = f'audio/trimmed_rirs/{folder}'
@@ -26,8 +33,10 @@ if __name__ == "__main__":
                 input_path,
                 generate_references=False,
                 original_er=False,
-                pre_norm=False)
+                pre_norm=False,
+                vst_path=vst_path,
+                n_iterations=n_iterations)
 
-
+    pass
 
 
