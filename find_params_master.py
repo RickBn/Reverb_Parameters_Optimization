@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # - 'Living Room'
     # - 'MARCo'
     # - 'METu'
-    rir_name = 'MARCo'
+    rir_name = 'Living Room'
     folder = f'stereo/{rir_name}/'
 
     # Set the path of the reverberator (vst3):
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     n_iterations = 10#200
 
-    rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
+    rir_path = f'audio/input/chosen_rirs/{folder}_todo/'
     er_path = f'audio/trimmed_rirs/{folder}'
     armodel_path = f'audio/armodels/{folder}'
     merged_rir_path = f'audio/merged_rirs/{folder}'

@@ -1,71 +1,71 @@
 ---
-032:
-    source_x: 0
-    source_y: 0
-    source_z: 0
-    listener_x: 0
-    listener_y: 0
-    listener_z: 0
-    listener_pitch: 0
-    listener_yaw: 0
-    listener_roll: 0
-    dimensions_x: 0
-    dimensions_y: 0
-    dimensions_z: 0
+'032':
+    source_x: 1
+    source_y: 1
+    source_z: 1
+    listener_x: 1
+    listener_y: 1
+    listener_z: 1
+    listener_pitch: 1
+    listener_yaw: 1
+    listener_roll: 1
+    dimensions_x: 1
+    dimensions_y: 1
+    dimensions_z: 1
     
-112:
-    source_x: 0
-    source_y: 0
-    source_z: 0
-    listener_x: 0
-    listener_y: 0
-    listener_z: 0
-    listener_pitch: 0
-    listener_yaw: 0
-    listener_roll: 0
-    dimensions_x: 0
-    dimensions_y: 0
-    dimensions_z: 0
+'112':
+    source_x: 1
+    source_y: 1
+    source_z: 1
+    listener_x: 1
+    listener_y: 1
+    listener_z: 1
+    listener_pitch: 1
+    listener_yaw: 1
+    listener_roll: 1
+    dimensions_x: 1
+    dimensions_y: 1
+    dimensions_z: 1
 
-152:
-    source_x: 0
-    source_y: 0
-    source_z: 0
-    listener_x: 0
-    listener_y: 0
-    listener_z: 0
-    listener_pitch: 0
-    listener_yaw: 0
-    listener_roll: 0
-    dimensions_x: 0
-    dimensions_y: 0
-    dimensions_z: 0
+'152':
+    source_x: 1
+    source_y: 1
+    source_z: 1
+    listener_x: 1
+    listener_y: 1
+    listener_z: 1
+    listener_pitch: 1
+    listener_yaw: 1
+    listener_roll: 1
+    dimensions_x: 1
+    dimensions_y: 1
+    dimensions_z: 1
     
-302:
-    source_x: 0
-    source_y: 0
-    source_z: 0
-    listener_x: 0
-    listener_y: 0
-    listener_z: 0
-    listener_pitch: 0
-    listener_yaw: 0
-    listener_roll: 0
-    dimensions_x: 0
-    dimensions_y: 0
-    dimensions_z: 0
+'302':
+    source_x: 1
+    source_y: 1
+    source_z: 1
+    listener_x: 1
+    listener_y: 1
+    listener_z: 1
+    listener_pitch: 1
+    listener_yaw: 1
+    listener_roll: 1
+    dimensions_x: 1
+    dimensions_y: 1
+    dimensions_z: 1
     
-362:
-    source_x: 0
-    source_y: 0
-    source_z: 0
-    listener_x: 0
-    listener_y: 0
-    listener_z: 0
-    listener_pitch: 0
-    listener_yaw: 0
-    listener_roll: 0
-    dimensions_x: 0
-    dimensions_y: 0
-    dimensions_z: 0
+'362':
+    source_x: 1
+    source_y: 1
+    source_z: 1
+    listener_x: 1
+    listener_y: 1
+    listener_z: 1
+    listener_pitch: 1
+    listener_yaw: 1
+    listener_roll: 1
+    dimensions_x: 1
+    dimensions_y: 1
+    dimensions_z: 1
     

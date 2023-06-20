@@ -9,10 +9,18 @@ from scripts.utils.dict_functions import exclude_keys
 
 
 def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sample_rate,
-                 vst3=None, merged=False, pre_norm=False):
+                 vst3=None, merged=False, pre_norm=False, fixed_params: dict = None, fixed_params_bool: list = []):
 
+    # for idx, par in enumerate(params_dict):
+    #     params_dict[par] = params[idx]
+
+    params_count = 0
     for idx, par in enumerate(params_dict):
-        params_dict[par] = params[idx]
+        if fixed_params_bool[idx]:
+            params_dict[par] = fixed_params[par]
+        else:
+            params_dict[par] = params[params_count]
+            params_count = params_count + 1
 
     n_channels = 2 if input_audio.shape[0] == 2 else 1
 

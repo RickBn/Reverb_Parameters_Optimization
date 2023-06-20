@@ -86,6 +86,8 @@ def find_params(rir_path: str,
     overall_time = 0
     times = []
 
+    loss_end = []
+    # Iterate over the RIRs of the room
     for ref_idx, ref in enumerate(reference_audio):
 
         rir_file = rir_folder[ref_idx]
@@ -119,6 +121,15 @@ def find_params(rir_path: str,
 
             rir_tail = np.array([])
 
+            # Fixed parameters for the current position
+            fixed_params_pos = fixed_params[rir_folder[ref_idx].split('.')[0]]
+
+            # Remove the fixed parameters from the list of parameters tu tune
+            fixed_params_bool = [p in fixed_params_pos.keys() for p in rev_param_names.keys()]
+            rev_param_ranges_to_tune = [rev_param_ranges[idx] for idx, p in enumerate(fixed_params_bool) if p == False]
+            rev_param_names_to_tune = {p: rev_param_names[p] for idx, p in enumerate(rev_param_names)
+                                       if fixed_params_bool[idx] == False}
+
             distance_func = functools.partial(rir_distance,
                                               params_dict=rev_param_names,
                                               input_audio=input_audio,
@@ -128,11 +139,13 @@ def find_params(rir_path: str,
                                               sample_rate=sr,
                                               vst3=rev_plugin,
                                               merged=original_er,
-                                              pre_norm=pre_norm)
+                                              pre_norm=pre_norm,
+                                              fixed_params=fixed_params_pos,
+                                              fixed_params_bool=fixed_params_bool)
 
             # start = timeit.default_timer()
 
-            res_rev = gp_minimize(distance_func, rev_param_ranges, acq_func="gp_hedge",
+            res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
                                   n_calls=n_iterations, n_random_starts=10, random_state=1234)
 
             fig = plt.figure()
@@ -147,17 +160,22 @@ def find_params(rir_path: str,
             # overall_time += time_s
             # times.append(time_s)
 
-            optimal_params = rev_param_names
+            optimal_params = rev_param_names_to_tune
 
             for i, p in enumerate(optimal_params):
                 optimal_params[p] = res_rev.x[i]
+
+            optimal_params = {**fixed_params_pos, **optimal_params}
+
+            loss_end.append(res_rev.fun)
+            dict_to_save = {'loss_end_value': loss_end[ref_idx], 'parameters': optimal_params}
 
             # Save params
             current_params_path = f'{params_path}{rir_name}/{effect_folder}/'
             if not os.path.exists(current_params_path):
                 os.makedirs(current_params_path)
 
-            json_store(f'{current_params_path}{current_effect}.json', optimal_params)
+            json_store(f'{current_params_path}{current_effect}.json', dict_to_save)
 
             scale = optimal_params['scale']
             opt_params = exclude_keys(optimal_params, 'scale')
@@ -194,6 +212,10 @@ def find_params(rir_path: str,
             merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
             os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
             sf.write(merged_rir_filename, merged_rir.T, sr)
+
+    print('FINAL LOSS FUNCTION VALUES')
+    for idx, l in enumerate(loss_end):
+        print(f'    {rir_folder[idx]}: {l}')
 
 
 def find_params_merged(rir_path: str,
