@@ -1,0 +1,71 @@
+---
+'+30':
+    source_x: 0
+    source_y: 0
+    source_z: 0
+    listener_x: 0
+    listener_y: 0
+    listener_z: 0
+    listener_pitch: 0
+    listener_yaw: 0
+    listener_roll: 0
+    dimensions_x: 0
+    dimensions_y: 0
+    dimensions_z: 0
+    
+'+90':
+    source_x: 0
+    source_y: 0
+    source_z: 0
+    listener_x: 0
+    listener_y: 0
+    listener_z: 0
+    listener_pitch: 0
+    listener_yaw: 0
+    listener_roll: 0
+    dimensions_x: 0
+    dimensions_y: 0
+    dimensions_z: 0
+
+'0':
+    source_x: 0
+    source_y: 0
+    source_z: 0
+    listener_x: 0
+    listener_y: 0
+    listener_z: 0
+    listener_pitch: 0
+    listener_yaw: 0
+    listener_roll: 0
+    dimensions_x: 0
+    dimensions_y: 0
+    dimensions_z: 0
+    
+'-30':
+    source_x: 0
+    source_y: 0
+    source_z: 0
+    listener_x: 0
+    listener_y: 0
+    listener_z: 0
+    listener_pitch: 0
+    listener_yaw: 0
+    listener_roll: 0
+    dimensions_x: 0
+    dimensions_y: 0
+    dimensions_z: 0
+    
+'-90':
+    source_x: 0
+    source_y: 0
+    source_z: 0
+    listener_x: 0
+    listener_y: 0
+    listener_z: 0
+    listener_pitch: 0
+    listener_yaw: 0
+    listener_roll: 0
+    dimensions_x: 0
+    dimensions_y: 0
+    dimensions_z: 0
+    

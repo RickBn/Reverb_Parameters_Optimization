@@ -2,15 +2,20 @@ from scripts.reverb_parameters_optimize import *
 
 plt.switch_backend('agg')
 
-sdn_params = dict()
-# sdn_params['Living Room']['S4'][] =
-
 if __name__ == "__main__":
 
-    rir_name = 'METu'
+    # Set the name of the room:
+    # - 'Living Room'
+    # - 'MARCo'
+    # - 'METu'
+    rir_name = 'MARCo'
     folder = f'stereo/{rir_name}/'
 
+    # Set the path of the reverberator (vst3):
+    # - 'vst3/Real time SDN.vst3'
+    # - 'vst3/FdnReverb.vst3'
     vst_path = "vst3/Real time SDN.vst3"
+    vst_name = 'SDN'
 
     n_iterations = 10#200
 
@@ -22,6 +27,7 @@ if __name__ == "__main__":
     params_path = f'audio/params/{folder}'
     result_path = f'audio/results/{folder}'
     input_path = f'audio/input/sounds/48/speech/_trimmed/loudnorm/_todo/'
+    fixed_params_path = f'fixed_parameters/{vst_name}/{rir_name}.yml'
 
     find_params(rir_path,
                 er_path,
@@ -31,6 +37,7 @@ if __name__ == "__main__":
                 params_path,
                 result_path,
                 input_path,
+                fixed_params_path=fixed_params_path,
                 generate_references=False,
                 original_er=False,
                 pre_norm=False,

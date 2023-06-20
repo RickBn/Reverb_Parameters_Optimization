@@ -1,6 +1,7 @@
 import functools
 from skopt import gp_minimize
 from skopt.plots import plot_convergence
+import yaml
 
 import timeit
 
@@ -23,12 +24,21 @@ def find_params(rir_path: str,
                 params_path: str,
                 result_path: str,
                 input_path: str,
+                fixed_params_path: str = None,
                 generate_references: bool = True,
                 original_er: bool = False,
                 pre_norm: bool = False,
                 vst_path: str = "vst3/Real time SDN.vst3",
-                fixed_params: dict = dict(),
                 n_iterations: int = 200):
+
+    if fixed_params_path is not None:
+        with open(fixed_params_path, "r") as stream:
+            try:
+                fixed_params = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+    else:
+        fixed_params = dict()
 
     rir_folder = os.listdir(rir_path)
     rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
