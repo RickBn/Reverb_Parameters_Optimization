@@ -227,7 +227,8 @@ def find_params_merged(rir_path: str,
                        result_path: str,
                        input_path: str,
                        generate_references: bool = True,
-                       pre_norm: bool = False):
+                       pre_norm: bool = False,
+                       vst_path: str = "vst3/Real time SDN.vst3"):
 
     rir_folder = os.listdir(rir_path)
     rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
@@ -248,7 +249,7 @@ def find_params_merged(rir_path: str,
     rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
     rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
 
-    rev_external = pedalboard.load_plugin("vst3/FdnReverb.vst3")
+    rev_external = pedalboard.load_plugin(vst_path)
     rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
 
     rev_param_names_ex.pop('fdn_size_internal')
