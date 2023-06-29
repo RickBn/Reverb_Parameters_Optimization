@@ -13,8 +13,11 @@ def retrieve_external_vst3_params(vst3: pedalboard.VST3Plugin) -> (dict, list):
 
     parameters = {}
     ranges = []
+    for p in param_names:
+        print(f'{p} - {params[p]} - {params[p].range}')
 
     for p in param_names:
+        # print(f'{p} - {params[p]} - {params[p].range}')
         parameters[p] = vst3.__getattr__(p)
         ranges.append(skopt.space.space.Real(params[p].range[0], params[p].range[1], transform='identity'))
     # ranges.append((params[p].range[0], params[p].range[1]))

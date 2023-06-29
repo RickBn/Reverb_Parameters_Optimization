@@ -4,11 +4,14 @@ plt.switch_backend('agg')
 
 if __name__ == "__main__":
 
+    # Whether match only the late reverberation or the entire RIR. Set to False for SDN
+    match_only_late = False
+
     # Set the name of the room:
     # - 'Living Room'
     # - 'MARCo'
     # - 'METu'
-    rir_name = 'Living Room'
+    rir_name = 'SDN000'
     folder = f'stereo/{rir_name}/'
 
     # Set the path of the reverberator (vst3):
@@ -17,7 +20,7 @@ if __name__ == "__main__":
     vst_path = "vst3/Real time SDN.vst3"
     vst_name = 'SDN'
 
-    n_iterations = 10#200
+    n_iterations = 25
 
     rir_path = f'audio/input/chosen_rirs/{folder}_todo/'
     er_path = f'audio/trimmed_rirs/{folder}'
@@ -42,8 +45,7 @@ if __name__ == "__main__":
                 original_er=False,
                 pre_norm=False,
                 vst_path=vst_path,
-                n_iterations=n_iterations)
+                n_iterations=n_iterations,
+                match_only_late=match_only_late)
 
     pass
-
-

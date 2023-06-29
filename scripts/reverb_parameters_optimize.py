@@ -29,7 +29,8 @@ def find_params(rir_path: str,
                 original_er: bool = False,
                 pre_norm: bool = False,
                 vst_path: str = "vst3/Real time SDN.vst3",
-                n_iterations: int = 200):
+                n_iterations: int = 200,
+                match_only_late: bool = True):
 
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
@@ -41,7 +42,9 @@ def find_params(rir_path: str,
         fixed_params = dict()
 
     rir_folder = os.listdir(rir_path)
-    rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
+
+    if match_only_late:
+        rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
 
     rir, sr = sf.read(rir_path + rir_folder[0])
     print(sr)
@@ -77,7 +80,7 @@ def find_params(rir_path: str,
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    if not os.path.exists(merged_rir_path):
+    if not os.path.exists(merged_rir_path) and match_only_late:
         os.makedirs(merged_rir_path)
 
     if not os.path.exists(vst_rir_path):
@@ -98,18 +101,23 @@ def find_params(rir_path: str,
 
         input_audio = np.stack([test_sound] * n_channels)
 
-        rir_er_path = er_path + rir_file
+        if match_only_late:
+            rir_er_path = er_path + rir_file
 
-        rir_er, sr_er = sf.read(rir_er_path)
-        rir_er = rir_er.T
+            rir_er, sr_er = sf.read(rir_er_path)
+            rir_er = rir_er.T
 
-        fade_in = int(5 * sr * 0.001)
+            fade_in = int(5 * sr * 0.001)
+
+            offset_list = rir_offset[rir_file]
+
+        else:
+            rir_er = None
+            offset_list = None
 
         current_rir_path = f'{result_path}{rir_name}/'
         if not os.path.exists(current_rir_path):
             os.makedirs(current_rir_path)
-
-        offset_list = rir_offset[rir_file]
 
         for rev in rev_plugins:
 
@@ -141,7 +149,8 @@ def find_params(rir_path: str,
                                               merged=original_er,
                                               pre_norm=pre_norm,
                                               fixed_params=fixed_params_pos,
-                                              fixed_params_bool=fixed_params_bool)
+                                              fixed_params_bool=fixed_params_bool,
+                                              match_only_late=match_only_late)
 
             # start = timeit.default_timer()
 
@@ -190,7 +199,10 @@ def find_params(rir_path: str,
             # print(f'Fade Length {abs(len(rir_er) - offset_list)}')
             # print(f'Len ER {len(rir_er)}')
 
-            rir_tail = pad_signal(rt, n_channels, np.max(offset_list), pad_end=False)[:, :(sr * 3)]
+            if match_only_late:
+                rir_tail = pad_signal(rt, n_channels, np.max(offset_list), pad_end=False)[:, :(sr * 3)]
+            else:
+                rir_tail = rt
 
             # rir_tail = np.concatenate((rir_tail, rt))
 
@@ -205,13 +217,14 @@ def find_params(rir_path: str,
             # merged_rir = merge_er_tail_rir(rir_er, np.stack([rir_tail] * rir_er.shape[0]),
             #                                sr, fade_length=fade_in, trim=3)
 
-            merged_rir = merge_er_tail_rir(rir_er, rir_tail,
-                                           sr, fade_length=fade_in, trim=3, fade=False)
+            if match_only_late:
+                merged_rir = merge_er_tail_rir(rir_er, rir_tail,
+                                               sr, fade_length=fade_in, trim=3, fade=False)
 
-            merged_rir_folder = merged_rir_path + current_effect + '/'
-            merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
-            os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
-            sf.write(merged_rir_filename, merged_rir.T, sr)
+                merged_rir_folder = merged_rir_path + current_effect + '/'
+                merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
+                os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
+                sf.write(merged_rir_filename, merged_rir.T, sr)
 
     print('FINAL LOSS FUNCTION VALUES')
     for idx, l in enumerate(loss_end):
@@ -364,6 +377,8 @@ def find_params_merged(rir_path: str,
                     os.makedirs(current_params_path)
 
                 json_store(f'{current_params_path}{current_effect}_{ch}.json', optimal_params)
+                with open(f'{current_params_path}{current_effect}_{ch}.yml', 'w') as outfile:
+                    yaml.dump(optimal_params, outfile, default_flow_style=False, sort_keys=False)
 
                 scale = optimal_params['scale']
                 opt_params = exclude_keys(optimal_params, 'scale')
