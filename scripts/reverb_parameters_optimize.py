@@ -43,6 +43,8 @@ def find_params(rir_path: str,
 
     rir_folder = os.listdir(rir_path)
 
+    venv_name = os.path.basename(os.path.normpath(params_path))
+
     if match_only_late:
         rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
 
@@ -115,9 +117,9 @@ def find_params(rir_path: str,
             rir_er = None
             offset_list = None
 
-        current_rir_path = f'{result_path}{rir_name}/'
-        if not os.path.exists(current_rir_path):
-            os.makedirs(current_rir_path)
+        # current_rir_path = f'{result_path}{rir_name}/'
+        # if not os.path.exists(current_rir_path):
+        #     os.makedirs(current_rir_path)
 
         for rev in rev_plugins:
 
@@ -159,7 +161,7 @@ def find_params(rir_path: str,
 
             fig = plt.figure()
             plot_convergence(res_rev)
-            converge_img_path = f'images/convergence/{rir_name}_{current_effect}.png'
+            converge_img_path = f'images/convergence/{venv_name}/{rir_name}_{current_effect}.png'
             os.makedirs(os.path.dirname(converge_img_path), exist_ok=True)
             plt.savefig(converge_img_path)
 
@@ -177,7 +179,7 @@ def find_params(rir_path: str,
             optimal_params = {**fixed_params_pos, **optimal_params}
 
             loss_end.append(res_rev.fun)
-            dict_to_save = {'loss_end_value': loss_end[ref_idx], 'parameters': optimal_params}
+            dict_to_save = {'loss_end_value': np.float(loss_end[ref_idx]), 'parameters': optimal_params}
 
             # Save params
             current_params_path = f'{params_path}{rir_name}/{effect_folder}/'
@@ -185,6 +187,8 @@ def find_params(rir_path: str,
                 os.makedirs(current_params_path)
 
             json_store(f'{current_params_path}{current_effect}.json', dict_to_save)
+            with open(f'{current_params_path}{current_effect}.yml', 'w') as outfile:
+                yaml.dump(dict_to_save, outfile, default_flow_style=False, sort_keys=False)
 
             scale = optimal_params['scale']
             opt_params = exclude_keys(optimal_params, 'scale')
@@ -377,8 +381,6 @@ def find_params_merged(rir_path: str,
                     os.makedirs(current_params_path)
 
                 json_store(f'{current_params_path}{current_effect}_{ch}.json', optimal_params)
-                with open(f'{current_params_path}{current_effect}_{ch}.yml', 'w') as outfile:
-                    yaml.dump(optimal_params, outfile, default_flow_style=False, sort_keys=False)
 
                 scale = optimal_params['scale']
                 opt_params = exclude_keys(optimal_params, 'scale')

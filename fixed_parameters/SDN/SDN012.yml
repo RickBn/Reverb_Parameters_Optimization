@@ -3,30 +3,30 @@ pos01:
   source_gain_db: 0
   render_line_of_sight: false
   source_x: 0.5
-  source_y: 0.75
+  source_y: 0.95
   source_z: 0.5
-  listener_x: 0.1
-  listener_y: 0.4
+  listener_x: 0.9
+  listener_y: 0.5
   listener_z: 0.5
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 1
-  dimensions_y_m: 2
-  dimensions_z_m: 2
+  dimensions_x_m: 4
+  dimensions_y_m: 3
+  dimensions_z_m: 3
 pos02:
   output_mode: Stereo
   source_gain_db: 0
   render_line_of_sight: false
-  source_x: 0.5
-  source_y: 0.75
-  source_z: 0.5
-  listener_x: 0.7
-  listener_y: 0.2
+  source_x: 0.1
+  source_y: 0.1
+  source_z: 0.1
+  listener_x: 0.5
+  listener_y: 0.5
   listener_z: 0.5
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 1
-  dimensions_y_m: 2
-  dimensions_z_m: 2
+  dimensions_x_m: 4
+  dimensions_y_m: 3
+  dimensions_z_m: 3

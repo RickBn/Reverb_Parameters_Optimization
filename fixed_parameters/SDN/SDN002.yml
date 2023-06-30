@@ -11,9 +11,9 @@ pos01:
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 1
-  dimensions_y_m: 2
-  dimensions_z_m: 2
+  dimensions_x_m: 15
+  dimensions_y_m: 20
+  dimensions_z_m: 5
 pos02:
   output_mode: Stereo
   source_gain_db: 0
@@ -27,6 +27,6 @@ pos02:
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 1
-  dimensions_y_m: 2
-  dimensions_z_m: 2
+  dimensions_x_m: 15
+  dimensions_y_m: 20
+  dimensions_z_m: 5
