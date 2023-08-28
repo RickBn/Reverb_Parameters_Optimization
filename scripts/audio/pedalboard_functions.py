@@ -33,7 +33,7 @@ def external_vst3_set_params(params: dict, vst3: pedalboard.VST3Plugin) \
     for p in params:
         vst3.__setattr__(p, params[p])
 
-    print(params)
+    # print(params)
 
     return vst3
 

@@ -1,13 +1,31 @@
 from scripts.reverb_parameters_optimize import *
+import datetime
 
 plt.switch_backend('agg')
 
 if __name__ == "__main__":
 
-    # Whether match only the late reverberation or the entire RIR. Set to False for SDN
-    match_only_late = False
+    start = datetime.datetime.now()
 
-    rir_names = ['SDN000', 'SDN005', 'SDN009', 'SDN012']
+    # Whether match only the late reverberation or the entire RIR. Set to False for SDN -> True NON FUNZIONA ANCORA
+    match_only_late = True
+
+    # Whether to apply the dimensionality reduction to the walls coefficients
+    apply_dim_red = False
+
+    # Whether all the walls have the same absorption coefficients
+    same_coef_walls = True
+
+    # Whether to set the absorption coef of the last 2 bands equal to the third to last
+    force_last2_bands_equal = True
+
+    # Number of iterations of gp_minimize
+    n_iterations = 500
+
+    # Number of initial points used by gp_minimize
+    n_initial_points = 5
+
+    rir_names = ['SDN037']#, 'SDN001', 'SDN005', 'SDN009', 'SDN012']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'
@@ -16,14 +34,14 @@ if __name__ == "__main__":
     vst_name = 'SDN'
 
     for rir_name in rir_names:
+        print(f'FITTING ENVIRONMENT: {rir_name}')
+
         # Set the name of the room:
         # - 'Living Room'
         # - 'MARCo'
         # - 'METu'
         # rir_name = 'SDN000'
         folder = f'stereo/{rir_name}/'
-
-        n_iterations = 200
 
         rir_path = f'audio/input/chosen_rirs/{folder}_todo/'
         er_path = f'audio/trimmed_rirs/{folder}'
@@ -49,6 +67,16 @@ if __name__ == "__main__":
                     pre_norm=False,
                     vst_path=vst_path,
                     n_iterations=n_iterations,
-                    match_only_late=match_only_late)
+                    match_only_late=match_only_late,
+                    apply_dim_red=apply_dim_red,
+                    same_coef_walls=same_coef_walls,
+                    force_last2_bands_equal=force_last2_bands_equal,
+                    n_initial_points=n_initial_points)
+
+    stop = datetime.datetime.now()
+
+    elapsed = stop - start
+
+    print(f'Total elapsed time: {elapsed}')
 
     pass

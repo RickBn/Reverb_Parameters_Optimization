@@ -1,0 +1,32 @@
+pos01:
+  output_mode: Stereo
+  source_gain_db: 0
+  render_line_of_sight: false
+  source_x: 0.5
+  source_y: 0.5
+  source_z: 0.5
+  listener_x: 0.4
+  listener_y: 0.65
+  listener_z: 0.5
+  listener_pitch: 0.0
+  listener_yaw: 0.0
+  listener_roll: 0.0
+  dimensions_x_m: 3
+  dimensions_y_m: 3
+  dimensions_z_m: 3
+pos02:
+  output_mode: Stereo
+  source_gain_db: 0
+  render_line_of_sight: false
+  source_x: 0.5
+  source_y: 0.5
+  source_z: 0.5
+  listener_x: 0.9
+  listener_y: 0.1
+  listener_z: 0.65
+  listener_pitch: 0.0
+  listener_yaw: 0.0
+  listener_roll: 0.0
+  dimensions_x_m: 3
+  dimensions_y_m: 3
+  dimensions_z_m: 3

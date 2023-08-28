@@ -2,18 +2,24 @@ import functools
 from skopt import gp_minimize
 from skopt.plots import plot_convergence
 import yaml
+import pandas as pd
 
-import timeit
+import datetime
 
 from scripts.parameters_learning import *
 from scripts.audio.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
 from scripts.utils.json_functions import *
+from scripts.params_dim_reduction import get_dim_red_model, reconstruct_original_params
+from er_detection import detect_er
 import scipy.signal
 
 #plt.switch_backend('agg')
 #plt.switch_backend('TkAgg')
+
+n_walls = 6
+n_wall_bands = 8
 
 
 def find_params(rir_path: str,
@@ -30,7 +36,11 @@ def find_params(rir_path: str,
                 pre_norm: bool = False,
                 vst_path: str = "vst3/Real time SDN.vst3",
                 n_iterations: int = 200,
-                match_only_late: bool = True):
+                match_only_late: bool = True,
+                apply_dim_red: bool = True,
+                same_coef_walls: bool = False,
+                force_last2_bands_equal: bool = False,
+                n_initial_points: int = 10):
 
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
@@ -46,7 +56,12 @@ def find_params(rir_path: str,
     venv_name = os.path.basename(os.path.normpath(params_path))
 
     if match_only_late:
-        rir_offset = np.load(armodel_path + 'rir_offset.npy', allow_pickle=True)[()]
+        # armodel_filename = armodel_path + 'rir_offset.npy'
+        armodel_filename = armodel_path + 'cut_idx_kl.npy'
+        if not os.path.exists(armodel_filename):
+            detect_er(venv_name)
+
+        rir_offset = np.load(armodel_filename, allow_pickle=True)[()]
 
     rir, sr = sf.read(rir_path + rir_folder[0])
     print(sr)
@@ -56,16 +71,27 @@ def find_params(rir_path: str,
 
     test_sound = sweep
 
-    scale_parameter = skopt.space.space.Real(0.0, 1.0, transform='identity')
-
-    rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
-    rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
+    # if match_only_late:
+    #     scale_parameter = skopt.space.space.Real(0.0, 1.0, transform='identity')
+    #
+    #     rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
+    #     rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
 
     rev_external = pedalboard.load_plugin(vst_path)
     rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
 
-    rev_param_names_ex['scale'] = 0.5
-    rev_param_ranges_ex.append(scale_parameter)
+    for i, r in enumerate(rev_param_ranges_ex):
+        try:
+            if r.bounds == (0, 1):
+                rev_param_ranges_ex[i] = skopt.space.space.Real(0.001,
+                                                                0.999,
+                                                                transform='identity')
+        except:
+            continue
+
+    # if match_only_late:
+    #     rev_param_names_ex['scale'] = 0.5
+    #     rev_param_ranges_ex.append(scale_parameter)
 
     rev_plugins = {'SDN': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
 
@@ -92,12 +118,16 @@ def find_params(rir_path: str,
     times = []
 
     loss_end = []
+
     # Iterate over the RIRs of the room
     for ref_idx, ref in enumerate(reference_audio):
 
+        start = datetime.datetime.now()
+
         rir_file = rir_folder[ref_idx]
         rir_name = rir_file.replace('.wav', '')
-        print(rir_name)
+
+        print(f'POSITION: {rir_name}')
 
         n_channels = ref.shape[0]
 
@@ -109,7 +139,8 @@ def find_params(rir_path: str,
             rir_er, sr_er = sf.read(rir_er_path)
             rir_er = rir_er.T
 
-            fade_in = int(5 * sr * 0.001)
+            # fade_in = int(5 * sr * 0.001)
+            fade_len = 128
 
             offset_list = rir_offset[rir_file]
 
@@ -140,6 +171,32 @@ def find_params(rir_path: str,
             rev_param_names_to_tune = {p: rev_param_names[p] for idx, p in enumerate(rev_param_names)
                                        if fixed_params_bool[idx] == False}
 
+            if same_coef_walls:
+                rev_param_ranges_to_tune = rev_param_ranges_to_tune[:int(len(rev_param_ranges_to_tune)/n_walls)]
+
+                # rev_param_names_to_tune_keys = list(rev_param_names_to_tune.keys())
+                # temp_dict = dict()
+                # for k in rev_param_names_to_tune_keys[:int(len(rev_param_names_to_tune_keys)/n_walls)]:
+                #     temp_dict[k] = rev_param_names_to_tune[k]
+                # rev_param_names_to_tune = temp_dict
+
+            if force_last2_bands_equal:
+                rev_param_ranges_to_tune = [rev_param_ranges_to_tune[i]
+                                            for i in range(len(rev_param_ranges_to_tune)) if i%n_wall_bands < 6]
+
+            if apply_dim_red:
+                dim_red_mdl = get_dim_red_model()
+                dim_red_mdl.x_min = np.floor(dim_red_mdl.x_min * 10) / 10
+                dim_red_mdl.x_max = np.ceil(dim_red_mdl.x_max * 10) / 10
+                rev_param_ranges_to_tune = []
+                for n in range(n_walls):
+                    for c in range(dim_red_mdl.n_components):
+                        rev_param_ranges_to_tune.append(skopt.space.space.Real(dim_red_mdl.x_min[c],
+                                                                               dim_red_mdl.x_max[c],
+                                                                               transform='identity'))
+            else:
+                dim_red_mdl = None
+
             distance_func = functools.partial(rir_distance,
                                               params_dict=rev_param_names,
                                               input_audio=input_audio,
@@ -152,12 +209,15 @@ def find_params(rir_path: str,
                                               pre_norm=pre_norm,
                                               fixed_params=fixed_params_pos,
                                               fixed_params_bool=fixed_params_bool,
-                                              match_only_late=match_only_late)
+                                              match_only_late=match_only_late,
+                                              dim_red_mdl=dim_red_mdl,
+                                              same_coef_walls=same_coef_walls,
+                                              force_last2_bands_equal=force_last2_bands_equal)
 
             # start = timeit.default_timer()
 
             res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
-                                  n_calls=n_iterations, n_random_starts=10, random_state=1234)
+                                  n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234, n_jobs=1)
 
             fig = plt.figure()
             plot_convergence(res_rev)
@@ -171,10 +231,27 @@ def find_params(rir_path: str,
             # overall_time += time_s
             # times.append(time_s)
 
+            if dim_red_mdl is not None:
+                res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
+
             optimal_params = rev_param_names_to_tune
 
+            if force_last2_bands_equal:
+                new_params = []
+                for i, p in enumerate(res_rev.x):
+                    new_params.append(p)
+                    if i % (n_wall_bands - 2) == 5:
+                        new_params.append(p)
+                        new_params.append(p)
+
+                res_rev.x = new_params
+                del new_params
+
             for i, p in enumerate(optimal_params):
-                optimal_params[p] = res_rev.x[i]
+                if same_coef_walls:
+                    optimal_params[p] = np.float(res_rev.x[i % n_wall_bands])
+                else:
+                    optimal_params[p] = np.float(res_rev.x[i])
 
             optimal_params = {**fixed_params_pos, **optimal_params}
 
@@ -190,8 +267,12 @@ def find_params(rir_path: str,
             with open(f'{current_params_path}{current_effect}.yml', 'w') as outfile:
                 yaml.dump(dict_to_save, outfile, default_flow_style=False, sort_keys=False)
 
-            scale = optimal_params['scale']
-            opt_params = exclude_keys(optimal_params, 'scale')
+            # if match_only_late:
+            #     scale = optimal_params['scale']
+            #     opt_params = exclude_keys(optimal_params, 'scale')
+            # else:
+            scale = 1
+            opt_params = optimal_params
 
             # Process tail with optimized params
 
@@ -203,10 +284,10 @@ def find_params(rir_path: str,
             # print(f'Fade Length {abs(len(rir_er) - offset_list)}')
             # print(f'Len ER {len(rir_er)}')
 
-            if match_only_late:
-                rir_tail = pad_signal(rt, n_channels, np.max(offset_list), pad_end=False)[:, :(sr * 3)]
-            else:
-                rir_tail = rt
+            # if match_only_late:
+            #     rir_tail = pad_signal(rt, n_channels, np.max(offset_list), pad_end=False)[:, :(sr * 3)]
+            # else:
+            rir_tail = rt
 
             # rir_tail = np.concatenate((rir_tail, rt))
 
@@ -222,13 +303,21 @@ def find_params(rir_path: str,
             #                                sr, fade_length=fade_in, trim=3)
 
             if match_only_late:
+                # rir_er = pad_signal(rir_er, n_channels, (sr * 3) - rir_er.shape[1], pad_end=True)
                 merged_rir = merge_er_tail_rir(rir_er, rir_tail,
-                                               sr, fade_length=fade_in, trim=3, fade=False)
+                                               sr, fade_length=fade_len, trim=3, offset=offset_list, fade=True)
 
                 merged_rir_folder = merged_rir_path + current_effect + '/'
                 merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
                 os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
                 sf.write(merged_rir_filename, merged_rir.T, sr)
+
+        stop = datetime.datetime.now()
+
+        elapsed = stop-start
+        times.append(elapsed)
+
+        print(f'{venv_name}-{rir_name} elapsed time: {elapsed}')
 
     print('FINAL LOSS FUNCTION VALUES')
     for idx, l in enumerate(loss_end):

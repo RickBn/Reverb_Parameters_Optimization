@@ -1,19 +1,18 @@
 from scripts.audio.rir_functions import *
 
-if __name__ == "__main__":
-    frame_size = 512
-    sr = 48000
-    fade_factor = 4
-    early_trim = 500
 
-    rir_name = 'MARCo'
+def detect_er(rir_name: str,
+              sr=48000,
+              frame_size=512,
+              fade_factor=4,
+              early_trim=500):
     folder = f'stereo/{rir_name}/'
-
     rir_path = f'audio/input/chosen_rirs/{folder}/_todo/'
+
     armodel_path = 'audio/armodels/' + folder
 
     a_a, p_a, l_a = rir_psd_metrics(rir_path, sr, frame_size, fade_factor, early_trim, direct_offset=True,
-                                  ms_encoding=False, save_path=armodel_path)
+                                    ms_encoding=False, save_path=armodel_path)
 
     knee_save_path = 'images/lsd/' + folder
 
@@ -24,5 +23,16 @@ if __name__ == "__main__":
 
     trim_rir_save_path = 'audio/trimmed_rirs/' + folder
     trim_rir_dict = rir_trim(rir_path, cut_dict, fade_length=128, save_path=trim_rir_save_path)
+
+
+if __name__ == "__main__":
+    frame_size = 512
+    sr = 48000
+    fade_factor = 4
+    early_trim = 500
+
+    rir_name = 'MARCo'
+
+    detect_er(rir_name, sr=sr, frame_size=frame_size, fade_factor=fade_factor, early_trim=early_trim)
 
     print(0)

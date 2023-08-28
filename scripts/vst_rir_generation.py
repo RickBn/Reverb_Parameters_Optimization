@@ -25,11 +25,11 @@ def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,
 def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=None, norm=False, rev_external=None):
     if rev_external is not None:
         rev = external_vst3_set_params(params, rev_external)
-        print(rev.parameters)
+        # print(rev.parameters)
 
     else:
         rev = native_reverb_set_params(params)
-        print(rev)
+        # print(rev)
 
     rev_audio = process_reverb(rev, sr, input, hp_cutoff=hp_cutoff, norm=norm)
     rev_audio *= scale_factor
@@ -38,24 +38,32 @@ def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=N
 
 
 def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None, offset=0, fade=True):
+    er_rir = np.zeros(tail.shape)
 
-    if len(tail.T) > abs(len(er.T) - offset):
-        er_rir = pad_signal(er, len(er), len(tail.T) - abs(len(er.T) - offset))
-    else:
-        er_rir = er
+    for ch in range(er.shape[0]):
+        offset[ch] = int(offset[ch])
+        if len(tail.T) > abs(len(er.T) - offset[ch]):
+            er_rir[ch,:] = pad_signal(np.expand_dims(er[ch,:], axis=0), n_channels=1,
+                                      pad_length=len(tail[ch,:].T) - len(er[ch,:].T))
+                                      # pad_length=len(tail[ch,:].T) - abs(len(er[ch,:].T) - offset[ch]))
+        else:
+            er_rir[ch,:] = er[ch,:]
 
-    if fade:
-        tail = tail * cosine_fade(len(tail.T), abs(len(er.T) - offset), False)
+        if fade:
+            cos_fade = np.concatenate([np.zeros(offset[ch]), cosine_fade(len(tail[ch, :].T) - offset[ch], fade_length, False)])
+            tail[ch,:] = tail[ch,:] * cos_fade
+            er_rir[ch,:] = er_rir[ch,:] * (cos_fade * (-1) + 1)
 
-    start_point = offset
-    print(f'Start point: {start_point}')
-    print(er_rir.shape)
-    print(tail.shape)
-    er_rir[:, start_point:] += tail
+        # start_point = offset[ch]
+        # print(f'Start point: {start_point}')
+        # print(er_rir.shape)
+        # print(tail.shape)
+        # er_rir[ch, start_point:] += tail[ch,:]
+        er_rir[ch,:] += tail[ch,:]
 
-    if trim is not None:
-        er_rir = er_rir[:, :(trim * sr)]
-        er_rir *= cosine_fade(len(er_rir.T), fade_length)
+        if trim is not None:
+            er_rir[ch,:] = er_rir[ch, :(trim * sr)]
+            er_rir[ch,:] *= cosine_fade(len(er_rir[ch,:].T), fade_length)
 
     return er_rir
 
