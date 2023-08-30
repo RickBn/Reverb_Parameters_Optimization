@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     start = datetime.datetime.now()
 
-    # Whether match only the late reverberation or the entire RIR. Set to False for SDN -> True NON FUNZIONA ANCORA
+    # Whether match only the late reverberation or the entire RIR
     match_only_late = True
 
     # Whether to apply the dimensionality reduction to the walls coefficients
@@ -23,9 +23,9 @@ if __name__ == "__main__":
     n_iterations = 500
 
     # Number of initial points used by gp_minimize
-    n_initial_points = 5
+    n_initial_points = 10
 
-    rir_names = ['SDN037']#, 'SDN001', 'SDN005', 'SDN009', 'SDN012']
+    rir_names = ['SDN034']#, 'SDN001', 'SDN005', 'SDN009', 'SDN012']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'

@@ -14,7 +14,7 @@ n_wall_bands = 8
 def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sample_rate,
                  vst3=None, merged=False, pre_norm=False, fixed_params: dict = None, fixed_params_bool: list = [],
                  match_only_late: bool = True, dim_red_mdl = None, same_coef_walls: bool = False,
-                 force_last2_bands_equal: bool = False):
+                 force_last2_bands_equal: bool = False, fade_length: int = 128):
 
     # for idx, par in enumerate(params_dict):
     #     params_dict[par] = params[idx]
@@ -63,7 +63,17 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
     if match_only_late:
         if rir_tail.ndim == 1 and rir_tail.ndim != rir_er.ndim:
             rir_tail = np.stack([rir_tail] * rir_er.shape[0])
+
+        # V1: attaccare con cross-fade prima della loss er originali e late matchata e poi calcolare la loss
         final_rir = merge_er_tail_rir(rir_er, rir_tail, sample_rate, trim=3, offset=offset)
+
+        # # V2: fade-in prima della loss di late matchata e della RIR originale (per togliere er), poi calcolare la loss
+        # for ch in range(n_channels):
+        #     rir_tail[ch,:] = rir_tail[ch,:] * np.concatenate([np.zeros(int(offset[ch])),
+        #                                                       cosine_fade(int(len(rir_tail[ch, :].T) - offset[ch]),
+        #                                                                   fade_length, False)])
+        # final_rir = rir_tail
+
     else:
         # rir_tail = rir_tail * cosine_fade(len(impulse.T), abs(len(rir_er.T) - offset), False)
         # if match_only_late:

@@ -42,6 +42,8 @@ def find_params(rir_path: str,
                 force_last2_bands_equal: bool = False,
                 n_initial_points: int = 10):
 
+    fade_length = 128
+
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
             try:
@@ -144,6 +146,18 @@ def find_params(rir_path: str,
 
             offset_list = rir_offset[rir_file]
 
+            ##V2: fade-in prima della loss di late matchata e della RIR originale (per togliere er), poi calcolare la loss
+            # rir_late, sr = sf.read(rir_path + rir_file)
+            # rir_late = rir_late.T
+            # for ch in range(n_channels):
+            #     rir_late[ch,:] = rir_late[ch,:] * np.concatenate([np.zeros(int(offset_list[ch])),
+            #                                                 cosine_fade(int(len(rir_late[ch, :].T) - offset_list[ch]),
+            #                                                             fade_length, False)])
+            #
+            # rir_late = scipy.signal.fftconvolve(input_audio, rir_late, mode='full', axes=1)
+            # ref = rir_late
+            ##V2
+
         else:
             rir_er = None
             offset_list = None
@@ -212,7 +226,8 @@ def find_params(rir_path: str,
                                               match_only_late=match_only_late,
                                               dim_red_mdl=dim_red_mdl,
                                               same_coef_walls=same_coef_walls,
-                                              force_last2_bands_equal=force_last2_bands_equal)
+                                              force_last2_bands_equal=force_last2_bands_equal,
+                                              fade_length=fade_length)
 
             # start = timeit.default_timer()
 
