@@ -8,10 +8,10 @@ if __name__ == "__main__":
     start = datetime.datetime.now()
 
     # Whether match only the late reverberation or the entire RIR
-    match_only_late = True
+    match_only_late = False
 
     # Whether to apply the dimensionality reduction to the walls coefficients
-    apply_dim_red = False
+    apply_dim_red = True
 
     # Whether all the walls have the same absorption coefficients
     same_coef_walls = True

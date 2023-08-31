@@ -203,7 +203,11 @@ def find_params(rir_path: str,
                 dim_red_mdl.x_min = np.floor(dim_red_mdl.x_min * 10) / 10
                 dim_red_mdl.x_max = np.ceil(dim_red_mdl.x_max * 10) / 10
                 rev_param_ranges_to_tune = []
-                for n in range(n_walls):
+
+                # If the walls have the same coeff then consider as if there is only 1 wall
+                n_walls_dimred = 1 if same_coef_walls else n_walls
+
+                for n in range(n_walls_dimred):
                     for c in range(dim_red_mdl.n_components):
                         rev_param_ranges_to_tune.append(skopt.space.space.Real(dim_red_mdl.x_min[c],
                                                                                dim_red_mdl.x_max[c],
