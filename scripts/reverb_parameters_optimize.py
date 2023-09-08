@@ -28,6 +28,7 @@ def find_params(rir_path: str,
                 merged_rir_path: str,
                 vst_rir_path: str,
                 params_path: str,
+                original_params_path: str,
                 result_path: str,
                 input_path: str,
                 fixed_params_path: str = None,
@@ -40,7 +41,9 @@ def find_params(rir_path: str,
                 apply_dim_red: bool = True,
                 same_coef_walls: bool = False,
                 force_last2_bands_equal: bool = False,
-                n_initial_points: int = 10):
+                n_initial_points: int = 10,
+                inv_interp: bool = False,
+                unit_circle: bool = False):
 
     fade_length = 128
 
@@ -56,6 +59,14 @@ def find_params(rir_path: str,
     rir_folder = os.listdir(rir_path)
 
     venv_name = os.path.basename(os.path.normpath(params_path))
+
+    # Retrieve original params
+    with open(original_params_path, "r") as stream:
+        try:
+            original_params = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
 
     if match_only_late:
         # armodel_filename = armodel_path + 'rir_offset.npy'
@@ -119,7 +130,9 @@ def find_params(rir_path: str,
     overall_time = 0
     times = []
 
-    loss_end = []
+    loss_end = {}
+
+    pred_params = {}
 
     # Iterate over the RIRs of the room
     for ref_idx, ref in enumerate(reference_audio):
@@ -199,7 +212,10 @@ def find_params(rir_path: str,
                                             for i in range(len(rev_param_ranges_to_tune)) if i%n_wall_bands < 6]
 
             if apply_dim_red:
-                dim_red_mdl = get_dim_red_model()
+                dim_red_mdl = get_dim_red_model(dim_red_alg='pca',
+                                                voronoi=False,
+                                                inv_interp=inv_interp,
+                                                unit_circle=unit_circle)
                 dim_red_mdl.x_min = np.floor(dim_red_mdl.x_min * 10) / 10
                 dim_red_mdl.x_max = np.ceil(dim_red_mdl.x_max * 10) / 10
                 rev_param_ranges_to_tune = []
@@ -208,6 +224,17 @@ def find_params(rir_path: str,
                 n_walls_dimred = 1 if same_coef_walls else n_walls
 
                 for n in range(n_walls_dimred):
+                    # if dim_red_mdl.unit_circle:
+                    #     if dim_red_mdl.n_components == 2:
+                    #         rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
+                    #                                                                1,
+                    #                                                                transform='identity'))
+                    #         rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
+                    #                                                                np.pi/2,
+                    #                                                                transform='identity'))
+                    #     else:
+                    #         raise Exception("You cannot use polar coordinate with more than 2 components")
+                    # else:
                     for c in range(dim_red_mdl.n_components):
                         rev_param_ranges_to_tune.append(skopt.space.space.Real(dim_red_mdl.x_min[c],
                                                                                dim_red_mdl.x_max[c],
@@ -251,6 +278,8 @@ def find_params(rir_path: str,
             # times.append(time_s)
 
             if dim_red_mdl is not None:
+                # if unit_circle:
+                #     res_rev.x = pol2cart(res_rev.x)
                 res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
 
             optimal_params = rev_param_names_to_tune
@@ -274,8 +303,8 @@ def find_params(rir_path: str,
 
             optimal_params = {**fixed_params_pos, **optimal_params}
 
-            loss_end.append(res_rev.fun)
-            dict_to_save = {'loss_end_value': np.float(loss_end[ref_idx]), 'parameters': optimal_params}
+            loss_end[rir_name] = res_rev.fun
+            dict_to_save = {'loss_end_value': np.float(loss_end[rir_name]), 'parameters': optimal_params}
 
             # Save params
             current_params_path = f'{params_path}{rir_name}/{effect_folder}/'
@@ -292,6 +321,14 @@ def find_params(rir_path: str,
             # else:
             scale = 1
             opt_params = optimal_params
+
+            pred_params[rir_name] = np.array([opt_params['125hz_wall_x_0'],
+                                              opt_params['250hz_wall_x_0'],
+                                              opt_params['500hz_wall_x_0'],
+                                              opt_params['1000hz_wall_x_0'],
+                                              opt_params['2000hz_wall_x_0'],
+                                              opt_params['4000hz_wall_x_0']
+                                              ])
 
             # Process tail with optimized params
 
@@ -338,9 +375,26 @@ def find_params(rir_path: str,
 
         print(f'{venv_name}-{rir_name} elapsed time: {elapsed}')
 
-    print('FINAL LOSS FUNCTION VALUES')
-    for idx, l in enumerate(loss_end):
-        print(f'    {rir_folder[idx]}: {l}')
+    print('MATCH RESULTS')
+    for rir_name in rir_folder:
+        r_n = rir_name.rstrip('.wav')
+        orig = np.array([original_params[r_n]['125hz_wall_x_0'],
+                         original_params[r_n]['250hz_wall_x_0'],
+                         original_params[r_n]['500hz_wall_x_0'],
+                         original_params[r_n]['1000hz_wall_x_0'],
+                         original_params[r_n]['2000hz_wall_x_0'],
+                         original_params[r_n]['4000hz_wall_x_0'],
+                         ])
+
+        pred = pred_params[r_n]
+
+        abs_err = abs(orig - pred)
+        mae = np.mean(abs_err)
+
+        print(f' -> {r_n}:')
+        print(f'     - Loss: {round(loss_end[r_n], 2)} dB')
+        print(f'     - Parameters abs error: {abs_err}')
+        print(f'     - Parameters MAE: {round(mae, 3)}')
 
 
 def find_params_merged(rir_path: str,

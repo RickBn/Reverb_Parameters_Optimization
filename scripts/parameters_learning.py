@@ -11,6 +11,20 @@ from scripts.params_dim_reduction import reconstruct_original_params
 n_wall_bands = 8
 
 
+def pol2cart(pol):
+    # pol: [rho, phi]
+    rho = pol[0]
+    phi = pol[1]
+
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+
+    if x < 0 or y < 0:
+        pass
+
+    return [x, y]
+
+
 def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sample_rate,
                  vst3=None, merged=False, pre_norm=False, fixed_params: dict = None, fixed_params_bool: list = [],
                  match_only_late: bool = True, dim_red_mdl = None, same_coef_walls: bool = False,
@@ -19,7 +33,15 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
     # for idx, par in enumerate(params_dict):
     #     params_dict[par] = params[idx]
 
+    # import random
+    # # params = [random.random() for p in params]
+    # params[0] = random.random()
+    # params[1] = random.uniform(0, np.pi/2)
+
     if dim_red_mdl is not None:
+        # if dim_red_mdl.unit_circle:
+        #     params = pol2cart(params)
+
         params = reconstruct_original_params(dim_red_mdl, params)
 
     if force_last2_bands_equal:
