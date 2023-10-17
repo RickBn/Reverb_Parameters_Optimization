@@ -9,11 +9,14 @@ from shapely.ops import nearest_points
 
 
 def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_interp: bool = False,
-                      unit_circle: bool = False):
+                      unit_circle: bool = False, materials_to_exclude: list = []):
     df = pd.read_csv('wall_coeff_dim_reduction/Absorption_database.csv', index_col='Material').drop_duplicates()
 
     # df['8000 Hz'] = df['4000 Hz']
     # df['16000 Hz'] = df['4000 Hz']
+
+    for m in materials_to_exclude:
+        df.drop(m, inplace=True)
 
     # PCA
     if dim_red_alg == 'pca':

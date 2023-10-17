@@ -8,7 +8,7 @@ if __name__ == "__main__":
     start = datetime.datetime.now()
 
     # Whether match only the late reverberation or the entire RIR
-    match_only_late = False
+    match_only_late = True
 
     # Whether to apply the dimensionality reduction to the walls coefficients
     apply_dim_red = True
@@ -16,8 +16,11 @@ if __name__ == "__main__":
     # Whether interpolate to return to the original space. Used only when apply_dim_red = True
     inv_interp = True
 
-    # Whether to use polar or cartesian coordinated. Used only when apply_dim_red = True and inv_interp = True
+    # Whether to force the points in the unit circle. Used only when apply_dim_red = True and inv_interp = True
     unit_circle = False
+
+    # Whether the optmizator works on polar coordinates instead of cartesian ones. Used only when apply_dim_red = True and n_dims_red = 2
+    polar_coords = False
 
     # Whether all the walls have the same absorption coefficients
     same_coef_walls = True
@@ -30,6 +33,9 @@ if __name__ == "__main__":
 
     # Number of initial points used by gp_minimize
     n_initial_points = 10
+
+    # Sample length of the fade
+    fade_length = 256
 
     rir_names = ['SDN037']
 
@@ -81,7 +87,9 @@ if __name__ == "__main__":
                     force_last2_bands_equal=force_last2_bands_equal,
                     n_initial_points=n_initial_points,
                     inv_interp=inv_interp,
-                    unit_circle=unit_circle)
+                    unit_circle=unit_circle,
+                    polar_coords=polar_coords,
+                    fade_length=fade_length)
 
     stop = datetime.datetime.now()
 

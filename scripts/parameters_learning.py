@@ -7,6 +7,7 @@ from scripts.audio.signal_generation import create_impulse
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.dict_functions import exclude_keys
 from scripts.params_dim_reduction import reconstruct_original_params
+from scripts.audio.rir_functions import remove_direct_from_rir
 
 n_wall_bands = 8
 
@@ -28,7 +29,7 @@ def pol2cart(pol):
 def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sample_rate,
                  vst3=None, merged=False, pre_norm=False, fixed_params: dict = None, fixed_params_bool: list = [],
                  match_only_late: bool = True, dim_red_mdl = None, same_coef_walls: bool = False,
-                 force_last2_bands_equal: bool = False, fade_length: int = 128):
+                 force_last2_bands_equal: bool = False, fade_length: int = 256, polar_coords: bool = False, impulse = []):
 
     # for idx, par in enumerate(params_dict):
     #     params_dict[par] = params[idx]
@@ -39,8 +40,8 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
     # params[1] = random.uniform(0, np.pi/2)
 
     if dim_red_mdl is not None:
-        # if dim_red_mdl.unit_circle:
-        #     params = pol2cart(params)
+        if polar_coords:
+            params = pol2cart(params)
 
         params = reconstruct_original_params(dim_red_mdl, params)
 
@@ -66,10 +67,6 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
             else:
                 params_count = params_count + 1
 
-    n_channels = 2 if input_audio.shape[0] == 2 else 1
-
-    impulse = create_impulse(sample_rate * 3, n_channels=n_channels)
-
     if 'scale' in params_dict.keys():
         scale = params_dict['scale']
         par = exclude_keys(params_dict, 'scale')
@@ -81,13 +78,15 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
     # if np.isnan(rir_tail).any():
     #     np.nan_to_num(rir_tail, copy=False, nan=0)
 
+    rir_tail = remove_direct_from_rir(rir_tail)
+
     # if merged:
     if match_only_late:
         if rir_tail.ndim == 1 and rir_tail.ndim != rir_er.ndim:
             rir_tail = np.stack([rir_tail] * rir_er.shape[0])
 
         # V1: attaccare con cross-fade prima della loss er originali e late matchata e poi calcolare la loss
-        final_rir = merge_er_tail_rir(rir_er, rir_tail, sample_rate, trim=3, offset=offset)
+        final_rir = merge_er_tail_rir(rir_er, rir_tail, sample_rate, fade_length=fade_length, trim=3, offset=offset)
 
         # # V2: fade-in prima della loss di late matchata e della RIR originale (per togliere er), poi calcolare la loss
         # for ch in range(n_channels):
@@ -105,7 +104,7 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
 
     if input_audio.ndim == 1 and input_audio.ndim != ref_audio.ndim:
         input_audio = np.stack([input_audio] * ref_audio.shape[0])
-
+    # Convolve reverberator current output with sweep
     audio_to_match = scipy.signal.fftconvolve(input_audio, final_rir, mode='full', axes=1)
     if np.isnan(audio_to_match).any():
         # for ch in range(audio_to_match.shape[0]):

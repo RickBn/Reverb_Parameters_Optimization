@@ -1,4 +1,5 @@
 from kneed import KneeLocator
+from scipy.signal import find_peaks
 
 from scripts.audio.DSPfunc import *
 from scripts.audio.audio_manipulation import *
@@ -150,7 +151,7 @@ def rir_er_detection(rir_path, lsd_dict, early_trim=500, ms_encoding=False, img_
 	return [cut_dict, offset_dict]
 
 
-def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
+def rir_trim(rir_path, cut_dict, fade_length=256, save_path=None):
 	trimmed_rir_dict = {}
 
 	rir_files = os.listdir(rir_path)
@@ -186,3 +187,19 @@ def rir_trim(rir_path, cut_dict, fade_length=128, save_path=None):
 			sf.write(save_path + rir_file, trimmed_rir_faded.T, sr)
 
 	return trimmed_rir_dict
+
+
+def remove_direct_from_rir(rir, fade_length=256):
+	from scripts.audio.audio_manipulation import cosine_fade
+	for ch in range(rir.shape[0]):
+		peaks = find_peaks(rir[ch,:])
+
+		direct_pos = peaks[0][0]
+
+		print(f'Direct found at {direct_pos}')
+
+		cos_fade = np.concatenate([np.zeros(direct_pos), cosine_fade(rir.shape[1] - direct_pos, fade_length, fade_out=False)])
+
+		rir[ch, :] = rir[ch, :] * cos_fade
+
+	return rir

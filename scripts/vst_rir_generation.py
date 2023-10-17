@@ -37,7 +37,7 @@ def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=N
     return rev_audio
 
 
-def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None, offset=0, fade=True):
+def merge_er_tail_rir(er, tail, sr, fade_length=256, trim=None, offset=0, fade=True):
     er_rir = np.zeros(tail.shape)
 
     for ch in range(er.shape[0]):
@@ -50,7 +50,7 @@ def merge_er_tail_rir(er, tail, sr, fade_length=128, trim=None, offset=0, fade=T
             er_rir[ch,:] = er[ch,:]
 
         if fade:
-            cos_fade = np.concatenate([np.zeros(offset[ch]), cosine_fade(len(tail[ch, :].T) - offset[ch], fade_length, False)])
+            cos_fade = np.concatenate([np.zeros(offset[ch] - round(fade_length/2)), cosine_fade(len(tail[ch, :].T) - offset[ch] - round(fade_length/2), fade_length, False)])
             tail[ch,:] = tail[ch,:] * cos_fade
             er_rir[ch,:] = er_rir[ch,:] * (cos_fade * (-1) + 1)
 

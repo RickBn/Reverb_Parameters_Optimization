@@ -14,6 +14,21 @@ import warnings
 from scripts.utils.dict_functions import *
 from scripts.utils.directory_functions import *
 from scripts.audio.pedalboard_functions import *
+from scripts.audio.rir_functions import remove_direct_from_rir
+
+
+def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
+    t = np.linspace(0, np.pi, fade_length)
+
+    if signal_length < fade_length:
+        fade_length = signal_length
+
+    no_fade = np.ones(signal_length - fade_length)
+
+    if fade_out is True:
+        return np.concatenate([no_fade, (np.cos(t) + 1) * 0.5], axis=0)
+    else:
+        return np.concatenate([((-np.cos(t)) + 1) * 0.5, no_fade], axis=0)
 
 
 def normalize_audio(audio: np.ndarray,
@@ -139,7 +154,8 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
                        return_convolved=True,
                        scale_factor: float = 1.0,
                        norm: bool = False,
-                       sr: int = 48000):
+                       sr: int = 48000,
+                       remove_direct=True):
 
     convolved = []
     input_list = []
@@ -168,6 +184,9 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
         for rir_idx, rir in enumerate(rir_list):
             input_rir, rir_sr = sf.read(rir)
             input_rir = input_rir.T
+
+            if remove_direct:
+                input_rir = remove_direct_from_rir(input_rir)
 
             input_multichannel = np.stack([input_sound] * input_rir.shape[0])
             convolved_sound = scipy.signal.fftconvolve(input_multichannel, input_rir, mode='full', axes=1)
@@ -255,20 +274,6 @@ def pad_windowed_signal(input_signal: np.array, window_size: int):
         xpad = input_signal
 
     return xpad
-
-
-def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
-    t = np.linspace(0, np.pi, fade_length)
-
-    if signal_length < fade_length:
-        fade_length = signal_length
-
-    no_fade = np.ones(signal_length - fade_length)
-
-    if fade_out is True:
-        return np.concatenate([no_fade, (np.cos(t) + 1) * 0.5], axis=0)
-    else:
-        return np.concatenate([((-np.cos(t)) + 1) * 0.5, no_fade], axis=0)
 
 
 if __name__ == "__main__":

@@ -43,9 +43,9 @@ def find_params(rir_path: str,
                 force_last2_bands_equal: bool = False,
                 n_initial_points: int = 10,
                 inv_interp: bool = False,
-                unit_circle: bool = False):
-
-    fade_length = 128
+                unit_circle: bool = False,
+                polar_coords: bool = False,
+                fade_length: int = 256):
 
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
@@ -76,7 +76,7 @@ def find_params(rir_path: str,
 
         rir_offset = np.load(armodel_filename, allow_pickle=True)[()]
 
-    rir, sr = sf.read(rir_path + rir_folder[0])
+    _, sr = sf.read(rir_path + rir_folder[0])
     print(sr)
 
     impulse = create_impulse(sr * 3, n_channels=2)
@@ -117,7 +117,7 @@ def find_params(rir_path: str,
 
     # Convolve the sweep with RIRs
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
-                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False)
+                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=True)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +155,6 @@ def find_params(rir_path: str,
             rir_er = rir_er.T
 
             # fade_in = int(5 * sr * 0.001)
-            fade_len = 128
 
             offset_list = rir_offset[rir_file]
 
@@ -215,7 +214,9 @@ def find_params(rir_path: str,
                 dim_red_mdl = get_dim_red_model(dim_red_alg='pca',
                                                 voronoi=False,
                                                 inv_interp=inv_interp,
-                                                unit_circle=unit_circle)
+                                                unit_circle=unit_circle,
+                                                # materials_to_exclude=original_params['materials']
+                                                )
                 dim_red_mdl.x_min = np.floor(dim_red_mdl.x_min * 10) / 10
                 dim_red_mdl.x_max = np.ceil(dim_red_mdl.x_max * 10) / 10
                 rev_param_ranges_to_tune = []
@@ -224,21 +225,21 @@ def find_params(rir_path: str,
                 n_walls_dimred = 1 if same_coef_walls else n_walls
 
                 for n in range(n_walls_dimred):
-                    # if dim_red_mdl.unit_circle:
-                    #     if dim_red_mdl.n_components == 2:
-                    #         rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
-                    #                                                                1,
-                    #                                                                transform='identity'))
-                    #         rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
-                    #                                                                np.pi/2,
-                    #                                                                transform='identity'))
-                    #     else:
-                    #         raise Exception("You cannot use polar coordinate with more than 2 components")
-                    # else:
-                    for c in range(dim_red_mdl.n_components):
-                        rev_param_ranges_to_tune.append(skopt.space.space.Real(dim_red_mdl.x_min[c],
-                                                                               dim_red_mdl.x_max[c],
-                                                                               transform='identity'))
+                    if polar_coords:
+                        if dim_red_mdl.n_components == 2:
+                            rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
+                                                                                   1,
+                                                                                   transform='identity'))
+                            rev_param_ranges_to_tune.append(skopt.space.space.Real(0,
+                                                                                   2 * np.pi,
+                                                                                   transform='identity'))
+                        else:
+                            raise Exception("You cannot use polar coordinate with more than 2 components")
+                    else:
+                        for c in range(dim_red_mdl.n_components):
+                            rev_param_ranges_to_tune.append(skopt.space.space.Real(dim_red_mdl.x_min[c],
+                                                                                   dim_red_mdl.x_max[c],
+                                                                                   transform='identity'))
             else:
                 dim_red_mdl = None
 
@@ -258,7 +259,9 @@ def find_params(rir_path: str,
                                               dim_red_mdl=dim_red_mdl,
                                               same_coef_walls=same_coef_walls,
                                               force_last2_bands_equal=force_last2_bands_equal,
-                                              fade_length=fade_length)
+                                              fade_length=fade_length,
+                                              polar_coords=polar_coords,
+                                              impulse=create_impulse(sr * 3, n_channels=n_channels))
 
             # start = timeit.default_timer()
 
@@ -278,8 +281,8 @@ def find_params(rir_path: str,
             # times.append(time_s)
 
             if dim_red_mdl is not None:
-                # if unit_circle:
-                #     res_rev.x = pol2cart(res_rev.x)
+                if polar_coords:
+                    res_rev.x = pol2cart(res_rev.x)
                 res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
 
             optimal_params = rev_param_names_to_tune
@@ -361,7 +364,7 @@ def find_params(rir_path: str,
             if match_only_late:
                 # rir_er = pad_signal(rir_er, n_channels, (sr * 3) - rir_er.shape[1], pad_end=True)
                 merged_rir = merge_er_tail_rir(rir_er, rir_tail,
-                                               sr, fade_length=fade_len, trim=3, offset=offset_list, fade=True)
+                                               sr, fade_length=fade_length, trim=3, offset=offset_list, fade=True)
 
                 merged_rir_folder = merged_rir_path + current_effect + '/'
                 merged_rir_filename = merged_rir_folder + rir_name + '_' + current_effect + '.wav'
