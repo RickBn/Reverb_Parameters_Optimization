@@ -9,42 +9,55 @@ from shapely.ops import nearest_points
 
 
 def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_interp: bool = False,
-                      unit_circle: bool = False, materials_to_exclude: list = []):
-    df = pd.read_csv('wall_coeff_dim_reduction/Absorption_database.csv', index_col='Material').drop_duplicates()
-
+                      unit_circle: bool = False, materials_to_exclude: list = [], path=None):
     # df['8000 Hz'] = df['4000 Hz']
     # df['16000 Hz'] = df['4000 Hz']
 
-    for m in materials_to_exclude:
-        df.drop(m, inplace=True)
-
-    # PCA
-    if dim_red_alg == 'pca':
-        # train PCA and transform set
+    if isinstance(path, dict):
         dim_red_mdl = PCA(n_components=2)
 
-        dim_red_mdl.fit(df)
+        dim_red_mdl.pts_pca = pd.read_csv(path['pts_2d'], header=None).values
 
-        x_dimred = dim_red_mdl.transform(df)
+        dim_red_mdl.original_pts = pd.read_csv(path['pts_original'], header=None).values
+
+        dim_red_mdl.n_components = dim_red_mdl.pts_pca.shape[1]
+        dim_red_mdl.n_features_ = dim_red_mdl.original_pts.shape[1]
 
         dim_red_mdl.type = 'pca'
 
     else:
-        x_dimred = df.values
+        df = pd.read_csv('wall_coeff_dim_reduction/Absorption_database.csv', index_col='Material').drop_duplicates()
 
-    dim_red_mdl.pts_pca = x_dimred
+        for m in materials_to_exclude:
+            df.drop(m, inplace=True)
 
-    dim_red_mdl.original_pts = df.values
+        # PCA
+        if dim_red_alg == 'pca':
+            # train PCA and transform set
+            dim_red_mdl = PCA(n_components=2)
 
-    if voronoi:
+            dim_red_mdl.fit(df)
 
-        # voronoi relaxation to obtain a more equally filled space
-        vor = voronoi_relaxation(dim_red_mdl.pts_pca, 50)
-        dim_red_mdl.pts_pca = vor.points
+            x_dimred = dim_red_mdl.transform(df)
 
-        tri = Delaunay(dim_red_mdl.pts_pca)
+            dim_red_mdl.type = 'pca'
 
-        dim_red_mdl.tri = tri
+        else:
+            x_dimred = df.values
+
+        dim_red_mdl.pts_pca = x_dimred
+
+        dim_red_mdl.original_pts = df.values
+
+        if voronoi:
+
+            # voronoi relaxation to obtain a more equally filled space
+            vor = voronoi_relaxation(dim_red_mdl.pts_pca, 50)
+            dim_red_mdl.pts_pca = vor.points
+
+            tri = Delaunay(dim_red_mdl.pts_pca)
+
+            dim_red_mdl.tri = tri
 
 
     if inv_interp or unit_circle:
@@ -70,6 +83,8 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
     dim_red_mdl.inv_interp = inv_interp
     dim_red_mdl.unit_circle = unit_circle
 
+    dim_red_mdl.voronoi = voronoi
+
     # TODO: capire cosa fare con unit circe, se mettere i minimi per restare nel cerchio con coord polari
     x_min = np.min(dim_red_mdl.pts_pca, axis=0)
     x_max = np.max(dim_red_mdl.pts_pca, axis=0)
@@ -77,7 +92,7 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
     dim_red_mdl.x_min = x_min
     dim_red_mdl.x_max = x_max
 
-    dim_red_mdl.voronoi = voronoi
+
 
     return dim_red_mdl
 

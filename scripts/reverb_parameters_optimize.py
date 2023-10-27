@@ -1,5 +1,5 @@
 import functools
-from skopt import gp_minimize
+from skopt import gp_minimize, forest_minimize, gbrt_minimize
 from skopt.plots import plot_convergence
 import yaml
 import pandas as pd
@@ -31,6 +31,8 @@ def find_params(rir_path: str,
                 original_params_path: str,
                 result_path: str,
                 input_path: str,
+                optimizer: str = 'gp_minimize',
+                optimizer_kappa: float = 1.96,
                 fixed_params_path: str = None,
                 generate_references: bool = True,
                 original_er: bool = False,
@@ -38,7 +40,7 @@ def find_params(rir_path: str,
                 vst_path: str = "vst3/Real time SDN.vst3",
                 n_iterations: int = 200,
                 match_only_late: bool = True,
-                apply_dim_red: bool = True,
+                apply_dim_red = True,
                 same_coef_walls: bool = False,
                 force_last2_bands_equal: bool = False,
                 n_initial_points: int = 10,
@@ -215,6 +217,7 @@ def find_params(rir_path: str,
                                                 voronoi=False,
                                                 inv_interp=inv_interp,
                                                 unit_circle=unit_circle,
+                                                path=apply_dim_red
                                                 # materials_to_exclude=original_params['materials']
                                                 )
                 dim_red_mdl.x_min = np.floor(dim_red_mdl.x_min * 10) / 10
@@ -265,8 +268,18 @@ def find_params(rir_path: str,
 
             # start = timeit.default_timer()
 
-            res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
-                                  n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234, n_jobs=1)
+            if optimizer == 'gp_minimize':
+                res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
+                                      n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
+                                      kappa=optimizer_kappa, n_jobs=1)
+            elif optimizer == 'forest_minimize':
+                res_rev = forest_minimize(distance_func, rev_param_ranges_to_tune, base_estimator='RF', acq_func="EI",
+                                          n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
+                                          kappa=optimizer_kappa, n_jobs=1)
+            elif optimizer == 'gbrt_minimize':
+                res_rev = gbrt_minimize(distance_func, rev_param_ranges_to_tune, acq_func="LCB",
+                                        n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
+                                        kappa=optimizer_kappa, n_jobs=1)
 
             fig = plt.figure()
             plot_convergence(res_rev)
@@ -283,6 +296,7 @@ def find_params(rir_path: str,
             if dim_red_mdl is not None:
                 if polar_coords:
                     res_rev.x = pol2cart(res_rev.x)
+                params_2d = res_rev.x
                 res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
 
             optimal_params = rev_param_names_to_tune
@@ -308,6 +322,8 @@ def find_params(rir_path: str,
 
             loss_end[rir_name] = res_rev.fun
             dict_to_save = {'loss_end_value': np.float(loss_end[rir_name]), 'parameters': optimal_params}
+            if dim_red_mdl is not None:
+                dict_to_save['parameters_2D'] = params_2d
 
             # Save params
             current_params_path = f'{params_path}{rir_name}/{effect_folder}/'

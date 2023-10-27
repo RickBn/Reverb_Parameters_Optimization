@@ -7,11 +7,20 @@ if __name__ == "__main__":
 
     start = datetime.datetime.now()
 
-    # Whether match only the late reverberation or the entire RIR
-    match_only_late = True
+    #  gp_minimize, forest_minimize, gbrt_minimize
+    optimizer = 'forest_minimize'
+    # Controls how much of the variance in the predicted values should be taken into account. If set to be very high,
+    # then we are favouring exploration over exploitation and vice versa. Used when the acquisition is "LCB".
+    # Non sembra influire
+    optimizer_kappa = 1.96#1.96
 
-    # Whether to apply the dimensionality reduction to the walls coefficients
-    apply_dim_red = True
+    # Whether match only the late reverberation or the entire RIR
+    match_only_late = False
+
+    # Whether to apply the dimensionality reduction to the walls coefficients. Path for pre-computed values
+    # apply_dim_red = True
+    apply_dim_red = {'pts_2d': r'C:\Users\david\Universita\Dottorato\SONICOM\Projects\Reverb experiment\Exp\Reverb_Parameters_Optimization\wall_coeff_dim_reduction\PCA_data\20000_iterations\2d_projection_data.csv',
+                     'pts_original': r'C:\Users\david\Universita\Dottorato\SONICOM\Projects\Reverb experiment\Exp\Reverb_Parameters_Optimization\wall_coeff_dim_reduction\PCA_data\20000_iterations\filters_data.csv'}
 
     # Whether interpolate to return to the original space. Used only when apply_dim_red = True
     inv_interp = True
@@ -29,7 +38,7 @@ if __name__ == "__main__":
     force_last2_bands_equal = True
 
     # Number of iterations of gp_minimize
-    n_iterations = 500
+    n_iterations = 5000
 
     # Number of initial points used by gp_minimize
     n_initial_points = 10
@@ -37,7 +46,7 @@ if __name__ == "__main__":
     # Sample length of the fade
     fade_length = 256
 
-    rir_names = ['SDN037']
+    rir_names = ['SDN030']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'
@@ -75,6 +84,8 @@ if __name__ == "__main__":
                     original_params_path,
                     result_path,
                     input_path,
+                    optimizer=optimizer,
+                    optimizer_kappa=optimizer_kappa,
                     fixed_params_path=fixed_params_path,
                     generate_references=False,
                     original_er=False,
