@@ -1,8 +1,8 @@
 import numpy as np
-import pedalboard
-import pedalboard_native
+from pedalboard_change_channel_limit import pedalboard
+# from pedalboard_change_channel_limit import pedalboard_native
 import skopt
-from pedalboard import Pedalboard, Reverb, load_plugin
+from pedalboard_change_channel_limit.pedalboard import Pedalboard, Reverb, load_plugin
 
 
 def retrieve_external_vst3_params(vst3: pedalboard.VST3Plugin) -> (dict, list):
@@ -33,12 +33,12 @@ def external_vst3_set_params(params: dict, vst3: pedalboard.VST3Plugin) \
     for p in params:
         vst3.__setattr__(p, params[p])
 
-    # print(params)
+    # print(vst3.output_mode)
 
     return vst3
 
 
-def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard_native.Reverb:
+def native_reverb_set_params(params: dict, full_wet=True) -> pedalboard.Reverb:
     #r = Reverb(freeze_mode=0)
 
     if full_wet:

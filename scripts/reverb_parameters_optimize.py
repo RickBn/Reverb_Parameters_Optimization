@@ -119,7 +119,7 @@ def find_params(rir_path: str,
 
     # Convolve the sweep with RIRs
     reference_audio = batch_fft_convolve([test_sound], result_file_names,
-                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=True)
+                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=False)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

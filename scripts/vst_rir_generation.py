@@ -31,6 +31,8 @@ def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=N
         rev = native_reverb_set_params(params)
         # print(rev)
 
+    print(rev.render_line_of_sight)
+
     rev_audio = process_reverb(rev, sr, input, hp_cutoff=hp_cutoff, norm=norm)
     rev_audio *= scale_factor
 

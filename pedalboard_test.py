@@ -1,4 +1,4 @@
-import pedalboard as pb
+import pedalboard_change_channel_limit.pedalboard as pb
 import numpy as np
 import matplotlib.pyplot as plt
 

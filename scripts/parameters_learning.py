@@ -1,4 +1,5 @@
-import pedalboard
+# import pedalboard
+from pedalboard_change_channel_limit import pedalboard
 
 from scripts.audio.audio_manipulation import *
 from scripts.audio.pedalboard_functions import *

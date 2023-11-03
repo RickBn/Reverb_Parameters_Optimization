@@ -1,7 +1,8 @@
 from scripts.parameters_learning import *
 from scripts.audio.signal_generation import *
 from scripts.vst_rir_generation import vst_reverb_process
-import pedalboard
+# import pedalboard
+from pedalboard_change_channel_limit import pedalboard
 import soundfile as sf
 import os
 import yaml
@@ -11,7 +12,7 @@ sr = 48000
 rir_len_sec = 3
 scale = 1
 n_coef_bands = 8
-vst_path = "vst3/Real time SDN.vst3"
+vst_path = "vst3/Real time SDN_25ch.vst3"
 base_save_path = "audio/input/chosen_rirs/stereo/"
 fixed_params_path = 'fixed_parameters/SDN'
 
@@ -19,9 +20,11 @@ dimensions_x = 13
 dimensions_y = 20
 dimensions_z = 6
 
+output_mode = '4th order Ambisonic'
+
 params = {
     'pos01': {
-        'output_mode': "Stereo",
+        'output_mode': output_mode,
         'source_gain_db': 0,
         'render_line_of_sight': False,
         'source_x': 0.5,
@@ -36,57 +39,57 @@ params = {
         'dimensions_x_m': dimensions_x,
         'dimensions_y_m': dimensions_y,
         'dimensions_z_m': dimensions_z,
-        '125hz_wall_x_0': 0.04,
-        '250hz_wall_x_0': 0.14,
-        '500hz_wall_x_0': 0.49,
-        '1000hz_wall_x_0': 0.35,
-        '2000hz_wall_x_0': 0.31,
-        '4000hz_wall_x_0': 0.36,
-        '8000hz_wall_x_0': 0.36,
-        '16000hz_wall_x_0': 0.36,
-        '125hz_wall_x_1': 0.04,
-        '250hz_wall_x_1': 0.14,
-        '500hz_wall_x_1': 0.49,
-        '1000hz_wall_x_1': 0.35,
-        '2000hz_wall_x_1': 0.31,
-        '4000hz_wall_x_1': 0.36,
-        '8000hz_wall_x_1': 0.36,
-        '16000hz_wall_x_1': 0.36,
-        '125hz_wall_y_0': 0.04,
-        '250hz_wall_y_0': 0.14,
-        '500hz_wall_y_0': 0.49,
-        '1000hz_wall_y_0': 0.35,
-        '2000hz_wall_y_0': 0.31,
-        '4000hz_wall_y_0': 0.36,
-        '8000hz_wall_y_0': 0.36,
-        '16000hz_wall_y_0': 0.36,
-        '125hz_wall_y_1': 0.04,
-        '250hz_wall_y_1': 0.14,
-        '500hz_wall_y_1': 0.49,
-        '1000hz_wall_y_1': 0.35,
-        '2000hz_wall_y_1': 0.31,
-        '4000hz_wall_y_1': 0.36,
-        '8000hz_wall_y_1': 0.36,
-        '16000hz_wall_y_1': 0.36,
-        '125hz_wall_z_0': 0.04,
-        '250hz_wall_z_0': 0.14,
-        '500hz_wall_z_0': 0.49,
-        '1000hz_wall_z_0': 0.35,
-        '2000hz_wall_z_0': 0.31,
-        '4000hz_wall_z_0': 0.36,
-        '8000hz_wall_z_0': 0.36,
-        '16000hz_wall_z_0': 0.36,
-        '125hz_wall_z_1': 0.04,
-        '250hz_wall_z_1': 0.14,
-        '500hz_wall_z_1': 0.49,
-        '1000hz_wall_z_1': 0.35,
-        '2000hz_wall_z_1': 0.31,
-        '4000hz_wall_z_1': 0.36,
-        '8000hz_wall_z_1': 0.36,
-        '16000hz_wall_z_1': 0.36,
+        '125hz_wall_x_0': 0.3,
+        '250hz_wall_x_0': 0.2,
+        '500hz_wall_x_0': 0.1,
+        '1000hz_wall_x_0': 0.07,
+        '2000hz_wall_x_0': 0.05,
+        '4000hz_wall_x_0': 0.02,
+        '8000hz_wall_x_0': 0.02,
+        '16000hz_wall_x_0': 0.02,
+        '125hz_wall_x_1': 0.3,
+        '250hz_wall_x_1': 0.2,
+        '500hz_wall_x_1': 0.1,
+        '1000hz_wall_x_1': 0.07,
+        '2000hz_wall_x_1': 0.05,
+        '4000hz_wall_x_1': 0.02,
+        '8000hz_wall_x_1': 0.02,
+        '16000hz_wall_x_1': 0.02,
+        '125hz_wall_y_0': 0.3,
+        '250hz_wall_y_0': 0.2,
+        '500hz_wall_y_0': 0.1,
+        '1000hz_wall_y_0': 0.07,
+        '2000hz_wall_y_0': 0.05,
+        '4000hz_wall_y_0': 0.02,
+        '8000hz_wall_y_0': 0.02,
+        '16000hz_wall_y_0': 0.02,
+        '125hz_wall_y_1': 0.3,
+        '250hz_wall_y_1': 0.2,
+        '500hz_wall_y_1': 0.1,
+        '1000hz_wall_y_1': 0.07,
+        '2000hz_wall_y_1': 0.05,
+        '4000hz_wall_y_1': 0.02,
+        '8000hz_wall_y_1': 0.02,
+        '16000hz_wall_y_1': 0.02,
+        '125hz_wall_z_0': 0.3,
+        '250hz_wall_z_0': 0.2,
+        '500hz_wall_z_0': 0.1,
+        '1000hz_wall_z_0': 0.07,
+        '2000hz_wall_z_0': 0.05,
+        '4000hz_wall_z_0': 0.02,
+        '8000hz_wall_z_0': 0.02,
+        '16000hz_wall_z_0': 0.02,
+        '125hz_wall_z_1': 0.3,
+        '250hz_wall_z_1': 0.2,
+        '500hz_wall_z_1': 0.1,
+        '1000hz_wall_z_1': 0.07,
+        '2000hz_wall_z_1': 0.05,
+        '4000hz_wall_z_1': 0.02,
+        '8000hz_wall_z_1': 0.02,
+        '16000hz_wall_z_1': 0.02,
     },
     # 'pos02': {
-    #     'output_mode': "Stereo",
+    #     'output_mode': output_mode,
     #     'source_gain_db': 0,
     #     'render_line_of_sight': False,
     #     'source_x': 0.75,
@@ -175,7 +178,14 @@ if __name__ == "__main__":
                     params['pos02'][p] = params['pos01'][p]
 
     # Create impulse
-    impulse = create_impulse(sr * rir_len_sec, n_channels=2)
+    if output_mode == 'Mono':
+        n_ch = 1
+    elif output_mode.endswith('order Ambisonic'):
+        n_ch = pow(int(output_mode[0]) + 1, 2)
+    else:
+        n_ch = 2
+
+    impulse = create_impulse(sr * rir_len_sec, n_channels=n_ch)
 
     # Load SDN VST plugin
     rev_plugin = pedalboard.load_plugin(vst_path)
@@ -196,7 +206,7 @@ if __name__ == "__main__":
 
     # Iterate over the positions
     for pos_key, pos_param in params.items():
-
+        print(rev_plugin.render_line_of_sight)
         # Generate RIR
         sdn_ir = vst_reverb_process(pos_param, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
 

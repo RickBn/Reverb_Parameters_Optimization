@@ -38,7 +38,7 @@ if __name__ == "__main__":
     force_last2_bands_equal = True
 
     # Number of iterations of gp_minimize
-    n_iterations = 5000
+    n_iterations = 500
 
     # Number of initial points used by gp_minimize
     n_initial_points = 10
