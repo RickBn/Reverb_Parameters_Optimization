@@ -32,18 +32,21 @@ def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
 
 
 def normalize_audio(audio: np.ndarray,
-                    scale_factor: float = 1.0, nan_check: bool = False, by_row: bool = True) -> np.ndarray:
+                    scale_factor: float = 1.0, nan_check: bool = False, by_row: bool = False) -> np.ndarray:
 
     if by_row:
         norm_audio = np.divide(audio.T, np.max(abs(audio), axis=1)).T
 
     else:
-        norm_audio = np.divide(audio, np.max(abs(audio), axis=0))
+        norm_audio = np.divide(audio, np.max(abs(audio)))
 
     if nan_check:
         norm_audio[np.isnan(norm_audio)] = 0
 
-    return norm_audio * scale_factor
+    if scale_factor != 1:
+        norm_audio = norm_audio * scale_factor
+
+    return norm_audio
 
 
 def batch_loudnorm(input_path: str, target_lufs: float):

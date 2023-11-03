@@ -38,6 +38,7 @@ def mel_spectrogram_l1_distance(h_1: np.ndarray,
                 w_2[np.where(w_2 < -60.0)] = -60.0
 
             distance[idx] += np.mean(abs(w_1 - w_2))
+            # TODO: Non sarebbe più corretto fare una media delle distance di ogni fft_size invece che la somma?
 
     mean_distance = float(np.mean(distance))
 

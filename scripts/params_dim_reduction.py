@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from scipy.spatial.distance import cdist
 from sklearn.decomposition import PCA
 from wall_coeff_dim_reduction.Constrained_Voronoi_relaxation import voronoi_relaxation
@@ -16,7 +17,7 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
     if isinstance(path, dict):
         dim_red_mdl = PCA(n_components=2)
 
-        dim_red_mdl.pts_pca = pd.read_csv(path['pts_2d'], header=None).values
+        dim_red_mdl.pts_pca = pd.read_csv(os.path.join(os.getcwd(), path['pts_2d']), header=None).values
 
         dim_red_mdl.original_pts = pd.read_csv(path['pts_original'], header=None).values
 

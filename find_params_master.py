@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     # Whether to apply the dimensionality reduction to the walls coefficients. Path for pre-computed values
     # apply_dim_red = True
-    apply_dim_red = {'pts_2d': r'C:\Users\david\Universita\Dottorato\SONICOM\Projects\Reverb experiment\Exp\Reverb_Parameters_Optimization\wall_coeff_dim_reduction\PCA_data\20000_iterations\2d_projection_data.csv',
-                     'pts_original': r'C:\Users\david\Universita\Dottorato\SONICOM\Projects\Reverb experiment\Exp\Reverb_Parameters_Optimization\wall_coeff_dim_reduction\PCA_data\20000_iterations\filters_data.csv'}
+    apply_dim_red = {'pts_2d': r'.\wall_coeff_dim_reduction\PCA_data\20000_iterations\2d_projection_data.csv',
+                     'pts_original': r'.\wall_coeff_dim_reduction\PCA_data\20000_iterations\filters_data.csv'}
 
     # Whether interpolate to return to the original space. Used only when apply_dim_red = True
     inv_interp = True
@@ -31,14 +31,14 @@ if __name__ == "__main__":
     # Whether the optmizator works on polar coordinates instead of cartesian ones. Used only when apply_dim_red = True and n_dims_red = 2
     polar_coords = False
 
-    # Whether all the walls have the same absorption coefficients
+    # Whether all the walls have the same absorption coefficients. Not used if RIR Ambisonic
     same_coef_walls = True
 
     # Whether to set the absorption coef of the last 2 bands equal to the third to last
     force_last2_bands_equal = True
 
     # Number of iterations of gp_minimize
-    n_iterations = 500
+    n_iterations = 10
 
     # Number of initial points used by gp_minimize
     n_initial_points = 10
@@ -46,7 +46,10 @@ if __name__ == "__main__":
     # Sample length of the fade
     fade_length = 256
 
-    rir_names = ['SDN030']
+    # Whether to remove direct
+    remove_direct = False
+
+    rir_names = ['SDN038']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'

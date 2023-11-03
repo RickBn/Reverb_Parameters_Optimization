@@ -9,6 +9,12 @@ from scripts.utils.dict_functions import save_or_merge
 
 plt.switch_backend('agg')
 
+def beaforming_ambisonic(rir_ambisonic: np.array, wall_idx_ambisonic: int = 0):
+	return rir_ambisonic[wall_idx_ambisonic:wall_idx_ambisonic+1,:]
+
+def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array):
+	return rir_ambisonic[0:7,:]
+
 
 def rir_psd_metrics(rir_path: str,
                     sr: float,

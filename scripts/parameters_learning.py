@@ -5,6 +5,7 @@ from scripts.audio.audio_manipulation import *
 from scripts.audio.pedalboard_functions import *
 from scripts.audio.audio_metrics import *
 from scripts.audio.signal_generation import create_impulse
+from scripts.audio.rir_functions import beaforming_ambisonic
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.dict_functions import exclude_keys
 from scripts.params_dim_reduction import reconstruct_original_params
@@ -27,10 +28,11 @@ def pol2cart(pol):
     return [x, y]
 
 
-def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sample_rate,
+def rir_distance(params, params_dict, input_sweep, target_rir_sweep, rir_er, offset, sample_rate,
                  vst3=None, merged=False, pre_norm=False, fixed_params: dict = None, fixed_params_bool: list = [],
                  match_only_late: bool = True, dim_red_mdl = None, same_coef_walls: bool = False,
-                 force_last2_bands_equal: bool = False, fade_length: int = 256, polar_coords: bool = False, impulse = []):
+                 force_last2_bands_equal: bool = False, fade_length: int = 256, polar_coords: bool = False, impulse = [],
+                 remove_direct: bool = False, wall_idx_ambisonic: int = None):
 
     # for idx, par in enumerate(params_dict):
     #     params_dict[par] = params[idx]
@@ -75,11 +77,16 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
         scale = 1
         par = params_dict
 
-    rir_tail = vst_reverb_process(par, impulse, sample_rate, scale_factor=scale, hp_cutoff=20, rev_external=vst3)
+    rir_tail = vst_reverb_process(par, impulse, sample_rate, scale_factor=scale, hp_cutoff=20, rev_external=vst3, norm=True)
     # if np.isnan(rir_tail).any():
     #     np.nan_to_num(rir_tail, copy=False, nan=0)
 
-    rir_tail = remove_direct_from_rir(rir_tail)
+    if wall_idx_ambisonic is not None:
+        rir_tail = beaforming_ambisonic(rir_tail, wall_idx_ambisonic=wall_idx_ambisonic)
+        # TODO: add windowing
+
+    if remove_direct:
+        rir_tail = remove_direct_from_rir(rir_tail)
 
     # if merged:
     if match_only_late:
@@ -103,10 +110,10 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
         # else:
         final_rir = rir_tail
 
-    if input_audio.ndim == 1 and input_audio.ndim != ref_audio.ndim:
-        input_audio = np.stack([input_audio] * ref_audio.shape[0])
+    if input_sweep.ndim == 1 and input_sweep.ndim != target_rir_sweep.ndim:
+        input_sweep = np.stack([input_sweep] * target_rir_sweep.shape[0])
     # Convolve reverberator current output with sweep
-    audio_to_match = scipy.signal.fftconvolve(input_audio, final_rir, mode='full', axes=1)
+    audio_to_match = scipy.signal.fftconvolve(input_sweep, final_rir, mode='full', axes=1)
     if np.isnan(audio_to_match).any():
         # for ch in range(audio_to_match.shape[0]):
         #     audio_to_match[ch, :] = np.convolve(input_audio[ch, :], final_rir[ch, :], mode='full')
@@ -114,21 +121,21 @@ def rir_distance(params, params_dict, input_audio, ref_audio, rir_er, offset, sa
 
     audio_to_match = pd_highpass_filter(audio_to_match, order=3, sr=sample_rate, cutoff=20.0)
 
-    if ref_audio.ndim > 1:
-        ref_audio = ref_audio[:, :len(input_audio.T)]
-        audio_to_match = audio_to_match[:, :len(input_audio.T)]
+    if target_rir_sweep.ndim > 1:
+        target_rir_sweep = target_rir_sweep[:, :len(input_sweep.T)]
+        audio_to_match = audio_to_match[:, :len(input_sweep.T)]
     else:
-        ref_audio = ref_audio[:len(input_audio.T)]
-        audio_to_match = audio_to_match[:len(input_audio.T)]
+        target_rir_sweep = target_rir_sweep[:len(input_sweep.T)]
+        audio_to_match = audio_to_match[:len(input_sweep.T)]
 
     # print(ref_audio.shape)
     # print(audio_to_match.shape)
 
     if pre_norm:
-        ref_audio = normalize_audio(ref_audio, nan_check=True)
+        target_rir_sweep = normalize_audio(target_rir_sweep, nan_check=True)
         audio_to_match = normalize_audio(audio_to_match, nan_check=True)
 
-    loss = mel_spectrogram_l1_distance(ref_audio, audio_to_match, sample_rate)
+    loss = mel_spectrogram_l1_distance(target_rir_sweep, audio_to_match, sample_rate)
 
     return loss
 

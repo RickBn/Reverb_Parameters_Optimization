@@ -19,7 +19,10 @@ def process_reverb(rev, sr, input_audio, scale_factor: float = 1.0,
         else:
             reverb = normalize_audio(reverb, nan_check=True)
 
-    return reverb * scale_factor
+    if scale_factor != 1:
+        reverb = reverb * scale_factor
+
+    return reverb
 
 
 def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=None, norm=False, rev_external=None):
@@ -31,10 +34,11 @@ def vst_reverb_process(params, input, sr, scale_factor: float = 1.0, hp_cutoff=N
         rev = native_reverb_set_params(params)
         # print(rev)
 
-    print(rev.render_line_of_sight)
+    # print(rev.render_line_of_sight)
 
     rev_audio = process_reverb(rev, sr, input, hp_cutoff=hp_cutoff, norm=norm)
-    rev_audio *= scale_factor
+    if scale_factor != 1:
+        rev_audio *= scale_factor
 
     return rev_audio
 

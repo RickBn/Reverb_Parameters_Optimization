@@ -73,12 +73,12 @@ def board_process(board, audio):
 
 
 def pd_highpass_filter(audio: np.ndarray, order: int, sr: int, cutoff=20.0):
-    filter = np.array([pedalboard.HighpassFilter(cutoff_frequency_hz=cutoff)] * audio.ndim)
+    filter = np.array([pedalboard.HighpassFilter(cutoff_frequency_hz=cutoff)] * audio.shape[0])
 
     if audio.ndim == 1:
-        audio = audio = filter[0](audio, sr)
+        audio = filter[0](audio, sr)
 
-    elif audio.ndim == len(filter):
+    else:
         for ch, fil in enumerate(filter):
             for i in range(0, order):
                 audio[ch] = fil(audio[ch], sr)

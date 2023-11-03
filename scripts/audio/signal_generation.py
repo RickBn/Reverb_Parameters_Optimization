@@ -2,8 +2,8 @@ import numpy as np
 from scipy.signal import chirp
 
 
-def create_impulse(length: int, n_channels: int = 1):
-    impulse = np.concatenate([[1], np.zeros(length - 1)], axis=0)
+def create_impulse(length: int, n_channels: int = 1, amp: float = 1.0):
+    impulse = np.concatenate([[amp], np.zeros(length - 1)], axis=0)
 
     if n_channels > 1:
         impulse = np.stack([impulse] * n_channels)

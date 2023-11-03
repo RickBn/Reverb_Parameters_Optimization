@@ -8,6 +8,7 @@ import datetime
 
 from scripts.parameters_learning import *
 from scripts.audio.signal_generation import *
+from scripts.audio.rir_functions import get_rir_wall_reflections_ambisonic
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.plot_functions import plot_melspec_pair
 from scripts.utils.json_functions import *
@@ -47,7 +48,8 @@ def find_params(rir_path: str,
                 inv_interp: bool = False,
                 unit_circle: bool = False,
                 polar_coords: bool = False,
-                fade_length: int = 256):
+                fade_length: int = 256,
+                remove_direct: bool = False):
 
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
@@ -57,6 +59,9 @@ def find_params(rir_path: str,
                 print(exc)
     else:
         fixed_params = dict()
+
+    format_mode = fixed_params[list(fixed_params.keys())[0]]['output_mode']
+    ambisonic = 'ambisonic' in format_mode.lower()
 
     rir_folder = os.listdir(rir_path)
 
@@ -69,8 +74,9 @@ def find_params(rir_path: str,
         except yaml.YAMLError as exc:
             print(exc)
 
-
     if match_only_late:
+        if ambisonic:
+            pass
         # armodel_filename = armodel_path + 'rir_offset.npy'
         armodel_filename = armodel_path + 'cut_idx_kl.npy'
         if not os.path.exists(armodel_filename):
@@ -78,13 +84,11 @@ def find_params(rir_path: str,
 
         rir_offset = np.load(armodel_filename, allow_pickle=True)[()]
 
-    _, sr = sf.read(rir_path + rir_folder[0])
-    print(sr)
+    rir_tmp, sr = sf.read(rir_path + rir_folder[0])
+    print(f'Sample rate: {sr}')
 
-    impulse = create_impulse(sr * 3, n_channels=2)
+    impulse = create_impulse(rir_tmp.shape[0], n_channels=2)
     sweep = create_log_sweep(1, 20, 20000, sr, 2, n_channels=1)
-
-    test_sound = sweep
 
     # if match_only_late:
     #     scale_parameter = skopt.space.space.Real(0.0, 1.0, transform='identity')
@@ -92,8 +96,12 @@ def find_params(rir_path: str,
     #     rev_param_ranges_nat = [scale_parameter, scale_parameter, scale_parameter, scale_parameter]
     #     rev_param_names_nat = {'room_size': 0.0, 'damping': 0.0, 'width': 0.0, 'scale': 0.5}
 
-    rev_external = pedalboard.load_plugin(vst_path)
-    rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_external)
+    if ambisonic:
+        vst_path_split = vst_path.split('.')
+        vst_path = f'{vst_path_split[0]}_25ch.{vst_path_split[1]}'
+
+    rev_vst = pedalboard.load_plugin(vst_path)
+    rev_param_names_ex, rev_param_ranges_ex = retrieve_external_vst3_params(rev_vst)
 
     for i, r in enumerate(rev_param_ranges_ex):
         try:
@@ -108,7 +116,7 @@ def find_params(rir_path: str,
     #     rev_param_names_ex['scale'] = 0.5
     #     rev_param_ranges_ex.append(scale_parameter)
 
-    rev_plugins = {'SDN': [rev_external, rev_param_names_ex, rev_param_ranges_ex]}
+    rev_plugins = {'SDN': [rev_vst, rev_param_names_ex, rev_param_ranges_ex]}
 
     input_file_names = os.listdir(input_path)
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
@@ -118,8 +126,8 @@ def find_params(rir_path: str,
                            return_convolved=False, scale_factor=1.0, norm=False)
 
     # Convolve the sweep with RIRs
-    reference_audio = batch_fft_convolve([test_sound], result_file_names,
-                                         rir_path, rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=False)
+    rirs_sweep = batch_fft_convolve([sweep], result_file_names, rir_path,
+                                    rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=remove_direct)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -137,39 +145,44 @@ def find_params(rir_path: str,
     pred_params = {}
 
     # Iterate over the RIRs of the room
-    for ref_idx, ref in enumerate(reference_audio):
+    for ref_idx, target_rir_sweep in enumerate(rirs_sweep):
 
         start = datetime.datetime.now()
 
-        rir_file = rir_folder[ref_idx]
-        rir_name = rir_file.replace('.wav', '')
+        rir_filename = rir_folder[ref_idx]
+        rir_name = rir_filename.replace('.wav', '')
 
         print(f'POSITION: {rir_name}')
 
-        n_channels = ref.shape[0]
+        n_channels_rir = target_rir_sweep.shape[0]
 
-        input_audio = np.stack([test_sound] * n_channels)
+        if ambisonic:
+            n_channels_to_consider = 1
+        else:
+            n_channels_to_consider = n_channels_rir
+
+        input_sweep = np.stack([sweep] * n_channels_to_consider)
 
         if match_only_late:
-            rir_er_path = er_path + rir_file
+            rir_er_path = er_path + rir_filename
 
             rir_er, sr_er = sf.read(rir_er_path)
             rir_er = rir_er.T
 
             # fade_in = int(5 * sr * 0.001)
 
-            offset_list = rir_offset[rir_file]
+            offset_list = rir_offset[rir_filename]
 
             ##V2: fade-in prima della loss di late matchata e della RIR originale (per togliere er), poi calcolare la loss
-            # rir_late, sr = sf.read(rir_path + rir_file)
+            # rir_late, sr = sf.read(rir_path + rir_filename)
             # rir_late = rir_late.T
             # for ch in range(n_channels):
             #     rir_late[ch,:] = rir_late[ch,:] * np.concatenate([np.zeros(int(offset_list[ch])),
             #                                                 cosine_fade(int(len(rir_late[ch, :].T) - offset_list[ch]),
             #                                                             fade_length, False)])
             #
-            # rir_late = scipy.signal.fftconvolve(input_audio, rir_late, mode='full', axes=1)
-            # ref = rir_late
+            # rir_late = scipy.signal.fftconvolve(input_sweep, rir_late, mode='full', axes=1)
+            # target_rir_sweep = rir_late
             ##V2
 
         else:
@@ -188,7 +201,7 @@ def find_params(rir_path: str,
             rev_param_names = rev_plugins[rev][1]
             rev_param_ranges = rev_plugins[rev][2]
 
-            rir_tail = np.array([])
+            # rir_tail = np.array([])
 
             # Fixed parameters for the current position
             fixed_params_pos = fixed_params[rir_folder[ref_idx].split('.')[0]]
@@ -199,7 +212,7 @@ def find_params(rir_path: str,
             rev_param_names_to_tune = {p: rev_param_names[p] for idx, p in enumerate(rev_param_names)
                                        if fixed_params_bool[idx] == False}
 
-            if same_coef_walls:
+            if same_coef_walls or ambisonic:
                 rev_param_ranges_to_tune = rev_param_ranges_to_tune[:int(len(rev_param_ranges_to_tune)/n_walls)]
 
                 # rev_param_names_to_tune_keys = list(rev_param_names_to_tune.keys())
@@ -246,46 +259,58 @@ def find_params(rir_path: str,
             else:
                 dim_red_mdl = None
 
-            distance_func = functools.partial(rir_distance,
-                                              params_dict=rev_param_names,
-                                              input_audio=input_audio,
-                                              ref_audio=ref,
-                                              rir_er=rir_er,
-                                              offset=offset_list,
-                                              sample_rate=sr,
-                                              vst3=rev_plugin,
-                                              merged=original_er,
-                                              pre_norm=pre_norm,
-                                              fixed_params=fixed_params_pos,
-                                              fixed_params_bool=fixed_params_bool,
-                                              match_only_late=match_only_late,
-                                              dim_red_mdl=dim_red_mdl,
-                                              same_coef_walls=same_coef_walls,
-                                              force_last2_bands_equal=force_last2_bands_equal,
-                                              fade_length=fade_length,
-                                              polar_coords=polar_coords,
-                                              impulse=create_impulse(sr * 3, n_channels=n_channels))
 
-            # start = timeit.default_timer()
+            if ambisonic:
+                # Use beamforming to islate the RIR reflections on the shoebox walls
+                target_rir_sweep = get_rir_wall_reflections_ambisonic(target_rir_sweep)
+                n_fittings = target_rir_sweep.shape[0]
+            else:
+                n_fittings = n_walls
 
-            if optimizer == 'gp_minimize':
-                res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
-                                      n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
-                                      kappa=optimizer_kappa, n_jobs=1)
-            elif optimizer == 'forest_minimize':
-                res_rev = forest_minimize(distance_func, rev_param_ranges_to_tune, base_estimator='RF', acq_func="EI",
+            for n_fit in range(n_fittings):
+
+                distance_func = functools.partial(rir_distance,
+                                                  params_dict=rev_param_names,
+                                                  input_sweep=input_sweep,
+                                                  target_rir_sweep=target_rir_sweep[n_fit:n_fit+1,:] if ambisonic else target_rir_sweep,
+                                                  rir_er=rir_er,
+                                                  offset=offset_list,
+                                                  sample_rate=sr,
+                                                  vst3=rev_plugin,
+                                                  merged=original_er,
+                                                  pre_norm=pre_norm,
+                                                  fixed_params=fixed_params_pos,
+                                                  fixed_params_bool=fixed_params_bool,
+                                                  match_only_late=match_only_late,
+                                                  dim_red_mdl=dim_red_mdl,
+                                                  same_coef_walls=same_coef_walls,
+                                                  force_last2_bands_equal=force_last2_bands_equal,
+                                                  fade_length=fade_length,
+                                                  polar_coords=polar_coords,
+                                                  impulse=create_impulse(sr * 3, n_channels=n_channels_rir),
+                                                  remove_direct=remove_direct,
+                                                  wall_idx_ambisonic=n_fit if ambisonic else None)
+
+                # start = timeit.default_timer()
+
+                if optimizer == 'gp_minimize':
+                    res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
                                           n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
                                           kappa=optimizer_kappa, n_jobs=1)
-            elif optimizer == 'gbrt_minimize':
-                res_rev = gbrt_minimize(distance_func, rev_param_ranges_to_tune, acq_func="LCB",
-                                        n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
-                                        kappa=optimizer_kappa, n_jobs=1)
+                elif optimizer == 'forest_minimize':
+                    res_rev = forest_minimize(distance_func, rev_param_ranges_to_tune, base_estimator='RF', acq_func="EI",
+                                              n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
+                                              kappa=optimizer_kappa, n_jobs=1)
+                elif optimizer == 'gbrt_minimize':
+                    res_rev = gbrt_minimize(distance_func, rev_param_ranges_to_tune, acq_func="LCB",
+                                            n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
+                                            kappa=optimizer_kappa, n_jobs=1)
 
-            fig = plt.figure()
-            plot_convergence(res_rev)
-            converge_img_path = f'images/convergence/{venv_name}/{rir_name}_{current_effect}.png'
-            os.makedirs(os.path.dirname(converge_img_path), exist_ok=True)
-            plt.savefig(converge_img_path)
+                fig = plt.figure()
+                plot_convergence(res_rev)
+                converge_img_path = f'images/convergence/{venv_name}/{rir_name}_{current_effect}_{n_fit}.png'
+                os.makedirs(os.path.dirname(converge_img_path), exist_ok=True)
+                plt.savefig(converge_img_path)
 
             # stop = timeit.default_timer()
 
@@ -351,7 +376,7 @@ def find_params(rir_path: str,
 
             # Process tail with optimized params
 
-            # rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
+            # rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_vst=rev_plugin)
 
             rt = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
 
