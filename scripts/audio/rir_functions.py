@@ -1,5 +1,7 @@
 from kneed import KneeLocator
 from scipy.signal import find_peaks
+import dawdreamer as daw
+import librosa
 
 from scripts.audio.DSPfunc import *
 from scripts.audio.audio_manipulation import *
@@ -9,12 +11,109 @@ from scripts.utils.dict_functions import save_or_merge
 
 plt.switch_backend('agg')
 
-def beaforming_ambisonic(rir_ambisonic: np.array, wall_idx_ambisonic: int = 0):
-	return rir_ambisonic[wall_idx_ambisonic:wall_idx_ambisonic+1,:]
+n_walls = 6
 
-def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array):
-	return rir_ambisonic[0:7,:]
+# Vector3f MathUtils::dirVector(Point3d& a, Point3d& b)
+# {
+# 	return Vector3f( a.x - b.x, a.y - b.y, a.z - b.z );
+# }
+#
+# Point3d MathUtils::reflectionPoint(Point3d a, Point3d b, char reflAxis, float wallPosition)
+# {
+# 	Vector3f direction;
+# 	float positionParam;
+#
+# 	switch (reflAxis)
+# 	{
+# 	case 'x':
+# 		a.x = (2 * wallPosition) - a.x;
+# 		direction = MathUtils::dirVector(a, b);
+# 		positionParam = (wallPosition - a.x) / direction.x();
+# 		return { wallPosition, a.y + direction.y() * positionParam, a.z + direction.z() * positionParam };
+# 		break;
+#
+# 	case 'y':
+# 		a.y = (2 * wallPosition) - a.y;
+# 		direction = MathUtils::dirVector(a, b);
+# 		positionParam = (wallPosition - a.y) / direction.y();
+# 		return { a.x + direction.x() * positionParam, wallPosition, a.z + direction.z() * positionParam };
+# 		break;
+#
+# 	case 'z':
+# 		a.z = (2 * wallPosition) - a.z;
+# 		direction = MathUtils::dirVector(a, b);
+# 		positionParam = (wallPosition - a.z) / direction.z();
+# 		return { a.x + direction.x() * positionParam, a.y + direction.y() * positionParam, wallPosition };
+# 		break;
+# 	}
+#
+# 	return { 0, 0, 0 };
+#
+# }
+def beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic: int = 0, length: int = 144000, window: bool = True, fade_length: int = 512):
+	from scripts.audio.audio_manipulation import cosine_fade
+	# 5: azimuth
+	beamformer.set_parameter(5, wall_idx_ambisonic/n_walls)
+	# 6: elevation
+	beamformer.set_parameter(6, wall_idx_ambisonic/n_walls)
 
+	engine.render(length)
+	y = engine.get_audio()
+
+	if window:
+		peaks = find_peaks(y[0, :])
+
+		refl_pos = peaks[0][0]
+
+		cos_fade = np.concatenate([np.ones(refl_pos),
+								   (cosine_fade(y.shape[1] - refl_pos, fade_length, fade_out=False)-1)*(-1)])
+
+		y = y * cos_fade
+
+	return y
+
+
+def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, sr: int = 48000, order: int = 4):
+
+	rir_beamform = np.zeros((n_walls+1, rir_ambisonic.shape[1]))
+
+	# Omni channel
+	rir_beamform[0, :] = rir_ambisonic[0, :]
+
+	buffer_size = 128
+	engine = daw.RenderEngine(sr, buffer_size)
+
+	beamformer = engine.make_plugin_processor("beamformer", "C:\Program Files\SPARTA\VST\sparta_beamformer.dll")
+
+	beamformer.set_bus(rir_ambisonic.shape[0], 1)
+	# 0: order
+	max_order = 7
+	beamformer.set_parameter(0, (order - 1) / (max_order - 1))
+	# a = beamformer.get_parameter_text(0)
+	# 1: channel order -> ACN
+	beamformer.set_parameter(1, 0)
+	# 2: normalisation type -> SN3D
+	beamformer.set_parameter(2, 0.5)
+	# 3: beam type -> Hyper-Card
+	beamformer.set_parameter(3, 0.5)
+	# 4: num beams -> 1
+	beamformer.set_parameter(4, 0.01)
+
+	playback = engine.make_playback_processor('input',  np.zeros((rir_ambisonic.shape[0], 0)))
+	playback.set_data(rir_ambisonic)
+
+	graph = [
+		(playback, []),
+		(beamformer, ['input'])
+	]
+
+	engine.load_graph(graph)
+
+	for w in range(1, n_walls+1):
+		rir_beamform[w, :] = beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic=w,
+												 length=rir_ambisonic.shape[1]/sr)
+
+	return rir_beamform, beamformer, engine, playback
 
 def rir_psd_metrics(rir_path: str,
                     sr: float,

@@ -161,6 +161,7 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
                        remove_direct=True):
 
     convolved = []
+    rirs = []
     input_list = []
 
     if type(input_path) is str:
@@ -187,6 +188,7 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
         for rir_idx, rir in enumerate(rir_list):
             input_rir, rir_sr = sf.read(rir)
             input_rir = input_rir.T
+            rirs.append(input_rir)
 
             if remove_direct:
                 input_rir = remove_direct_from_rir(input_rir)
@@ -216,7 +218,7 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
 
                 sf.write(sp + input_name[input_idx], convolved_sound.T, sr)
 
-    return convolved
+    return convolved, rirs
 
 
 def prepare_batch_pb_convolve(rir_path, mix=1.0):

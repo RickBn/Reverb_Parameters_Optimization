@@ -22,6 +22,9 @@ import scipy.signal
 n_walls = 6
 n_wall_bands = 8
 
+coef_bands = ['125hz_wall', '250hz_wall', '500hz_wall', '1000hz_wall', '2000hz_wall', '4000hz_wall', '8000hz_wall', '16000hz_wall']
+wall_order = ['omni', 'x_0', 'x_1', 'y_0', 'y_1', 'z_0', 'z_1']
+
 
 def find_params(rir_path: str,
                 er_path: str,
@@ -34,6 +37,7 @@ def find_params(rir_path: str,
                 input_path: str,
                 optimizer: str = 'gp_minimize',
                 optimizer_kappa: float = 1.96,
+                optimizer_xi: float = 0.01,
                 fixed_params_path: str = None,
                 generate_references: bool = True,
                 original_er: bool = False,
@@ -49,7 +53,8 @@ def find_params(rir_path: str,
                 unit_circle: bool = False,
                 polar_coords: bool = False,
                 fade_length: int = 256,
-                remove_direct: bool = False):
+                remove_direct: bool = False,
+                n_jobs: int = 1):
 
     if fixed_params_path is not None:
         with open(fixed_params_path, "r") as stream:
@@ -87,7 +92,6 @@ def find_params(rir_path: str,
     rir_tmp, sr = sf.read(rir_path + rir_folder[0])
     print(f'Sample rate: {sr}')
 
-    impulse = create_impulse(rir_tmp.shape[0], n_channels=2)
     sweep = create_log_sweep(1, 20, 20000, sr, 2, n_channels=1)
 
     # if match_only_late:
@@ -126,8 +130,8 @@ def find_params(rir_path: str,
                            return_convolved=False, scale_factor=1.0, norm=False)
 
     # Convolve the sweep with RIRs
-    rirs_sweep = batch_fft_convolve([sweep], result_file_names, rir_path,
-                                    rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=remove_direct)
+    target_rirs_sweep, target_rirs = batch_fft_convolve([sweep], result_file_names, rir_path,
+                                                        rir_names=None, save_path=None, scale_factor=1.0, norm=False, remove_direct=remove_direct)
 
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -142,12 +146,14 @@ def find_params(rir_path: str,
 
     loss_end = {}
 
-    pred_params = {}
+    optimized_params_dict_rir = {}
 
     # Iterate over the RIRs of the room
-    for ref_idx, target_rir_sweep in enumerate(rirs_sweep):
+    for ref_idx, target_rir_sweep in enumerate(target_rirs_sweep):
 
         start = datetime.datetime.now()
+
+        target_rir = target_rirs[ref_idx]
 
         rir_filename = rir_folder[ref_idx]
         rir_name = rir_filename.replace('.wav', '')
@@ -155,6 +161,7 @@ def find_params(rir_path: str,
         print(f'POSITION: {rir_name}')
 
         n_channels_rir = target_rir_sweep.shape[0]
+        impulse = create_impulse(rir_tmp.shape[0], n_channels=n_channels_rir)
 
         if ambisonic:
             n_channels_to_consider = 1
@@ -259,27 +266,40 @@ def find_params(rir_path: str,
             else:
                 dim_red_mdl = None
 
-
             if ambisonic:
-                # Use beamforming to islate the RIR reflections on the shoebox walls
-                target_rir_sweep = get_rir_wall_reflections_ambisonic(target_rir_sweep)
-                n_fittings = target_rir_sweep.shape[0]
+                # Use beamforming to isolate the RIR reflections on the shoebox walls
+                target_rir_beamforming, beamformer, engine, playback = get_rir_wall_reflections_ambisonic(target_rir, sr=sr, order=int(format_mode[0]))
+                n_fittings = target_rir_beamforming.shape[0]
             else:
                 n_fittings = n_walls
+                beamformer = None
+                engine = None
+                playback = None
+
+            params_omni2d = None
+
+            # Set fixed params
+            optimized_params_dict = rev_param_names
+            for idx, par in enumerate(optimized_params_dict):
+                if fixed_params_bool[idx]:
+                    optimized_params_dict[par] = fixed_params_pos[par]
+
+            loss_end[rir_name] = {}
+            optimized_params2d_dict = {}
 
             for n_fit in range(n_fittings):
+                print(f'Optimizing {wall_order[n_fit]}...')
 
                 distance_func = functools.partial(rir_distance,
-                                                  params_dict=rev_param_names,
+                                                  params_dict=optimized_params_dict,
                                                   input_sweep=input_sweep,
-                                                  target_rir_sweep=target_rir_sweep[n_fit:n_fit+1,:] if ambisonic else target_rir_sweep,
+                                                  target_rir=target_rir_beamforming[n_fit:n_fit+1,:] if ambisonic else target_rir_sweep,
                                                   rir_er=rir_er,
                                                   offset=offset_list,
                                                   sample_rate=sr,
                                                   vst3=rev_plugin,
                                                   merged=original_er,
                                                   pre_norm=pre_norm,
-                                                  fixed_params=fixed_params_pos,
                                                   fixed_params_bool=fixed_params_bool,
                                                   match_only_late=match_only_late,
                                                   dim_red_mdl=dim_red_mdl,
@@ -287,24 +307,76 @@ def find_params(rir_path: str,
                                                   force_last2_bands_equal=force_last2_bands_equal,
                                                   fade_length=fade_length,
                                                   polar_coords=polar_coords,
-                                                  impulse=create_impulse(sr * 3, n_channels=n_channels_rir),
+                                                  impulse=impulse,
                                                   remove_direct=remove_direct,
-                                                  wall_idx_ambisonic=n_fit if ambisonic else None)
+                                                  wall_idx_ambisonic=n_fit if ambisonic else None,
+                                                  beamformer=beamformer,
+                                                  engine=engine,
+                                                  playback=playback,
+                                                  wall_order=wall_order
+                                                  )
 
                 # start = timeit.default_timer()
 
                 if optimizer == 'gp_minimize':
                     res_rev = gp_minimize(distance_func, rev_param_ranges_to_tune, acq_func="gp_hedge",
                                           n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
-                                          kappa=optimizer_kappa, n_jobs=1)
+                                          kappa=optimizer_kappa, n_jobs=n_jobs,
+                                          x0=params_omni2d,
+                                          xi=optimizer_xi)
                 elif optimizer == 'forest_minimize':
                     res_rev = forest_minimize(distance_func, rev_param_ranges_to_tune, base_estimator='RF', acq_func="EI",
                                               n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
-                                              kappa=optimizer_kappa, n_jobs=1)
+                                              kappa=optimizer_kappa, n_jobs=n_jobs,
+                                              x0=params_omni2d,
+                                              xi=optimizer_xi)
                 elif optimizer == 'gbrt_minimize':
                     res_rev = gbrt_minimize(distance_func, rev_param_ranges_to_tune, acq_func="LCB",
                                             n_calls=n_iterations, n_initial_points=n_initial_points, random_state=1234,
-                                            kappa=optimizer_kappa, n_jobs=1)
+                                            kappa=optimizer_kappa, n_jobs=n_jobs,
+                                            x0=params_omni2d,
+                                            xi=optimizer_xi)
+
+
+                if polar_coords:
+                    res_rev.x = pol2cart(res_rev.x)
+
+                params_2d = res_rev.x
+                params_optimized = reconstruct_original_params(dim_red_mdl, res_rev.x)
+
+                if force_last2_bands_equal:
+                    params_optimized.append(params_optimized[-1])
+                    params_optimized.append(params_optimized[-1])
+
+                if ambisonic:
+                    loss_end[rir_name][wall_order[n_fit]] = np.float(res_rev.fun)
+                    optimized_params2d_dict[wall_order[n_fit]] = [np.float(p) for p in params_2d]
+
+                    if n_fit == 0:
+                        params_omni2d = res_rev.x
+                        params_omni = params_optimized
+
+                        params_count = 0
+                        for idx, par in enumerate(optimized_params_dict):
+                            if not fixed_params_bool[idx]:
+                                optimized_params_dict[par] = np.float(params_omni[params_count])
+                                params_count = (params_count + 1) % n_wall_bands
+
+                    else:
+                        for i, b in enumerate(coef_bands):
+                            optimized_params_dict[f'{b}_{wall_order[n_fit]}'] = np.float(params_optimized[i])
+
+                else:
+                    loss_end[rir_name] = np.float(res_rev.fun)
+                    optimized_params2d_dict = [np.float(p) for p in params_2d]
+                    params_count = 0
+                    for idx, par in enumerate(optimized_params_dict):
+                        if not fixed_params_bool[idx]:
+                            optimized_params_dict[par] = np.float(params_optimized[params_count])
+                            if same_coef_walls:
+                                params_count = (params_count + 1) % n_wall_bands
+                            else:
+                                params_count = params_count + 1
 
                 fig = plt.figure()
                 plot_convergence(res_rev)
@@ -318,37 +390,38 @@ def find_params(rir_path: str,
             # overall_time += time_s
             # times.append(time_s)
 
+            # if dim_red_mdl is not None:
+            #     if polar_coords:
+            #         res_rev.x = pol2cart(res_rev.x)
+            #     params_2d = res_rev.x
+            #     res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
+            #
+            # optimal_params = rev_param_names_to_tune
+            #
+            # if force_last2_bands_equal:
+            #     new_params = []
+            #     for i, p in enumerate(res_rev.x):
+            #         new_params.append(p)
+            #         if i % (n_wall_bands - 2) == 5:
+            #             new_params.append(p)
+            #             new_params.append(p)
+            #
+            #     res_rev.x = new_params
+            #     del new_params
+            #
+            # for i, p in enumerate(optimal_params):
+            #     if same_coef_walls:
+            #         optimal_params[p] = np.float(res_rev.x[i % n_wall_bands])
+            #     else:
+            #         optimal_params[p] = np.float(res_rev.x[i])
+            #
+            # optimal_params = {**fixed_params_pos, **optimal_params}
+
+            # loss_end[rir_name] = res_rev.fun
+
+            dict_to_save = {'loss_end_value': loss_end[rir_name], 'parameters': optimized_params_dict}
             if dim_red_mdl is not None:
-                if polar_coords:
-                    res_rev.x = pol2cart(res_rev.x)
-                params_2d = res_rev.x
-                res_rev.x = reconstruct_original_params(dim_red_mdl, res_rev.x)
-
-            optimal_params = rev_param_names_to_tune
-
-            if force_last2_bands_equal:
-                new_params = []
-                for i, p in enumerate(res_rev.x):
-                    new_params.append(p)
-                    if i % (n_wall_bands - 2) == 5:
-                        new_params.append(p)
-                        new_params.append(p)
-
-                res_rev.x = new_params
-                del new_params
-
-            for i, p in enumerate(optimal_params):
-                if same_coef_walls:
-                    optimal_params[p] = np.float(res_rev.x[i % n_wall_bands])
-                else:
-                    optimal_params[p] = np.float(res_rev.x[i])
-
-            optimal_params = {**fixed_params_pos, **optimal_params}
-
-            loss_end[rir_name] = res_rev.fun
-            dict_to_save = {'loss_end_value': np.float(loss_end[rir_name]), 'parameters': optimal_params}
-            if dim_red_mdl is not None:
-                dict_to_save['parameters_2D'] = params_2d
+                dict_to_save['parameters_2D'] = optimized_params2d_dict
 
             # Save params
             current_params_path = f'{params_path}{rir_name}/{effect_folder}/'
@@ -364,21 +437,20 @@ def find_params(rir_path: str,
             #     opt_params = exclude_keys(optimal_params, 'scale')
             # else:
             scale = 1
-            opt_params = optimal_params
 
-            pred_params[rir_name] = np.array([opt_params['125hz_wall_x_0'],
-                                              opt_params['250hz_wall_x_0'],
-                                              opt_params['500hz_wall_x_0'],
-                                              opt_params['1000hz_wall_x_0'],
-                                              opt_params['2000hz_wall_x_0'],
-                                              opt_params['4000hz_wall_x_0']
-                                              ])
+            # pred_params[rir_name] = np.array([optimized_params_dict['125hz_wall_x_0'],
+            #                                   optimized_params_dict['250hz_wall_x_0'],
+            #                                   optimized_params_dict['500hz_wall_x_0'],
+            #                                   optimized_params_dict['1000hz_wall_x_0'],
+            #                                   optimized_params_dict['2000hz_wall_x_0'],
+            #                                   optimized_params_dict['4000hz_wall_x_0']
+            #                                   ])
 
             # Process tail with optimized params
 
             # rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_vst=rev_plugin)
 
-            rt = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
+            rir_tail = vst_reverb_process(optimized_params_dict, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
 
             # rt = rt * cosine_fade(len(rt), fade_length=abs(len(rir_er) - offset_list), fade_out=False)
             # print(f'Fade Length {abs(len(rir_er) - offset_list)}')
@@ -387,7 +459,7 @@ def find_params(rir_path: str,
             # if match_only_late:
             #     rir_tail = pad_signal(rt, n_channels, np.max(offset_list), pad_end=False)[:, :(sr * 3)]
             # else:
-            rir_tail = rt
+            # rir_tail = rt
 
             # rir_tail = np.concatenate((rir_tail, rt))
 
@@ -412,6 +484,8 @@ def find_params(rir_path: str,
                 os.makedirs(os.path.dirname(merged_rir_folder), exist_ok=True)
                 sf.write(merged_rir_filename, merged_rir.T, sr)
 
+            optimized_params_dict_rir[rir_name] = optimized_params_dict
+
         stop = datetime.datetime.now()
 
         elapsed = stop-start
@@ -421,24 +495,30 @@ def find_params(rir_path: str,
 
     print('MATCH RESULTS')
     for rir_name in rir_folder:
+        abs_err = pd.DataFrame(None, columns=coef_bands, index=wall_order)
         r_n = rir_name.rstrip('.wav')
-        orig = np.array([original_params[r_n]['125hz_wall_x_0'],
-                         original_params[r_n]['250hz_wall_x_0'],
-                         original_params[r_n]['500hz_wall_x_0'],
-                         original_params[r_n]['1000hz_wall_x_0'],
-                         original_params[r_n]['2000hz_wall_x_0'],
-                         original_params[r_n]['4000hz_wall_x_0'],
-                         ])
 
-        pred = pred_params[r_n]
+        for wall in wall_order:
+            orig = np.array([original_params[r_n][f'{b}_{wall}'] for b in coef_bands])
+            pred = np.array([optimized_params_dict_rir[r_n][f'{b}_{wall}'] for b in coef_bands])
 
-        abs_err = abs(orig - pred)
-        mae = np.mean(abs_err)
+        # pred = pred_params[r_n]
+
+            abs_err.loc[wall,:] = abs(orig - pred)
+
+        mae_wall = abs_err.mean(axis=1)
+        mae_band = abs_err.mean(axis=0)
+
+        mae_overall = abs_err.mean(axis=None)
 
         print(f' -> {r_n}:')
-        print(f'     - Loss: {round(loss_end[r_n], 2)} dB')
-        print(f'     - Parameters abs error: {abs_err}')
-        print(f'     - Parameters MAE: {round(mae, 3)}')
+        # print(f'     - Loss: {round(loss_end[r_n], 2)} dB')
+        # print(f'     - Parameters abs error: {abs_err}')
+        print('     - MAE per wall')
+        print(mae_wall)
+        print('     - MAE per band')
+        print(mae_band)
+        print(f'     - Parameters MAE overall: {round(mae_overall, 3)}')
 
 
 def find_params_merged(rir_path: str,

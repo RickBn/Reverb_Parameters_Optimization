@@ -13,6 +13,9 @@ if __name__ == "__main__":
     # then we are favouring exploration over exploitation and vice versa. Used when the acquisition is "LCB".
     # Non sembra influire
     optimizer_kappa = 1.96#1.96
+    # Controls how much improvement one wants over the previous best values. Used when the acquisition is either "EI" or
+    # "PI".
+    optimizer_xi = 0.01,
 
     # Whether match only the late reverberation or the entire RIR
     match_only_late = False
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     force_last2_bands_equal = True
 
     # Number of iterations of gp_minimize
-    n_iterations = 10
+    n_iterations = 11
 
     # Number of initial points used by gp_minimize
     n_initial_points = 10
@@ -48,6 +51,9 @@ if __name__ == "__main__":
 
     # Whether to remove direct
     remove_direct = False
+
+    # Number of cores to run in parallel. If n_jobs=-1, then number of jobs is set to number of cores.
+    n_jobs = 1
 
     rir_names = ['SDN038']
 
@@ -89,6 +95,7 @@ if __name__ == "__main__":
                     input_path,
                     optimizer=optimizer,
                     optimizer_kappa=optimizer_kappa,
+                    optimizer_xi=optimizer_xi,
                     fixed_params_path=fixed_params_path,
                     generate_references=False,
                     original_er=False,
@@ -103,7 +110,8 @@ if __name__ == "__main__":
                     inv_interp=inv_interp,
                     unit_circle=unit_circle,
                     polar_coords=polar_coords,
-                    fade_length=fade_length)
+                    fade_length=fade_length,
+                    n_jobs=n_jobs)
 
     stop = datetime.datetime.now()
 
