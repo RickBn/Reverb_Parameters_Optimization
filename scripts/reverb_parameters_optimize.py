@@ -4,6 +4,8 @@ from skopt.plots import plot_convergence
 import yaml
 import pandas as pd
 
+import plotly.express as px
+
 import datetime
 
 from scripts.parameters_learning import *
@@ -268,7 +270,7 @@ def find_params(rir_path: str,
 
             if ambisonic:
                 # Use beamforming to isolate the RIR reflections on the shoebox walls
-                target_rir_beamforming, beamformer, engine, playback = get_rir_wall_reflections_ambisonic(target_rir, sr=sr, order=int(format_mode[0]))
+                target_rir_beamforming, beamformer, engine, playback = get_rir_wall_reflections_ambisonic(target_rir, fixed_params=fixed_params_pos, wall_order=wall_order, sr=sr, order=int(format_mode[0]))
                 n_fittings = target_rir_beamforming.shape[0]
             else:
                 n_fittings = n_walls
@@ -495,30 +497,46 @@ def find_params(rir_path: str,
 
     print('MATCH RESULTS')
     for rir_name in rir_folder:
-        abs_err = pd.DataFrame(None, columns=coef_bands, index=wall_order)
+        abs_err = pd.DataFrame(None, columns=coef_bands + ['Mean per wall'], index=wall_order[1:]  + ['Mean per band'])
         r_n = rir_name.rstrip('.wav')
 
-        for wall in wall_order:
+        for wall in wall_order[1:]:
             orig = np.array([original_params[r_n][f'{b}_{wall}'] for b in coef_bands])
             pred = np.array([optimized_params_dict_rir[r_n][f'{b}_{wall}'] for b in coef_bands])
 
         # pred = pred_params[r_n]
 
-            abs_err.loc[wall,:] = abs(orig - pred)
+            abs_err.loc[wall,coef_bands] = abs(orig - pred)
 
         mae_wall = abs_err.mean(axis=1)
         mae_band = abs_err.mean(axis=0)
+        mae_overall = abs_err.loc[wall_order[1:],coef_bands].values.mean()
 
-        mae_overall = abs_err.mean(axis=None)
+        abs_err.loc['Mean per band', coef_bands] = mae_band[coef_bands]
+        abs_err.loc[wall_order[1:], 'Mean per wall'] = mae_wall[wall_order[1:]]
+        abs_err.loc['Mean per band', 'Mean per wall'] = mae_overall
 
         print(f' -> {r_n}:')
         # print(f'     - Loss: {round(loss_end[r_n], 2)} dB')
         # print(f'     - Parameters abs error: {abs_err}')
+        print()
         print('     - MAE per wall')
-        print(mae_wall)
+        print(mae_wall[wall_order[1:]])
+        print()
         print('     - MAE per band')
-        print(mae_band)
+        print(mae_band[coef_bands])
         print(f'     - Parameters MAE overall: {round(mae_overall, 3)}')
+
+        fig = px.imshow(abs_err, title="Absolute error")
+        fig.update_layout(xaxis_title="Frequency band", yaxis_title="Wall", xaxis={'side': 'top'})
+        fig.show()
+
+        current_params_path = f'{params_path}{r_n}/{effect_folder}/abs_err'
+
+        abs_err.to_csv(f'{current_params_path}.csv')
+        fig.write_html(f'{current_params_path}.html')
+
+
 
 
 def find_params_merged(rir_path: str,

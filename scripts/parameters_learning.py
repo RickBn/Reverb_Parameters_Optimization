@@ -139,7 +139,7 @@ def rir_distance(params, params_dict, input_sweep, target_rir, rir_er, offset, s
 
         else:
             playback.set_data(matched_rir)
-            matched_rir = beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic=wall_idx_ambisonic,
+            matched_rir = beaforming_ambisonic(beamformer, engine, fixed_params=params_dict, wall_idx_ambisonic=wall_idx_ambisonic, wall_order=wall_order,
                                                length=matched_rir.shape[1] / sample_rate, window=True)
             matched_rir = matched_rir[0, :]
 

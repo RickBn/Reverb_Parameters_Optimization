@@ -34,7 +34,7 @@ params = {
         'listener_x': 0.4,
         'listener_y': 0.6,
         'listener_z': 0.6,
-        'listener_pitch': 0.0,
+        'listener_pitch': 0.0,# Pitch, yaw, roll not used form Ambisonics output
         'listener_yaw': 0.0,
         'listener_roll': 0.0,
         'dimensions_x_m': dimensions_x,

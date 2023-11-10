@@ -50,12 +50,64 @@ n_walls = 6
 # 	return { 0, 0, 0 };
 #
 # }
-def beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic: int = 0, length: int = 144000, window: bool = True, fade_length: int = 512):
+
+
+def get_azel_2points_3d(a_x, a_y, a_z, b_x, b_y, b_z):
+	dir_vec = np.array([a_x - b_x, a_y - b_y, a_z - b_z])
+
+	# Così per l'orientamento degli assi usato dal plugin
+	az = np.degrees(np.arctan2(dir_vec[0], dir_vec[2]))
+	el = np.degrees(np.arcsin((dir_vec[1]) / np.linalg.norm(dir_vec)))
+
+	# Così se fosse orientato con gli assi normalmente
+	# XsqPlusYsq = dir_vec[0] ** 2 + dir_vec[1] ** 2
+	# az2 = np.degrees(np.arctan2(dir_vec[1], dir_vec[0]))
+	# el2 = np.degrees(np.arctan2(dir_vec[2], np.sqrt(XsqPlusYsq)))
+
+	return az, el
+
+
+def get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order):
+	wall = wall_order[wall_idx_ambisonic]
+	wall = wall.split('_')
+	refl_axis = wall[0]
+	wall_position = int(wall[1])
+
+	source_x = fixed_params['dimensions_x_m'] * fixed_params['source_x']
+	source_y = fixed_params['dimensions_y_m'] * fixed_params['source_y']
+	source_z = fixed_params['dimensions_z_m'] * fixed_params['source_z']
+
+	listener_x = fixed_params['dimensions_x_m'] * fixed_params['listener_x']
+	listener_y = fixed_params['dimensions_y_m'] * fixed_params['listener_y']
+	listener_z = fixed_params['dimensions_z_m'] * fixed_params['listener_z']
+
+	if refl_axis == 'x':
+		wall_position = fixed_params['dimensions_x_m'] * wall_position
+		source_x = (2 * wall_position) - source_x
+
+	elif refl_axis == 'y':
+		wall_position = fixed_params['dimensions_y_m'] * wall_position
+		source_y = (2 * wall_position) - source_y
+
+	elif refl_axis == 'z':
+		wall_position = fixed_params['dimensions_y_m'] * wall_position
+		source_z = (2 * wall_position) - source_z
+
+	return get_azel_2points_3d(source_x, source_y, source_z, listener_x, listener_y, listener_z)
+
+
+def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: int = 0, wall_order=[], length: int = 144000, window: bool = True, fade_length: int = 512):
 	from scripts.audio.audio_manipulation import cosine_fade
+
+	azimuth, elevation = get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order)
+
 	# 5: azimuth
-	beamformer.set_parameter(5, wall_idx_ambisonic/n_walls)
+	beamformer.set_parameter(5, (azimuth/360)+0.5)
 	# 6: elevation
-	beamformer.set_parameter(6, wall_idx_ambisonic/n_walls)
+	beamformer.set_parameter(6, (elevation/180)+0.5)
+
+	if beamformer.get_parameter_text(5) != azimuth or beamformer.get_parameter_text(6) != elevation:
+		pass
 
 	engine.render(length)
 	y = engine.get_audio()
@@ -73,7 +125,7 @@ def beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic: int = 0, length
 	return y
 
 
-def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, sr: int = 48000, order: int = 4):
+def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wall_order=[], sr: int = 48000, order: int = 4):
 
 	rir_beamform = np.zeros((n_walls+1, rir_ambisonic.shape[1]))
 
@@ -94,7 +146,7 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, sr: int = 48000,
 	beamformer.set_parameter(1, 0)
 	# 2: normalisation type -> SN3D
 	beamformer.set_parameter(2, 0.5)
-	# 3: beam type -> Hyper-Card
+	# 3: beam type -> Hyper-Card TODO: ok?
 	beamformer.set_parameter(3, 0.5)
 	# 4: num beams -> 1
 	beamformer.set_parameter(4, 0.01)
@@ -110,10 +162,11 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, sr: int = 48000,
 	engine.load_graph(graph)
 
 	for w in range(1, n_walls+1):
-		rir_beamform[w, :] = beaforming_ambisonic(beamformer, engine, wall_idx_ambisonic=w,
-												 length=rir_ambisonic.shape[1]/sr)
+		rir_beamform[w, :] = beaforming_ambisonic(beamformer, engine, fixed_params=fixed_params, wall_idx_ambisonic=w,
+												  wall_order=wall_order, length=rir_ambisonic.shape[1]/sr)
 
 	return rir_beamform, beamformer, engine, playback
+
 
 def rir_psd_metrics(rir_path: str,
                     sr: float,
