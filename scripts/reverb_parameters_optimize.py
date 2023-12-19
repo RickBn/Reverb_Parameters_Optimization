@@ -354,6 +354,7 @@ def find_params(rir_path: str,
                     loss_end[rir_name][wall_order[n_fit]] = np.float(res_rev.fun)
                     optimized_params2d_dict[wall_order[n_fit]] = [np.float(p) for p in params_2d]
 
+                    # If omni, set to all coeffs of all walls
                     if n_fit == 0:
                         params_omni2d = res_rev.x
                         params_omni = params_optimized
@@ -364,6 +365,7 @@ def find_params(rir_path: str,
                                 optimized_params_dict[par] = np.float(params_omni[params_count])
                                 params_count = (params_count + 1) % n_wall_bands
 
+                    # If not omni, set only to the current wall coeffs
                     else:
                         for i, b in enumerate(coef_bands):
                             optimized_params_dict[f'{b}_{wall_order[n_fit]}'] = np.float(params_optimized[i])
@@ -452,7 +454,7 @@ def find_params(rir_path: str,
 
             # rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_vst=rev_plugin)
 
-            rir_tail = vst_reverb_process(optimized_params_dict, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
+            rir_tail = vst_reverb_process(optimized_params_dict, impulse, sr, scale_factor=scale, rev_external=rev_plugin, norm=True)
 
             # rt = rt * cosine_fade(len(rt), fade_length=abs(len(rir_er) - offset_list), fade_out=False)
             # print(f'Fade Length {abs(len(rir_er) - offset_list)}')
@@ -497,7 +499,7 @@ def find_params(rir_path: str,
 
     print('MATCH RESULTS')
     for rir_name in rir_folder:
-        abs_err = pd.DataFrame(None, columns=coef_bands + ['Mean per wall'], index=wall_order[1:]  + ['Mean per band'])
+        abs_err = pd.DataFrame(None, columns=coef_bands + ['Mean per wall'], index=wall_order[1:] + ['Mean per band'])
         r_n = rir_name.rstrip('.wav')
 
         for wall in wall_order[1:]:
@@ -512,6 +514,10 @@ def find_params(rir_path: str,
         mae_band = abs_err.mean(axis=0)
         mae_overall = abs_err.loc[wall_order[1:],coef_bands].values.mean()
 
+        stdae_wall = abs_err.std(axis=1)
+        stdae_band = abs_err.std(axis=0)
+        stdae_overall = abs_err.loc[wall_order[1:],coef_bands].values.std()
+
         abs_err.loc['Mean per band', coef_bands] = mae_band[coef_bands]
         abs_err.loc[wall_order[1:], 'Mean per wall'] = mae_wall[wall_order[1:]]
         abs_err.loc['Mean per band', 'Mean per wall'] = mae_overall
@@ -525,7 +531,8 @@ def find_params(rir_path: str,
         print()
         print('     - MAE per band')
         print(mae_band[coef_bands])
-        print(f'     - Parameters MAE overall: {round(mae_overall, 3)}')
+        print()
+        print(f'     - Parameters MAE overall: {round(mae_overall, 3)} ± {stdae_overall:.3f}')
 
         fig = px.imshow(abs_err, title="Absolute error")
         fig.update_layout(xaxis_title="Frequency band", yaxis_title="Wall", xaxis={'side': 'top'})

@@ -17,77 +17,77 @@ vst_path = "vst3/Real time SDN_25ch.vst3"
 base_save_path = "audio/input/chosen_rirs/stereo/"
 fixed_params_path = 'fixed_parameters/SDN'
 
-dimensions_x = 7
-dimensions_y = 12
-dimensions_z = 4
+dimensions_x = 10
+dimensions_y = 10
+dimensions_z = 30
 
 output_mode = '4th order Ambisonic'
 
 params = {
     'pos01': {
         'output_mode': output_mode,
-        'source_gain_db': 0,
+        'source_gain_db': -12,
         'render_line_of_sight': False,
         'source_x': 0.5,
         'source_y': 0.5,
-        'source_z': 0.5,
-        'listener_x': 0.4,
-        'listener_y': 0.6,
-        'listener_z': 0.6,
-        'listener_pitch': 0.0,# Pitch, yaw, roll not used form Ambisonics output
+        'source_z': 0.35,
+        'listener_x': 0.5,
+        'listener_y': 0.5,
+        'listener_z': 0.75,
+        'listener_pitch': 0.0,# Pitch, yaw, roll not used for Ambisonics output
         'listener_yaw': 0.0,
         'listener_roll': 0.0,
         'dimensions_x_m': dimensions_x,
         'dimensions_y_m': dimensions_y,
         'dimensions_z_m': dimensions_z,
-        '125hz_wall_x_0': 0.04,
-        '250hz_wall_x_0': 0.14,
-        '500hz_wall_x_0': 0.49,
-        '1000hz_wall_x_0': 0.35,
-        '2000hz_wall_x_0': 0.31,
-        '4000hz_wall_x_0': 0.36,
-        '8000hz_wall_x_0': 0.36,
-        '16000hz_wall_x_0': 0.36,
-        '125hz_wall_x_1': 0.04,
-        '250hz_wall_x_1': 0.14,
-        '500hz_wall_x_1': 0.49,
-        '1000hz_wall_x_1': 0.35,
-        '2000hz_wall_x_1': 0.31,
-        '4000hz_wall_x_1': 0.36,
-        '8000hz_wall_x_1': 0.36,
-        '16000hz_wall_x_1': 0.36,
-        '125hz_wall_y_0': 0.04,
-        '250hz_wall_y_0': 0.14,
-        '500hz_wall_y_0': 0.49,
-        '1000hz_wall_y_0': 0.35,
-        '2000hz_wall_y_0': 0.31,
-        '4000hz_wall_y_0': 0.36,
-        '8000hz_wall_y_0': 0.36,
-        '16000hz_wall_y_0': 0.36,
-        '125hz_wall_y_1': 0.04,
-        '250hz_wall_y_1': 0.14,
-        '500hz_wall_y_1': 0.49,
-        '1000hz_wall_y_1': 0.35,
-        '2000hz_wall_y_1': 0.31,
-        '4000hz_wall_y_1': 0.36,
-        '8000hz_wall_y_1': 0.36,
-        '16000hz_wall_y_1': 0.36,
-        '125hz_wall_z_0': 0.04,
-        '250hz_wall_z_0': 0.14,
-        '500hz_wall_z_0': 0.49,
-        '1000hz_wall_z_0': 0.35,
-        '2000hz_wall_z_0': 0.31,
-        '4000hz_wall_z_0': 0.36,
-        '8000hz_wall_z_0': 0.36,
-        '16000hz_wall_z_0': 0.36,
-        '125hz_wall_z_1': 0.04,
+        '125hz_wall_x_0': 0.1,
+        '250hz_wall_x_0': 0.05,
+        '500hz_wall_x_0': 0.04,
+        '1000hz_wall_x_0': 0.03,
+        '2000hz_wall_x_0': 0.03,
+        '4000hz_wall_x_0': 0.03,
+        '8000hz_wall_x_0': 0.03,
+        '16000hz_wall_x_0': 0.03,
+        '125hz_wall_x_1': 0.41,
+        '250hz_wall_x_1': 0.53,
+        '500hz_wall_x_1': 0.64,
+        '1000hz_wall_x_1': 0.84,
+        '2000hz_wall_x_1': 0.91,
+        '4000hz_wall_x_1': 0.63,
+        '8000hz_wall_x_1': 0.63,
+        '16000hz_wall_x_1': 0.63,
+        '125hz_wall_y_0': 0.21333,
+        '250hz_wall_y_0': 0.44667,
+        '500hz_wall_y_0': 0.79,
+        '1000hz_wall_y_0': 0.80333,
+        '2000hz_wall_y_0': 0.575,
+        '4000hz_wall_y_0': 0.575,
+        '8000hz_wall_y_0': 0.575,
+        '16000hz_wall_y_0': 0.575,
+        '125hz_wall_y_1': 0.25,
+        '250hz_wall_y_1': 0.5,
+        '500hz_wall_y_1': 0.8,
+        '1000hz_wall_y_1': 0.9,
+        '2000hz_wall_y_1': 0.9,
+        '4000hz_wall_y_1': 0.85,
+        '8000hz_wall_y_1': 0.85,
+        '16000hz_wall_y_1': 0.85,
+        '125hz_wall_z_0': 0.08,
+        '250hz_wall_z_0': 0.27,
+        '500hz_wall_z_0': 0.39,
+        '1000hz_wall_z_0': 0.34,
+        '2000hz_wall_z_0': 0.48,
+        '4000hz_wall_z_0': 0.63,
+        '8000hz_wall_z_0': 0.63,
+        '16000hz_wall_z_0': 0.63,
+        '125hz_wall_z_1': 0.6,
         '250hz_wall_z_1': 0.14,
-        '500hz_wall_z_1': 0.49,
-        '1000hz_wall_z_1': 0.35,
-        '2000hz_wall_z_1': 0.31,
-        '4000hz_wall_z_1': 0.36,
-        '8000hz_wall_z_1': 0.36,
-        '16000hz_wall_z_1': 0.36,
+        '500hz_wall_z_1': 0.08,
+        '1000hz_wall_z_1': 0.08,
+        '2000hz_wall_z_1': 0.08,
+        '4000hz_wall_z_1': 0.08,
+        '8000hz_wall_z_1': 0.08,
+        '16000hz_wall_z_1': 0.08,
     },
     # 'pos02': {
     #     'output_mode': output_mode,
@@ -209,7 +209,8 @@ if __name__ == "__main__":
     for pos_key, pos_param in params.items():
         # print(rev_plugin.render_line_of_sight)
         # Generate RIR
-        sdn_ir = vst_reverb_process(pos_param, impulse, sr, scale_factor=scale, rev_external=rev_plugin)
+        sdn_ir = vst_reverb_process(pos_param, impulse, sr, scale_factor=scale, rev_external=rev_plugin,
+                                    norm=False)
 
         # if np.any(sdn_ir >= 1):
         #     warnings.warn('Amplitude >= 1 found!')
@@ -217,7 +218,7 @@ if __name__ == "__main__":
         # sdn_ir = sdn_ir / max_amp
 
         # Save RIR
-        sf.write(f'{save_folder}/{pos_key}.wav', sdn_ir.T, sr)
+        sf.write(f'{save_folder}/{pos_key}.wav', sdn_ir.T, sr, subtype='FLOAT')
 
         # Retrieve fixed parameters
         fixed_params[pos_key] = {k: pos_param[k] for k in pos_param if 'hz_wall' not in k}

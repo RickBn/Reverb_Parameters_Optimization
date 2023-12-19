@@ -21,7 +21,6 @@ if __name__ == "__main__":
     match_only_late = False
 
     # Whether to apply the dimensionality reduction to the walls coefficients. Path for pre-computed values
-    # apply_dim_red = True
     apply_dim_red = {'pts_2d': r'.\wall_coeff_dim_reduction\PCA_data\20000_iterations\2d_projection_data.csv',
                      'pts_original': r'.\wall_coeff_dim_reduction\PCA_data\20000_iterations\filters_data.csv'}
 
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     # Whether to force the points in the unit circle. Used only when apply_dim_red = True and inv_interp = True
     unit_circle = False
 
-    # Whether the optmizator works on polar coordinates instead of cartesian ones. Used only when apply_dim_red = True and n_dims_red = 2
+    # Whether the optimizator works on polar coordinates instead of cartesian ones. Used only when apply_dim_red = True and n_dims_red = 2
     polar_coords = False
 
     # Whether all the walls have the same absorption coefficients. Not used if RIR Ambisonic
@@ -49,13 +48,13 @@ if __name__ == "__main__":
     # Sample length of the fade
     fade_length = 256
 
-    # Whether to remove direct
+    # Whether to remove direct. Set to False because the direct is already removed when SDN generates the RIR with the parameter line_of_sight
     remove_direct = False
 
     # Number of cores to run in parallel. If n_jobs=-1, then number of jobs is set to number of cores.
     n_jobs = 1
 
-    rir_names = ['SDN038']
+    rir_names = ['SDN044']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'

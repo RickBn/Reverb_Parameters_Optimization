@@ -1,16 +1,16 @@
 pos01:
   output_mode: 4th order Ambisonic
-  source_gain_db: 0
+  source_gain_db: -12
   render_line_of_sight: false
-  source_x: 0.5
-  source_y: 0.5
-  source_z: 0.5
+  source_x: 0.85
+  source_y: 0.4
+  source_z: 0.3
   listener_x: 0.4
-  listener_y: 0.6
-  listener_z: 0.6
+  listener_y: 0.5
+  listener_z: 0.5
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 7
-  dimensions_y_m: 12
-  dimensions_z_m: 4
+  dimensions_x_m: 15
+  dimensions_y_m: 8
+  dimensions_z_m: 12

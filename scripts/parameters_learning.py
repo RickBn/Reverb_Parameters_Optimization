@@ -34,6 +34,7 @@ def beamforming_loss(target_rir, matched_rir, sr: int = 48000):
     matched_rir_f = rfft(matched_rir)
     # target_rir_f = librosa.power_to_db(target_rir_f, ref=np.max)
     # matched_rir_f = librosa.power_to_db(matched_rir_f, ref=np.max)
+    target_rir_f = np.fft.rfft(target_rir, axis=0)/target_rir.shape[0]
 
     loss = np.mean(np.abs(np.abs(target_rir_f) - np.abs(matched_rir_f)))
 
@@ -85,6 +86,8 @@ def rir_distance(params, params_dict, input_sweep, target_rir, rir_er, offset, s
         params_count = 0
         for idx, par in enumerate(params_dict):
             if not fixed_params_bool[idx]:
+
+                # If not omni, set only to the current wall coeffs
                 if wall_idx_ambisonic > 0:
                      if par.split('_wall_')[1] == wall_order[wall_idx_ambisonic]:
                         params_dict[par] = params[params_count]
@@ -92,6 +95,7 @@ def rir_distance(params, params_dict, input_sweep, target_rir, rir_er, offset, s
                             break
                         params_count = params_count + 1
 
+                # If omni, set to all coeffs of all walls
                 else:
                     params_dict[par] = params[params_count]
                     params_count = (params_count + 1) % n_wall_bands
