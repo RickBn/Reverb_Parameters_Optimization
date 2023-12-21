@@ -454,7 +454,7 @@ def find_params(rir_path: str,
 
             # rir_tail = vst_reverb_process(opt_params, impulse, sr, scale_factor=scale, rev_vst=rev_plugin)
 
-            rir_tail = vst_reverb_process(optimized_params_dict, impulse, sr, scale_factor=scale, rev_external=rev_plugin, norm=True)
+            rir_tail = vst_reverb_process(optimized_params_dict, impulse, sr, scale_factor=scale, rev_external=rev_plugin, norm=False)
 
             # rt = rt * cosine_fade(len(rt), fade_length=abs(len(rir_er) - offset_list), fade_out=False)
             # print(f'Fade Length {abs(len(rir_er) - offset_list)}')

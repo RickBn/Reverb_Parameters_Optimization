@@ -1,5 +1,6 @@
 from kneed import KneeLocator
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, peak_prominences
+from scipy.spatial.distance import euclidean
 import dawdreamer as daw
 import librosa
 
@@ -66,8 +67,7 @@ def get_azel_2points_3d(a_x, a_y, a_z, b_x, b_y, b_z):
 
 	return az, el
 
-
-def get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order):
+def get_image_source_listener_pos(fixed_params, wall_idx_ambisonic, wall_order):
 	wall = wall_order[wall_idx_ambisonic]
 	wall = wall.split('_')
 	refl_axis = wall[0]
@@ -93,6 +93,13 @@ def get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order):
 		wall_position = fixed_params['dimensions_z_m'] * wall_position
 		source_z = (2 * wall_position) - source_z
 
+	return source_x, source_y, source_z, listener_x, listener_y, listener_z
+
+def get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order):
+	source_x, source_y, source_z, listener_x, listener_y, listener_z = get_image_source_listener_pos(fixed_params,
+																									 wall_idx_ambisonic,
+																									 wall_order)
+
 	azimuth, elevation = get_azel_2points_3d(source_x, source_y, source_z, listener_x, listener_y, listener_z)
 
 	# Invert azimuth since SPARTA Beamformer interpret azimuth in the opposite way (neg azimuth is on the right)
@@ -100,38 +107,63 @@ def get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order):
 
 	return azimuth, elevation
 
-def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: int = 0, wall_order=[], length: int = 144000, window: bool = True, fade_length: int = 512):
-	from scripts.audio.audio_manipulation import cosine_fade
 
-	# # TEST PER BEAMFORMING
-	# # wall_idx_ambisonic_test = 1
-	# n = 20
+def compute_delay_source_listener(fixed_params, wall_idx_ambisonic, wall_order):
+	source_x, source_y, source_z, listener_x, listener_y, listener_z = get_image_source_listener_pos(fixed_params,
+																									 wall_idx_ambisonic,
+																									 wall_order)
+
+	dist = euclidean([source_x, source_y, source_z], [listener_x, listener_y, listener_z])
+
+	sound_speed = 343
+	delay_ms = dist / sound_speed * 1000
+
+	return delay_ms
+
+
+def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: int = 0, wall_order=[], length: int = 144000, window: bool = True, fade_length: int = 512, sr=48000):
+	from scripts.audio.audio_manipulation import cosine_fade, ms2samples, samples2ms
+
+	# TEST PER BEAMFORMING
+	# wall_idx_ambisonic_test = 1
+	n = 20
 	# v = np.zeros((n, n))
-	#
-	# el_list = []
-	# az_list = []
-	# el_list_01 = []
-	# az_list_01 = []
-	#
-	# for i, e in enumerate(np.linspace(0, 1, n)):
-	# 	for j, a in enumerate(np.linspace(0, 1, n)):
-	# 		beamformer.set_parameter(5, a)
-	# 		# 6: elevation
-	# 		beamformer.set_parameter(6, e)
-	#
-	# 		if j == 0:
-	# 			el_list.append(beamformer.get_parameter_text(6))
-	# 			el_list_01.append(e)
-	#
-	# 		if i == 0:
-	# 			az_list.append(beamformer.get_parameter_text(5))
-	# 			az_list_01.append(a)
-	#
-	# 		engine.render(length)
-	# 		y = engine.get_audio()
-	#
-	# 		v[i, j] = np.max(y)
-	#
+	v_amp = np.zeros((n, n))
+
+	v_delay = np.zeros((n, n))
+
+	el_list = []
+	az_list = []
+	el_list_01 = []
+	az_list_01 = []
+
+	for i, e in enumerate(np.linspace(0, 1, n)):
+		for j, a in enumerate(np.linspace(0, 1, n)):
+			beamformer.set_parameter(5, a)
+			# 6: elevation
+			beamformer.set_parameter(6, e)
+
+			if j == 0:
+				el_list.append(beamformer.get_parameter_text(6))
+				el_list_01.append(e)
+
+			if i == 0:
+				az_list.append(beamformer.get_parameter_text(5))
+				az_list_01.append(a)
+
+			engine.render(length)
+			y = engine.get_audio()
+
+			# v[i, j] = np.max(y)
+
+			peaks, _ = find_peaks(np.abs(y[0, :]), height=np.max(np.abs(y[0, :])) * .1, distance=ms2samples(ms=2.5, sr=sr))
+
+			refl_pos = peaks[0]
+
+			v_amp[i, j] = y[0, refl_pos]
+			v_delay[i, j] = samples2ms(refl_pos, sr)
+
+
 	# max_idx = np.unravel_index(v.argmax(), v.shape)
 	#
 	# # 5: azimuth
@@ -141,21 +173,33 @@ def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: i
 	#
 	# max_az = beamformer.get_parameter_text(5)
 	# max_el = beamformer.get_parameter_text(6)
-	#
-	# # azimuth, elevation = get_refl_angle(fixed_params, wall_idx_ambisonic_test, wall_order)
-	#
-	# import plotly.express as px
+
+	# azimuth, elevation = get_refl_angle(fixed_params, wall_idx_ambisonic_test, wall_order)
+
+	import plotly.express as px
 	# fig = px.imshow(v, x=az_list, y=el_list, labels=dict(x="Azimuth", y="Elevation", color="Peak"))
-	#
-	# for w in range(1,7):
-	# 	azimuth, elevation = get_refl_angle(fixed_params, w, wall_order)
-	#
-	# 	fig.add_annotation(x=((azimuth/360)+0.5)*(n-1), y=((elevation/180)+0.5)*(n-1),
-	# 					   text=wall_order[w],
-	# 					   showarrow=False,
-	# 					   yshift=0, bordercolor='LightSeaGreen')
-	# # fig.update_layout(title=f'{wall_order[wall_idx_ambisonic_test]} - Max in matrix: (Az: {max_az}°, El: {max_el}°) - Beamforming angle: (Az: {azimuth}°, El: {elevation}°)')
+	fig_amp = px.imshow(v_amp, x=az_list, y=el_list, labels=dict(x="Azimuth", y="Elevation", color="Peak 1st reflection"))
+	fig_delay = px.imshow(v_delay, x=az_list, y=el_list, labels=dict(x="Azimuth", y="Elevation", color="Delay 1st reflection"))
+
+	for w in range(1,7):
+		azimuth, elevation = get_refl_angle(fixed_params, w, wall_order)
+
+		# fig.add_annotation(x=((azimuth/360)+0.5)*(n-1), y=((elevation/180)+0.5)*(n-1),
+		# 				   text=wall_order[w],
+		# 				   showarrow=False,
+		# 				   yshift=0, bordercolor='LightSeaGreen')
+		fig_amp.add_annotation(x=((azimuth/360)+0.5)*(n-1), y=((elevation/180)+0.5)*(n-1),
+							   text=wall_order[w],
+							   showarrow=False,
+							   yshift=0, bordercolor='LightSeaGreen')
+		fig_delay.add_annotation(x=((azimuth/360)+0.5)*(n-1), y=((elevation/180)+0.5)*(n-1),
+								 text=wall_order[w],
+								 showarrow=False,
+								 yshift=0, bordercolor='LightSeaGreen')
+	# fig.update_layout(title=f'{wall_order[wall_idx_ambisonic_test]} - Max in matrix: (Az: {max_az}°, El: {max_el}°) - Beamforming angle: (Az: {azimuth}°, El: {elevation}°)')
 	# fig.show()
+	fig_amp.show()
+	fig_delay.show()
 
 
 	azimuth, elevation = get_refl_angle(fixed_params, wall_idx_ambisonic, wall_order)
@@ -172,9 +216,17 @@ def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: i
 	y = engine.get_audio()
 
 	if window:
-		peaks = find_peaks(y[0, :])
 
-		refl_pos = peaks[0][0]
+		delay_ms = compute_delay_source_listener(fixed_params, wall_idx_ambisonic, wall_order)
+		delay_samples = round(ms2samples(delay_ms, sr))
+
+		# Set to 0 to samples before the computed ideal first reflection coming from the considered wall
+		y[:, 0:delay_samples] = 0
+
+		peaks, _ = find_peaks(np.abs(y[0, :]), height=np.max(np.abs(y[0, :])) * .1, distance=ms2samples(ms=2.5, sr=sr))
+
+		refl_pos = peaks[0]
+
 
 		cos_fade = np.concatenate([np.ones(refl_pos),
 								   (cosine_fade(y.shape[1] - refl_pos, fade_length, fade_out=False)-1)*(-1)])
@@ -205,7 +257,7 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wa
 	beamformer.set_parameter(1, 0)
 	# 2: normalisation type -> N3D
 	beamformer.set_parameter(2, 0)
-	# 3: beam type -> MaxEV TODO: ok?
+	# 3: beam type -> MaxEV
 	beamformer.set_parameter(3, 1)
 	# 4: num beams -> 1
 	beamformer.set_parameter(4, 0.01)
@@ -223,7 +275,7 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wa
 
 	for w in range(1, n_walls+1):
 		rir_beamform[w, :] = beaforming_ambisonic(beamformer, engine, fixed_params=fixed_params, wall_idx_ambisonic=w,
-												  wall_order=wall_order, length=rir_ambisonic.shape[1]/sr)
+												  wall_order=wall_order, length=rir_ambisonic.shape[1]/sr, sr=sr)
 
 	return rir_beamform, beamformer, engine, playback
 

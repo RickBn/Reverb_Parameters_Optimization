@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # Number of cores to run in parallel. If n_jobs=-1, then number of jobs is set to number of cores.
     n_jobs = 1
 
-    rir_names = ['SDN044']
+    rir_names = ['SDN045']
 
     # Set the path of the reverberator (vst3):
     # - 'vst3/Real time SDN.vst3'

@@ -17,6 +17,14 @@ from scripts.audio.pedalboard_functions import *
 from scripts.audio.rir_functions import remove_direct_from_rir
 
 
+def samples2ms(n_samples: int, sr: int):
+    return n_samples / sr * 1000
+
+
+def ms2samples(ms: float, sr: int):
+    return ms / 1000 * sr
+
+
 def cosine_fade(signal_length: int, fade_length: int, fade_out=True):
     t = np.linspace(0, np.pi, fade_length)
 

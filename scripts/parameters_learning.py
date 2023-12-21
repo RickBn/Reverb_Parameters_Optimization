@@ -130,7 +130,7 @@ def rir_distance(params, params_dict, input_sweep, target_rir, rir_er, offset, s
         par = params_dict
 
     matched_rir = vst_reverb_process(par, impulse, sample_rate, scale_factor=scale, hp_cutoff=None, rev_external=vst3,
-                                     norm=True)
+                                     norm=False)
     # if np.isnan(matched_rir).any():
     #     np.nan_to_num(matched_rir, copy=False, nan=0)
 
