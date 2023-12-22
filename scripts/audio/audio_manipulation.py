@@ -189,6 +189,7 @@ def batch_fft_convolve(input_path: Union[str, List[np.ndarray], List[str]],
 
     if rir_names is None:
         rir_names = directory_filter(rir_path)
+        rir_names = [r_n for r_n in rir_names if r_n.endswith('.wav')]
 
     rir_list = [f'{rir_path}{rir_name}' for rir_name in rir_names]
 

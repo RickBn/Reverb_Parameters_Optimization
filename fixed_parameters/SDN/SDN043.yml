@@ -3,14 +3,14 @@ pos01:
   source_gain_db: -12
   render_line_of_sight: false
   source_x: 0.5
-  source_y: 0.5
-  source_z: 0.35
-  listener_x: 0.5
+  source_y: 0.8
+  source_z: 0.9
+  listener_x: 0.1
   listener_y: 0.5
-  listener_z: 0.75
+  listener_z: 0.6
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 10
-  dimensions_y_m: 10
+  dimensions_x_m: 15
+  dimensions_y_m: 18
   dimensions_z_m: 30

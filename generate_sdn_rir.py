@@ -17,9 +17,9 @@ vst_path = "vst3/Real time SDN_25ch.vst3"
 base_save_path = "audio/input/chosen_rirs/stereo/"
 fixed_params_path = 'fixed_parameters/SDN'
 
-dimensions_x = 1
-dimensions_y = 1
-dimensions_z = 1
+dimensions_x = 10
+dimensions_y = 10
+dimensions_z = 10
 
 output_mode = '4th order Ambisonic'
 
@@ -29,8 +29,8 @@ params = {
         'source_gain_db': -12,
         'render_line_of_sight': True,
         'source_x': 0.5,
-        'source_y': 0.5,
-        'source_z': 0.75,
+        'source_y': 0.95,
+        'source_z': 0.5,
         'listener_x': 0.5,
         'listener_y': 0.5,
         'listener_z': 0.5,
@@ -40,14 +40,14 @@ params = {
         'dimensions_x_m': dimensions_x,
         'dimensions_y_m': dimensions_y,
         'dimensions_z_m': dimensions_z,
-        '125hz_wall_x_0': 0.1,
-        '250hz_wall_x_0': 0.1,
-        '500hz_wall_x_0': 0.1,
-        '1000hz_wall_x_0': 0.1,
-        '2000hz_wall_x_0': 0.1,
-        '4000hz_wall_x_0': 0.1,
-        '8000hz_wall_x_0': 0.1,
-        '16000hz_wall_x_0': 0.1,
+        '125hz_wall_x_0': 1,
+        '250hz_wall_x_0': 1,
+        '500hz_wall_x_0': 1,
+        '1000hz_wall_x_0': 1,
+        '2000hz_wall_x_0': 1,
+        '4000hz_wall_x_0': 1,
+        '8000hz_wall_x_0': 1,
+        '16000hz_wall_x_0': 1,
         '125hz_wall_x_1': 1,
         '250hz_wall_x_1': 1,
         '500hz_wall_x_1': 1,
