@@ -25,12 +25,12 @@ if __name__ == "__main__":
 
     # Whether to apply the dimensionality reduction to the walls coefficients
     # Path for pre-computed values of the 2PS
-    # apply_dim_red = {'pts_2d': r'.\wall_coeff_dim_reduction\PCA_data\324000_iterations\2d_projection_data.csv',
-    #                  'pts_original': r'.\wall_coeff_dim_reduction\PCA_data\324000_iterations\filters_data.csv'}
+    apply_dim_red = {'pts_2d': r'.\wall_coeff_dim_reduction\PCA_data\324000_iterations\2d_projection_data.csv',
+                     'pts_original': r'.\wall_coeff_dim_reduction\PCA_data\324000_iterations\filters_data.csv'}
     # Classic PCA
     # apply_dim_red = 'pca'
     # No dim reduction
-    apply_dim_red = False
+    # apply_dim_red = False
 
     # Whether interpolate to return to the original space. Used only when apply_dim_red = True
     inv_interp = True
@@ -100,8 +100,9 @@ if __name__ == "__main__":
     # for r in range(n_rirs):
     #     rir_names.append(generate_rirs(param_type='sample', same_coef_per_wall=False))
 
-    rir_names = ['SDN050', 'SDN051', 'SDN052', 'SDN053', 'SDN054', 'SDN055', 'SDN056', 'SDN057', 'SDN058',
-                 'SDN059', 'SDN060', 'SDN061', 'SDN062', 'SDN063', 'SDN064', 'SDN065']
+    rir_names = ['SDN050']
+        # , 'SDN051', 'SDN052', 'SDN053', 'SDN054', 'SDN055', 'SDN056', 'SDN057', 'SDN058',
+        #          'SDN059', 'SDN060', 'SDN061', 'SDN062', 'SDN063', 'SDN064', 'SDN065']
     # rir_names = ['SDN054', 'SDN055', 'SDN056', 'SDN057', 'SDN058',
     #              'SDN059', 'SDN060', 'SDN061', 'SDN062', 'SDN063', 'SDN064', 'SDN065']
     # rir_names = ['SDN056', 'SDN057', 'SDN058', 'SDN059', 'SDN060', 'SDN061', 'SDN062', 'SDN063', 'SDN064', 'SDN065']

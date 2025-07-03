@@ -161,6 +161,7 @@ def find_params(rir_path: str,
 
     rev_plugins = {'SDN': [rev_vst, rev_param_names_ex, rev_param_ranges_ex]}
 
+    # Vecchio, da togliere
     input_file_names = os.listdir(input_path)
     result_file_names = [x.replace(".wav", '_ref.wav') for x in input_file_names]
 
@@ -171,7 +172,8 @@ def find_params(rir_path: str,
     # Convolve the sweep with RIRs
     target_rirs_sweep, target_rirs = batch_fft_convolve([sweep], result_file_names, rir_path,
                                                         rir_names=None, save_path=None, scale_factor=scale, norm=False, remove_direct=remove_direct)
-
+    #########
+    
     # //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if not os.path.exists(merged_rir_path) and match_only_late:

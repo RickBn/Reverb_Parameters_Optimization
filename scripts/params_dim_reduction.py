@@ -95,7 +95,7 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
     else:
         dim_red_mdl.voronoi = False
 
-        # TODO: capire cosa fare con unit circe, se mettere i minimi per restare nel cerchio con coord polari
+
     x_min = np.min(dim_red_mdl.pts_pca, axis=0)
     x_max = np.max(dim_red_mdl.pts_pca, axis=0)
 
