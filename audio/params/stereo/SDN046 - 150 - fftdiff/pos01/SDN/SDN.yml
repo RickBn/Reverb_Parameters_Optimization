@@ -1,0 +1,333 @@
+loss_end_value:
+  omni: 1.3252440975519426
+  x_0: 0.28667306498181955
+  x_1: 0.7460062623361838
+  y_0: 0.141342581795155
+  y_1: 0.09709265162226968
+  z_0: 0.052274220851748106
+  z_1: 0.04372337324893135
+parameters:
+  source_x: 0.25
+  source_y: 0.5
+  source_z: 0.5
+  listener_x: 0.75
+  listener_y: 0.5
+  listener_z: 0.5
+  listener_pitch: 0.0
+  listener_yaw: 0.0
+  listener_roll: 0.0
+  output_mode: 4th order Ambisonic
+  source_gain_db: -12
+  dimensions_x_m: 4
+  dimensions_y_m: 1.5
+  dimensions_z_m: 5
+  125hz_wall_x_0: 0.08692212896741965
+  250hz_wall_x_0: 0.09510719418939378
+  500hz_wall_x_0: 0.31723366628886523
+  1000hz_wall_x_0: 0.2554957899600259
+  2000hz_wall_x_0: 0.2323978284339741
+  4000hz_wall_x_0: 0.16943719683752326
+  8000hz_wall_x_0: 0.16943719683752326
+  16000hz_wall_x_0: 0.16943719683752326
+  125hz_wall_x_1: 0.24492766389984677
+  250hz_wall_x_1: 0.6038969338251936
+  500hz_wall_x_1: 0.5976110401184321
+  1000hz_wall_x_1: 0.3874201928271876
+  2000hz_wall_x_1: 0.35562294357834234
+  4000hz_wall_x_1: 0.2746378860311822
+  8000hz_wall_x_1: 0.2746378860311822
+  16000hz_wall_x_1: 0.2746378860311822
+  125hz_wall_y_0: 0.0
+  250hz_wall_y_0: 1.0
+  500hz_wall_y_0: 1.0
+  1000hz_wall_y_0: 0.9170040102785517
+  2000hz_wall_y_0: 0.9855595643239132
+  4000hz_wall_y_0: 0.9627077129754591
+  8000hz_wall_y_0: 0.9627077129754591
+  16000hz_wall_y_0: 0.9627077129754591
+  125hz_wall_y_1: 0.29967854539176664
+  250hz_wall_y_1: 0.4423239690189398
+  500hz_wall_y_1: 0.5390022563391512
+  1000hz_wall_y_1: 0.8215973510134972
+  2000hz_wall_y_1: 0.8500191704249919
+  4000hz_wall_y_1: 0.8480176890518722
+  8000hz_wall_y_1: 0.8480176890518722
+  16000hz_wall_y_1: 0.8480176890518722
+  125hz_wall_z_0: 0.16987951340526272
+  250hz_wall_z_0: 0.06678709731450728
+  500hz_wall_z_0: 0.16311477193736723
+  1000hz_wall_z_0: 0.18354740118121848
+  2000hz_wall_z_0: 0.36161310774452293
+  4000hz_wall_z_0: 0.3447479328075646
+  8000hz_wall_z_0: 0.3447479328075646
+  16000hz_wall_z_0: 0.3447479328075646
+  125hz_wall_z_1: 0.334929305407374
+  250hz_wall_z_1: 0.5471201250978197
+  500hz_wall_z_1: 0.8026363951540609
+  1000hz_wall_z_1: 0.8077439979776053
+  2000hz_wall_z_1: 0.8250655838438767
+  4000hz_wall_z_1: 0.6885928124516453
+  8000hz_wall_z_1: 0.6885928124516453
+  16000hz_wall_z_1: 0.6885928124516453
+  render_line_of_sight: false
+  air_absorption: false
+baseline_parameters:
+  125hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - f8
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    0HvOXLsl5j8=
+  250hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    qCulSEme6D8=
+  500hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    KBnYu8XQ6j8=
+  1000hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    rEKwBYw/6z8=
+  2000hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    Z/IBP3Xu6D8=
+  4000hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    0qL6Gr0h6T8=
+  8000hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    jOTHkSLo5j8=
+  16000hz_wall_omni: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    aMDnvgnF5T8=
+  125hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    UVzP9VUU6j8=
+  250hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    KttZwUqg7D8=
+  500hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    SZx8pa857D8=
+  1000hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    Oojp/YPo6z8=
+  2000hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    80HVpa7w6z8=
+  4000hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    h16+PqfO6z8=
+  8000hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    3vn3uoXB6z8=
+  16000hz_wall_x_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    ejrZ9X2+6z8=
+  125hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    ysRRPuQJ6T8=
+  250hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    omXo4PoA7D8=
+  500hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    R0UudFku6z8=
+  1000hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    FmUW//BA6z8=
+  2000hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    9ceD6lDb6j8=
+  4000hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    j+OTw8DR6j8=
+  8000hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    fPbtL/SV6j8=
+  16000hz_wall_x_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    7GJeelOH6j8=
+  125hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    2JZNL89S6j8=
+  250hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    vkRB+YBr7T8=
+  500hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    bXll+6cI7j8=
+  1000hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    RWdSZaxh7j8=
+  2000hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    lXjnqxBR7j8=
+  4000hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    Jhzs3IE97j8=
+  8000hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    vkSaH+Us7j8=
+  16000hz_wall_y_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    0N0ltqwh7j8=
+  125hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    k2CmlzKv6T8=
+  250hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    wKU6QWB+6j8=
+  500hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    EVJbLPSD7D8=
+  1000hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    tfIV5S227D8=
+  2000hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    lzz6k5ei7D8=
+  4000hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    pKoMCWPC7D8=
+  8000hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    22/MWBja7D8=
+  16000hz_wall_y_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    YsZuMfPo7D8=
+  125hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    JCwztqXn6z8=
+  250hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    NuXx4vko7D8=
+  500hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    ZDjQ+sfe7D8=
+  1000hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    HQjULLq/7D8=
+  2000hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    Wc6tUwTq7D8=
+  4000hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    KuNIFhvO7D8=
+  8000hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    56rU2E/M7D8=
+  16000hz_wall_z_0: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    Iyj63kjR7D8=
+  125hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    0+UYmMbL7D8=
+  250hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    aqHvERlU7T8=
+  500hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    vNhimcZR7j8=
+  1000hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    He25icay7j8=
+  2000hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    VnWHQlon7j8=
+  4000hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    0Lo1/wTd7T8=
+  8000hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    BvcOHAfY7T8=
+  16000hz_wall_z_1: !!python/object/apply:numpy.core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AoTkhv3h7T8=
+parameters_2D:
+  omni:
+  - -0.46687104525713485
+  - -0.6224991447708668
+  x_0:
+  - -0.591752469873817
+  - 0.2042324969423902
+  x_1:
+  - 0.20685399362884604
+  - 0.4386388378530234
+  y_0:
+  - 0.994175839921853
+  - -0.6282656717031668
+  y_1:
+  - 0.38318369022635856
+  - -0.5057690817993782
+  z_0:
+  - -0.7093298417975785
+  - -0.16331670355839945
+  z_1:
+  - 0.7329421009040344
+  - -0.11012134873706136

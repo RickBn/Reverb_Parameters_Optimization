@@ -13,8 +13,8 @@ def retrieve_external_vst3_params(vst3: pedalboard.VST3Plugin) -> (dict, list):
 
     parameters = {}
     ranges = []
-    for p in param_names:
-        print(f'{p} - {params[p]} - {params[p].range}')
+    # for p in param_names:
+    #     print(f'{p} - {params[p]} - {params[p].range}')
 
     for p in param_names:
         # print(f'{p} - {params[p]} - {params[p].range}')

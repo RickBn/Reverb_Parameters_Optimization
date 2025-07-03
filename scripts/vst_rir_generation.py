@@ -1,4 +1,3 @@
-from scripts.parameters_learning import *
 from scripts.utils.plot_functions import *
 
 from scripts.audio.signal_generation import *

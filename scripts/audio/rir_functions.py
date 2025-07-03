@@ -4,10 +4,14 @@ from scipy.spatial.distance import euclidean
 import dawdreamer as daw
 import librosa
 
+from scipy.signal import fftconvolve
+
 from scripts.audio.DSPfunc import *
 from scripts.audio.audio_manipulation import *
 from scripts.audio.audio_metrics import *
 from scripts.utils.dict_functions import save_or_merge
+from scripts.audio.signal_generation import *
+from scripts.vst_rir_generation import vst_reverb_process
 
 
 plt.switch_backend('agg')
@@ -52,6 +56,56 @@ n_walls = 6
 #
 # }
 
+def get_sweep_deconv(dur, f0, f1, sr, n_ch):
+	# https://github.com/MehmetColaak/Deconvolution_Project/blob/main/Deconvolution.py
+	from scripts.audio.audio_manipulation import cosine_fade
+	silence_sec = 0.2
+
+	# ff0 = 20
+	# ff1 = 20000
+	sweep = create_log_sweep(length=dur-silence_sec, f0=f0, f1=f1, sr=sr, silence=0, n_channels=0)
+
+	# 15 sec
+	# len_fadein_ms = 0.8
+	# len_fadeout_ms = 0.01
+	# 3 sec
+	len_fadein_ms = 0.27
+	len_fadeout_ms = 0.0018
+	fadein = cosine_fade(signal_length=sweep.shape[0], fade_length=int(sr * len_fadein_ms), fade_out=False)
+	fadeout = cosine_fade(signal_length=sweep.shape[0], fade_length=int(sr * len_fadeout_ms), fade_out=True)
+
+	sweep = sweep * fadein
+	sweep = sweep * fadeout
+
+	sweep = np.concatenate([sweep, np.zeros(int(silence_sec * sr))], axis=0)
+
+	sweep = np.stack([sweep] * n_ch)
+
+	return sweep
+
+def get_ir_deconv_sweep(rev_plugin, parameters, sr, n_ch, max_len_sec=None, sweep=None):
+	dur = 3
+	f0 = 10
+	f1 = 22000
+	if sweep is None:
+		sweep = get_sweep_deconv(dur, f0, f1, sr, n_ch)
+
+	# 10 ms di fade-out e 800 ms di fade-in
+	sdn_sweep = vst_reverb_process(parameters, sweep, sr, scale_factor=1,
+                                   rev_external=rev_plugin,
+                                   norm=False)
+
+	t = np.linspace(0, dur, int(sr * dur))
+	s = np.exp((t * np.log(f1 / f0)) / dur)
+	sweep = sweep * s
+	ir = fftconvolve(sdn_sweep, sweep[:, ::-1], mode='full', axes=1)
+	ir /= np.abs(ir).max()
+	ir = ir[:, sweep.shape[1]:]
+
+	if max_len_sec is not None:
+		ir = ir[:, :int(sr*max_len_sec)]
+
+	return ir
 
 def get_azel_2points_3d(a_x, a_y, a_z, b_x, b_y, b_z):
 	dir_vec = np.array([a_x - b_x, a_y - b_y, a_z - b_z])
@@ -121,7 +175,7 @@ def compute_delay_source_listener(fixed_params, wall_idx_ambisonic, wall_order):
 	return delay_ms
 
 
-def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: int = 0, wall_order=[], length: int = 144000, window: bool = True, fade_length: int = 512, sr=48000):
+def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: int = 0, wall_order=[], length: int = 144000, window: bool = True, fade_length_ms: int = 10, sr=48000):
 	from scripts.audio.audio_manipulation import cosine_fade, ms2samples, samples2ms
 
 	# # TEST PER BEAMFORMING
@@ -153,7 +207,7 @@ def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: i
 	# 		engine.render(length)
 	# 		y = engine.get_audio()
 	#
-	# 		v[i, j] = np.max(y)
+	# 		v[i, j] = np.max(np.abs(y))
 	#
 	# 		# peaks, _ = find_peaks(np.abs(y[0, :]), height=np.max(np.abs(y[0, :])) * .1, distance=ms2samples(ms=2.5, sr=sr))
 	# 		#
@@ -232,27 +286,39 @@ def beaforming_ambisonic(beamformer, engine, fixed_params, wall_idx_ambisonic: i
 	y = engine.get_audio()
 
 	if window:
-
+		# Compute the delay between from the source to the listener accounting for the reflection on the considered wall
 		delay_ms = compute_delay_source_listener(fixed_params, wall_idx_ambisonic, wall_order)
 		delay_samples = round(ms2samples(delay_ms, sr))
 
 		# Set to 0 to samples before the computed ideal first reflection coming from the considered wall
-		y[:, 0:delay_samples] = 0
+		# y[:, 0:delay_samples] = 0
+		# l_fade = int(ms2samples(ms=fade_length_ms, sr=sr) / 10)
+		l_fade = int(ms2samples(ms=1, sr=sr))
+		cos_fade_in = np.concatenate([np.zeros(delay_samples - l_fade), cosine_fade(l_fade, l_fade, fade_out=False),
+								   np.ones(y.shape[1] - delay_samples)])
+		# cos_fade = np.concatenate([np.zeros(delay_samples), cosine_fade(l_fade, l_fade, fade_out=False),
+		# 						   np.ones(y.shape[1] - delay_samples - l_fade)])
+		y = y * cos_fade_in
 
 		peaks, _ = find_peaks(np.abs(y[0, :]), height=np.max(np.abs(y[0, :])) * .1, distance=ms2samples(ms=2.5, sr=sr))
 
-		refl_pos = peaks[0]
+		if len(peaks) == 0:
+			refl_pos = np.min([np.argmax(y[0,:]), sr])
+
+		else:
+			refl_pos = peaks[0]
 
 
-		cos_fade = np.concatenate([np.ones(refl_pos),
-								   (cosine_fade(y.shape[1] - refl_pos, fade_length, fade_out=False)-1)*(-1)])
+		cos_fade_out = np.concatenate([np.ones(refl_pos),
+								   (cosine_fade(y.shape[1] - refl_pos, int(ms2samples(ms=fade_length_ms, sr=sr)), fade_out=False)-1)*(-1)])
 
-		y = y * cos_fade
+		y = y * cos_fade_out
 
 	return y
 
 
-def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wall_order=[], sr: int = 48000, order: int = 4):
+def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wall_order=[], sr: int = 48000, order: int = 4,
+									   fade_length_ms=10, window: bool = True):
 
 	rir_beamform = np.zeros((n_walls+1, rir_ambisonic.shape[1]))
 
@@ -273,8 +339,12 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wa
 	beamformer.set_parameter(1, 0)
 	# 2: normalisation type -> N3D
 	beamformer.set_parameter(2, 0)
-	# 3: beam type -> MaxEV
-	beamformer.set_parameter(3, 1)
+	# # 3: beam type -> MaxEV
+	# beamformer.set_parameter(3, 1)
+	# 3: beam type -> Hyper-cardioid
+	beamformer.set_parameter(3, 0.5)
+	# # 3: beam type -> Cardioid
+	# beamformer.set_parameter(3, 0)
 	# 4: num beams -> 1
 	beamformer.set_parameter(4, 0.01)
 
@@ -291,7 +361,8 @@ def get_rir_wall_reflections_ambisonic(rir_ambisonic: np.array, fixed_params, wa
 
 	for w in range(1, n_walls+1):
 		rir_beamform[w, :] = beaforming_ambisonic(beamformer, engine, fixed_params=fixed_params, wall_idx_ambisonic=w,
-												  wall_order=wall_order, length=rir_ambisonic.shape[1]/sr, sr=sr)
+												  wall_order=wall_order, length=rir_ambisonic.shape[1]/sr, sr=sr,
+												  fade_length_ms=fade_length_ms, window=window)
 
 	return rir_beamform, beamformer, engine, playback
 

@@ -1,6 +1,5 @@
 # import pedalboard
 from pedalboard_change_channel_limit import pedalboard
-from scipy.fft import rfft
 
 from scripts.audio.audio_manipulation import *
 from scripts.audio.pedalboard_functions import *
@@ -10,9 +9,11 @@ from scripts.audio.rir_functions import beaforming_ambisonic
 from scripts.vst_rir_generation import vst_reverb_process, merge_er_tail_rir
 from scripts.utils.dict_functions import exclude_keys
 from scripts.params_dim_reduction import reconstruct_original_params
-from scripts.audio.rir_functions import remove_direct_from_rir
+from scripts.audio.rir_functions import remove_direct_from_rir, get_ir_deconv_sweep
 
 n_wall_bands = 8
+wall_order = ['x_0', 'x_1', 'y_0', 'y_1', 'z_0', 'z_1']
+coef_bands = ['125hz_wall', '250hz_wall', '500hz_wall', '1000hz_wall', '2000hz_wall', '4000hz_wall', '8000hz_wall', '16000hz_wall']
 
 
 def pol2cart(pol):
@@ -28,15 +29,80 @@ def pol2cart(pol):
 
     return [x, y]
 
-def beamforming_loss(target_rir, matched_rir, sr: int = 48000):
-    # TODO: controllare, gestire caso omni e efficientamento fft con zeri alla fine
-    target_rir_f = rfft(target_rir)
-    matched_rir_f = rfft(matched_rir)
-    # target_rir_f = librosa.power_to_db(target_rir_f, ref=np.max)
-    # matched_rir_f = librosa.power_to_db(matched_rir_f, ref=np.max)
-    target_rir_f = np.fft.rfft(target_rir, axis=0)/target_rir.shape[0]
 
-    loss = np.mean(np.abs(np.abs(target_rir_f) - np.abs(matched_rir_f)))
+def beamforming_loss(target_rir, matched_rir, sr: int = 48000, type='lsd'):
+    # loss = np.mean(np.abs(np.abs(target_rir_f[start_fr_bin:]) - np.abs(matched_rir_f[start_fr_bin:])))
+
+    if type == 'lsd':
+        loss = lsd_loss(target_rir, matched_rir, sr, start_fr_hz=20, end_fr_hz=int(sr/2))
+    elif type == 'rt':
+        loss = rt_loss(target_rir, matched_rir, sr)
+    elif type == 'edr':
+        loss = edr_l1_distance(target_rir, matched_rir, sr, win_ms=40, mel=True, fmax=4000)
+    elif type == 'mel':
+        loss = mel_spectrogram_l1_distance(target_rir, matched_rir, sr)
+    elif type == 'mfcc':
+        loss = mfcc_l1_distance(target_rir, matched_rir, sr, fft_sizes=[512, 1024, 2048, 4096], n_mfcc=20, fmax=sr/2)
+    elif type == 'env':
+        loss = env_l1_distance(target_rir, matched_rir)
+
+    if np.isinf(loss):
+        loss = 10000
+
+    return loss
+
+
+def rir_distance_coef_scale(params, params_dict, target_rir, sample_rate, vst3=None, impulse = [], sweep = [],
+                            remove_direct: bool = False):
+    params_dict_temp = params_dict.copy()
+
+    for idx, par in enumerate(params_dict_temp):
+
+        if '_wall_' in par:
+            params_dict_temp[par] = np.clip(params_dict_temp[par] + params[0], 0.001, 0.999)
+            # params_dict_temp[par] = float(np.clip(params_dict_temp[par] * params[0] + params[1], 0.001, 0.999))
+            # params_dict_temp[par] = np.clip(params_dict_temp[par] * params[0], 0.001, 0.999)
+            # params_dict_temp[par] = np.clip(params_dict_temp[par] ** params[0], 0.001, 0.999)
+
+    matched_rir = get_ir_deconv_sweep(vst3, params_dict_temp, sample_rate, sweep.shape[0], max_len_sec=3, sweep=sweep)
+    # matched_rir = vst_reverb_process(params_dict_temp, impulse, sample_rate, scale_factor=1, hp_cutoff=None, rev_external=vst3,
+    #                                  norm=False)
+    # if np.isnan(matched_rir).any():
+    #     np.nan_to_num(matched_rir, copy=False, nan=0)
+
+    if remove_direct:
+        matched_rir = remove_direct_from_rir(matched_rir)
+
+    # loss = beamforming_loss(target_rir[0, :], matched_rir[0, :], sr=sample_rate, type='rt')
+    loss = beamforming_loss(target_rir, matched_rir, sr=sample_rate, type='rt')
+    # loss = beamforming_loss(target_rir[0, :], matched_rir[0, :], sr=sample_rate, type='edr')
+
+    if np.isnan(loss):
+        loss = 999999999
+
+    return loss
+
+
+def rir_distance_coef_scale_perwall(params, params_dict, target_rir, sample_rate, vst3=None, impulse = [],
+                            remove_direct: bool = False):
+    params_dict_temp = params_dict.copy()
+
+    for n, w in enumerate(wall_order):
+        for b in coef_bands:
+            params_dict_temp[f'{b}_{w}'] = np.clip(params_dict_temp[f'{b}_{w}'] + params[n], 0.001, 0.999)
+            # params_dict_temp[f'{b}_{w}'] = float(np.clip(params_dict_temp[f'{b}_{w}'] * params[n][0] + params[n][1], 0.001, 0.999))
+
+    matched_rir = vst_reverb_process(params_dict_temp, impulse, sample_rate, scale_factor=1, hp_cutoff=None, rev_external=vst3,
+                                     norm=False)
+    if remove_direct:
+        matched_rir = remove_direct_from_rir(matched_rir)
+
+    # loss = beamforming_loss(target_rir[0, :], matched_rir[0, :], sr=sample_rate, type='rt')
+    loss = beamforming_loss(target_rir, matched_rir, sr=sample_rate, type='rt')
+    # loss = beamforming_loss(target_rir[0, :], matched_rir[0, :], sr=sample_rate, type='edr')
+
+    if np.isnan(loss):
+        loss = 999999999
 
     return loss
 
@@ -201,7 +267,12 @@ def rir_distance(params, params_dict, input_sweep, target_rir, rir_er, offset, s
     if wall_idx_ambisonic is None:
         loss = mel_spectrogram_l1_distance(target_rir, matched_rir, sample_rate)
     else:
-        loss = beamforming_loss(target_rir[0,:], matched_rir, sr=sample_rate)
+        loss = beamforming_loss(target_rir[0, :], matched_rir, sr=sample_rate, type='lsd')
+
+    # loss = mel_spectrogram_l1_distance(target_rir, np.expand_dims(matched_rir, 0), sample_rate)
+
+    if np.isnan(loss):
+        loss = 100
 
     return loss
 

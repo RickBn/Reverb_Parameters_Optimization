@@ -13,7 +13,13 @@ input/
 results/
 armodels/
 images/
+audio/vst_rirs
+results_SDN_matching
+results_analysis_notebook.ipynb
 
 # Extensions
 *.reapeaks
 *.bak
+*.html
+*.pdf
+*.zip

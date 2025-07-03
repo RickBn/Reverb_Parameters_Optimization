@@ -1,16 +1,23 @@
 pos01:
   output_mode: 4th order Ambisonic
   source_gain_db: -12
-  render_line_of_sight: true
-  source_x: 0.5
-  source_y: 0.5
-  source_z: 0.75
-  listener_x: 0.5
-  listener_y: 0.5
-  listener_z: 0.5
+  render_line_of_sight: false
+  air_absorption: false
+  source_x: 0.7382624525339588
+  source_y: 0.9324394151212265
+  source_z: 0.9486124718816462
+  listener_x: 0.5112013437656654
+  listener_y: 0.8084961392022086
+  listener_z: 0.5672675221714149
   listener_pitch: 0.0
   listener_yaw: 0.0
   listener_roll: 0.0
-  dimensions_x_m: 10
-  dimensions_y_m: 10
-  dimensions_z_m: 10
+  dimensions_x_m: 4.754547650506323
+  dimensions_y_m: 7.367604119389634
+  dimensions_z_m: 1.0
+  coef_idx_x_0: 218
+  coef_idx_x_1: 245
+  coef_idx_y_0: 170
+  coef_idx_y_1: 2
+  coef_idx_z_0: 194
+  coef_idx_z_1: 393

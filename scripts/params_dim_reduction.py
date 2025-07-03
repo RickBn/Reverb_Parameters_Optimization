@@ -10,16 +10,20 @@ from shapely.ops import nearest_points
 
 
 def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_interp: bool = False,
-                      unit_circle: bool = False, materials_to_exclude: list = [], path=None):
+                      unit_circle: bool = False, materials_to_exclude: list = [], path=None,
+                      points_to_remove: list = []):
     # df['8000 Hz'] = df['4000 Hz']
     # df['16000 Hz'] = df['4000 Hz']
 
+    # 2PS
     if isinstance(path, dict):
         dim_red_mdl = PCA(n_components=2)
 
         dim_red_mdl.pts_pca = pd.read_csv(os.path.join(os.getcwd(), path['pts_2d']), header=None).values
+        dim_red_mdl.pts_pca = np.delete(dim_red_mdl.pts_pca, points_to_remove, axis=0)
 
         dim_red_mdl.original_pts = pd.read_csv(path['pts_original'], header=None).values
+        dim_red_mdl.original_pts = np.delete(dim_red_mdl.original_pts, points_to_remove, axis=0)
 
         dim_red_mdl.n_components = dim_red_mdl.pts_pca.shape[1]
         dim_red_mdl.n_features_ = dim_red_mdl.original_pts.shape[1]
@@ -27,28 +31,30 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
         dim_red_mdl.type = 'pca'
 
     else:
-        df = pd.read_csv('wall_coeff_dim_reduction/Absorption_database.csv', index_col='Material').drop_duplicates()
+        # df = pd.read_csv('wall_coeff_dim_reduction/Absorption_database.csv', index_col='Material').drop_duplicates()
+        abs_coef = pd.read_csv(r'.\wall_coeff_dim_reduction\PCA_data\324000_iterations\filters_data.csv', header=None).values
 
-        for m in materials_to_exclude:
-            df.drop(m, inplace=True)
+        abs_coef = np.delete(abs_coef, points_to_remove, axis=0)
+        # for m in materials_to_exclude:
+        #     df.drop(m, inplace=True)
 
-        # PCA
+        # CLASSIC PCA
         if dim_red_alg == 'pca':
             # train PCA and transform set
             dim_red_mdl = PCA(n_components=2)
 
-            dim_red_mdl.fit(df)
+            dim_red_mdl.fit(abs_coef)
 
-            x_dimred = dim_red_mdl.transform(df)
+            x_dimred = dim_red_mdl.transform(abs_coef)
 
-            dim_red_mdl.type = 'pca'
+            dim_red_mdl.type = 'pca_classic'
 
         else:
-            x_dimred = df.values
+            x_dimred = abs_coef
 
         dim_red_mdl.pts_pca = x_dimred
 
-        dim_red_mdl.original_pts = df.values
+        dim_red_mdl.original_pts = abs_coef
 
         if voronoi:
 
@@ -60,40 +66,41 @@ def get_dim_red_model(dim_red_alg: str = 'pca', voronoi: bool = False, inv_inter
 
             dim_red_mdl.tri = tri
 
-
-    if inv_interp or unit_circle:
-        # create polygon of the convex hull of the PCA points
-        hull = ConvexHull(dim_red_mdl.pts_pca)
-        dim_red_mdl.ply = Polygon(dim_red_mdl.pts_pca[hull.vertices])
-
-        if unit_circle:
-            # for each point map it to a unit circle with scaling relative to the convex hull
-            for idx, point in enumerate(dim_red_mdl.pts_pca):
-                line = LineString([[0, 0], point * 100])  # extend line from [0,0] to point
-                if line.intersects(dim_red_mdl.ply) and not line.within(dim_red_mdl.ply):
-                    intersection = line.intersection(dim_red_mdl.ply)
-                    dim_red_mdl.pts_pca[idx] = (1 / intersection.length) * point
-                else:
-                    pass
-
+    if dim_red_mdl.type != 'pca_classic':
+        if inv_interp or unit_circle:
+            # create polygon of the convex hull of the PCA points
             hull = ConvexHull(dim_red_mdl.pts_pca)
             dim_red_mdl.ply = Polygon(dim_red_mdl.pts_pca[hull.vertices])
 
-        dim_red_mdl.tri = Delaunay(dim_red_mdl.pts_pca)
+            if unit_circle:
+                # for each point map it to a unit circle with scaling relative to the convex hull
+                for idx, point in enumerate(dim_red_mdl.pts_pca):
+                    line = LineString([[0, 0], point * 100])  # extend line from [0,0] to point
+                    if line.intersects(dim_red_mdl.ply) and not line.within(dim_red_mdl.ply):
+                        intersection = line.intersection(dim_red_mdl.ply)
+                        dim_red_mdl.pts_pca[idx] = (1 / intersection.length) * point
+                    else:
+                        pass
 
-    dim_red_mdl.inv_interp = inv_interp
-    dim_red_mdl.unit_circle = unit_circle
+                hull = ConvexHull(dim_red_mdl.pts_pca)
+                dim_red_mdl.ply = Polygon(dim_red_mdl.pts_pca[hull.vertices])
 
-    dim_red_mdl.voronoi = voronoi
+            dim_red_mdl.tri = Delaunay(dim_red_mdl.pts_pca)
 
-    # TODO: capire cosa fare con unit circe, se mettere i minimi per restare nel cerchio con coord polari
+        dim_red_mdl.inv_interp = inv_interp
+        dim_red_mdl.unit_circle = unit_circle
+
+        dim_red_mdl.voronoi = voronoi
+
+    else:
+        dim_red_mdl.voronoi = False
+
+        # TODO: capire cosa fare con unit circe, se mettere i minimi per restare nel cerchio con coord polari
     x_min = np.min(dim_red_mdl.pts_pca, axis=0)
     x_max = np.max(dim_red_mdl.pts_pca, axis=0)
 
     dim_red_mdl.x_min = x_min
     dim_red_mdl.x_max = x_max
-
-
 
     return dim_red_mdl
 
@@ -130,7 +137,8 @@ def pca_inverse_interp(dim_red_mdl, pts_dim_red, k_neighbor: int = 2):
 
     return x_origdim
 
-def reconstruct_original_params(dim_red_mdl, params_dim_red, min_rec_val=0, max_rec_val=1):
+
+def reconstruct_original_params(dim_red_mdl, params_dim_red, min_rec_val=0.001, max_rec_val=0.999):
     params = []
     for n in range(0, len(params_dim_red), dim_red_mdl.n_components):
         if dim_red_mdl.voronoi:
@@ -150,6 +158,10 @@ def reconstruct_original_params(dim_red_mdl, params_dim_red, min_rec_val=0, max_
                 else:
                     # PCA inverse through sklearn method
                     reconstr_params = dim_red_mdl.inverse_transform(params_dim_red[n:n + dim_red_mdl.n_components])
+
+            elif dim_red_mdl.type == 'pca_classic':
+                reconstr_params = dim_red_mdl.inverse_transform(params_dim_red[n:n + dim_red_mdl.n_components])
+
 
         reconstr_params = np.clip(reconstr_params, min_rec_val, max_rec_val)
 
